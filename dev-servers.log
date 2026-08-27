@@ -1,0 +1,178 @@
+
+> dev
+> concurrently "npm:dev --workspace=@hbg/api" "npm:dev --workspace=@hbg/web"
+
+[dev] 
+[dev] > dev
+[dev] > next dev
+[dev] 
+[dev] 
+[dev] > dev
+[dev] > node --watch src/server.js
+[dev] 
+[dev] Restarting 'src/server.js'
+[dev]    ▲ Next.js 15.5.23
+[dev]    - Local:        http://localhost:3000
+[dev]    - Network:      http://100.102.222.81:3000
+[dev]    - Environments: .env.local, .env
+[dev] 
+[dev]  ✓ Starting...
+[dev]  ✓ Ready in 7.5s
+[dev] Restarting 'src/server.js'
+[dev] MongooseServerSelectionError: getaddrinfo ENOTFOUND mongo
+[dev]     at _handleConnectionErrors (D:\Bratamalya\New folder\Real Estate\node_modules\mongoose\lib\connection.js:1169:11)
+[dev]     at NativeConnection.openUri (D:\Bratamalya\New folder\Real Estate\node_modules\mongoose\lib\connection.js:1100:11)
+[dev]     at async bootstrap (file:///D:/Bratamalya/New%20folder/Real%20Estate/apps/api/src/server.js:133:30) {
+[dev]   errorLabelSet: Set(0) {},
+[dev]   reason: TopologyDescription {
+[dev]     type: 'Unknown',
+[dev]     servers: Map(1) { 'mongo:27017' => [ServerDescription] },
+[dev]     stale: false,
+[dev]     compatible: true,
+[dev]     heartbeatFrequencyMS: 10000,
+[dev]     localThresholdMS: 15,
+[dev]     setName: null,
+[dev]     maxElectionId: null,
+[dev]     maxSetVersion: null,
+[dev]     commonWireVersion: 0,
+[dev]     logicalSessionTimeoutMinutes: null
+[dev]   },
+[dev]   code: undefined,
+[dev]   cause: TopologyDescription {
+[dev]     type: 'Unknown',
+[dev]     servers: Map(1) { 'mongo:27017' => [ServerDescription] },
+[dev]     stale: false,
+[dev]     compatible: true,
+[dev]     heartbeatFrequencyMS: 10000,
+[dev]     localThresholdMS: 15,
+[dev]     setName: null,
+[dev]     maxElectionId: null,
+[dev]     maxSetVersion: null,
+[dev]     commonWireVersion: 0,
+[dev]     logicalSessionTimeoutMinutes: null
+[dev]   }
+[dev] }
+[dev] Failed running 'src/server.js'. Waiting for file changes before restarting...
+[dev]  ○ Compiling / ...
+[dev]  ⚠ ./app/globals.css.webpack[javascript/auto]!=!../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./app/globals.css
+[dev] Warning
+[dev] 
+[dev] (389:3) autoprefixer: end value has mixed support, consider using flex-end instead
+[dev] 
+[dev] Import trace for requested module:
+[dev] ./app/globals.css.webpack[javascript/auto]!=!../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./app/globals.css
+[dev] ./app/globals.css
+[dev] <w> [webpack.cache.PackFileCacheStrategy] Skipped not serializable cache item 'Compilation/modules|D:\Bratamalya\New folder\Real Estate\node_modules\next\dist\build\webpack\loaders\css-loader\src\index.js??ruleSet[1].rules[14].oneOf[10].use[2]!D:\Bratamalya\New folder\Real Estate\node_modules\next\dist\build\webpack\loaders\postcss-loader\src\index.js??ruleSet[1].rules[14].oneOf[10].use[3]!D:\Bratamalya\New folder\Real Estate\apps\web\app\globals.css': No serializer registered for Warning
+[dev] <w> while serializing webpack/lib/cache/PackFileCacheStrategy.PackContentItems -> webpack/lib/NormalModule -> Array { 1 items } -> webpack/lib/ModuleWarning -> Warning
+[dev]  GET / 200 in 8909ms
+[dev]  ⚠ ./app/globals.css.webpack[javascript/auto]!=!../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./app/globals.css
+[dev] Warning
+[dev] 
+[dev] (389:3) autoprefixer: end value has mixed support, consider using flex-end instead
+[dev] 
+[dev] Import trace for requested module:
+[dev] ./app/globals.css.webpack[javascript/auto]!=!../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./app/globals.css
+[dev] ./app/globals.css
+[dev]  ✓ Compiled /homes-for-sale in 719ms (614 modules)
+[dev]  GET /homes-for-sale 200 in 943ms
+[dev]  ✓ Compiled /recently-sold in 469ms (616 modules)
+[dev]  GET /recently-sold 200 in 585ms
+[dev]  ⚠ ./app/globals.css.webpack[javascript/auto]!=!../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./app/globals.css
+[dev] Warning
+[dev] 
+[dev] (414:3) autoprefixer: end value has mixed support, consider using flex-end instead
+[dev] 
+[dev] Import trace for requested module:
+[dev] ./app/globals.css.webpack[javascript/auto]!=!../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./app/globals.css
+[dev] ./app/globals.css
+[dev]  GET /recently-sold 200 in 148ms
+[dev]  ⚠ ./app/globals.css.webpack[javascript/auto]!=!../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./app/globals.css
+[dev] Warning
+[dev] 
+[dev] (414:3) autoprefixer: end value has mixed support, consider using flex-end instead
+[dev] 
+[dev] Import trace for requested module:
+[dev] ./app/globals.css.webpack[javascript/auto]!=!../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./app/globals.css
+[dev] ./app/globals.css
+[dev]  GET /recently-sold 200 in 98ms
+[dev]  ⨯ Error: Cannot find module './695.js'
+[dev] Require stack:
+[dev] - D:\Bratamalya\New folder\Real Estate\apps\web\.next\server\webpack-runtime.js
+[dev] - D:\Bratamalya\New folder\Real Estate\apps\web\.next\server\app\recently-sold\page.js
+[dev] - D:\Bratamalya\New folder\Real Estate\node_modules\next\dist\server\require.js
+[dev] - D:\Bratamalya\New folder\Real Estate\node_modules\next\dist\server\load-components.js
+[dev] - D:\Bratamalya\New folder\Real Estate\node_modules\next\dist\build\utils.js
+[dev] - D:\Bratamalya\New folder\Real Estate\node_modules\next\dist\build\swc\options.js
+[dev] - D:\Bratamalya\New folder\Real Estate\node_modules\next\dist\build\swc\index.js
+[dev] - D:\Bratamalya\New folder\Real Estate\node_modules\next\dist\build\analysis\parse-module.js
+[dev] - D:\Bratamalya\New folder\Real Estate\node_modules\next\dist\build\analysis\get-page-static-info.js
+[dev] - D:\Bratamalya\New folder\Real Estate\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+[dev] - D:\Bratamalya\New folder\Real Estate\node_modules\next\dist\server\lib\router-server.js
+[dev] - D:\Bratamalya\New folder\Real Estate\node_modules\next\dist\server\lib\start-server.js
+[dev]     at <unknown> (D:\Bratamalya\New folder\Real Estate\apps\web\.next\server\app\homes-for-sale\page.js:2:8720)
+[dev]     at Object.<anonymous> (D:\Bratamalya\New folder\Real Estate\apps\web\.next\server\app\homes-for-sale\page.js:2:8776) {
+[dev]   code: 'MODULE_NOT_FOUND',
+[dev]   requireStack: [Array],
+[dev]   page: '/homes-for-sale'
+[dev] }
+[dev]  ⚠ ./app/globals.css.webpack[javascript/auto]!=!../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./app/globals.css
+[dev] Warning
+[dev] 
+[dev] (414:3) autoprefixer: end value has mixed support, consider using flex-end instead
+[dev] 
+[dev] Import trace for requested module:
+[dev] ./app/globals.css.webpack[javascript/auto]!=!../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./app/globals.css
+[dev] ./app/globals.css
+[dev]  ○ Compiling /_error ...
+[dev] <w> [webpack.cache.PackFileCacheStrategy] Skipped not serializable cache item 'Compilation/modules|D:\Bratamalya\New folder\Real Estate\node_modules\next\dist\build\webpack\loaders\css-loader\src\index.js??ruleSet[1].rules[14].oneOf[10].use[2]!D:\Bratamalya\New folder\Real Estate\node_modules\next\dist\build\webpack\loaders\postcss-loader\src\index.js??ruleSet[1].rules[14].oneOf[10].use[3]!D:\Bratamalya\New folder\Real Estate\apps\web\app\globals.css': No serializer registered for Warning
+[dev] <w> while serializing webpack/lib/cache/PackFileCacheStrategy.PackContentItems -> webpack/lib/NormalModule -> Array { 1 items } -> webpack/lib/ModuleWarning -> Warning
+[dev]  ✓ Compiled /_error in 3.7s (963 modules)
+[dev]  GET /homes-for-sale 500 in 4648ms
+[dev]  GET /homes-for-sale 200 in 190ms
+[dev]  GET /homes-for-sale 200 in 41ms
+[dev]  GET /homes-for-sale 200 in 275ms
+[dev]  GET /homes-for-sale 200 in 76ms
+[dev]  GET / 200 in 126ms
+[dev]  GET / 200 in 196ms
+[dev]  GET / 200 in 107ms
+[dev]  GET / 200 in 90ms
+[dev]  GET / 200 in 78ms
+[dev]  GET / 200 in 58ms
+[dev]  GET / 200 in 55ms
+[dev] [?25h
+[dev] npm run dev --workspace=@hbg/web exited with code 0
+[dev] Restarting 'src/server.js'
+[dev] MongooseServerSelectionError: getaddrinfo ENOTFOUND mongo
+[dev]     at _handleConnectionErrors (D:\Bratamalya\New folder\Real Estate\node_modules\mongoose\lib\connection.js:1169:11)
+[dev]     at NativeConnection.openUri (D:\Bratamalya\New folder\Real Estate\node_modules\mongoose\lib\connection.js:1100:11)
+[dev]     at async bootstrap (file:///D:/Bratamalya/New%20folder/Real%20Estate/apps/api/src/server.js:142:30) {
+[dev]   errorLabelSet: Set(0) {},
+[dev]   reason: TopologyDescription {
+[dev]     type: 'Unknown',
+[dev]     servers: Map(1) { 'mongo:27017' => [ServerDescription] },
+[dev]     stale: false,
+[dev]     compatible: true,
+[dev]     heartbeatFrequencyMS: 10000,
+[dev]     localThresholdMS: 15,
+[dev]     setName: null,
+[dev]     maxElectionId: null,
+[dev]     maxSetVersion: null,
+[dev]     commonWireVersion: 0,
+[dev]     logicalSessionTimeoutMinutes: null
+[dev]   },
+[dev]   code: undefined,
+[dev]   cause: TopologyDescription {
+[dev]     type: 'Unknown',
+[dev]     servers: Map(1) { 'mongo:27017' => [ServerDescription] },
+[dev]     stale: false,
+[dev]     compatible: true,
+[dev]     heartbeatFrequencyMS: 10000,
+[dev]     localThresholdMS: 15,
+[dev]     setName: null,
+[dev]     maxElectionId: null,
+[dev]     maxSetVersion: null,
+[dev]     commonWireVersion: 0,
+[dev]     logicalSessionTimeoutMinutes: null
+[dev]   }
+[dev] }
+[dev] Failed running 'src/server.js'. Waiting for file changes before restarting...

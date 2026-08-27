@@ -1,0 +1,24 @@
+
+> dev
+> next dev
+
+   ▲ Next.js 15.5.23
+   - Local:        http://localhost:3000
+   - Network:      http://100.102.222.81:3000
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 2.3s
+ ○ Compiling / ...
+ ✓ Compiled / in 949ms (609 modules)
+ GET / 200 in 1375ms
+ GET / 200 in 58ms
+ GET / 200 in 149ms
+ ⚠ Cross origin request detected from view-captain-legs-stadium.trycloudflare.com to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ GET / 200 in 108ms
+ GET / 200 in 212ms
+ GET / 200 in 85ms
+ GET / 200 in 86ms
+ GET / 200 in 87ms
+ GET / 200 in 113ms

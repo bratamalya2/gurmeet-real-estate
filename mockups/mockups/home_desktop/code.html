@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HomesByGurmeet | Luxury Real Estate</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#dae2fd",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "paper-white": "#FFFFFF",
+                        "secondary-fixed-dim": "#ecbf7d",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#2d3133",
+                        "surface-container-low": "#f2f4f6",
+                        "estate-gold": "#B48C4F",
+                        "surface-dim": "#d8dadc",
+                        "on-secondary-fixed": "#281800",
+                        "on-primary-container": "#7c839b",
+                        "surface-container-lowest": "#ffffff",
+                        "charcoal-slate": "#334155",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#45464d",
+                        "on-background": "#191c1e",
+                        "on-secondary-fixed-variant": "#5f4109",
+                        "on-tertiary-fixed": "#0d1c2f",
+                        "on-tertiary-fixed-variant": "#3a485c",
+                        "success-emerald": "#10B981",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#eceef0",
+                        "primary-container": "#131b2e",
+                        "inverse-primary": "#bec6e0",
+                        "tertiary-container": "#0d1c2f",
+                        "on-error-container": "#93000a",
+                        "background": "#f7f9fb",
+                        "primary": "#000000",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-container-high": "#e6e8ea",
+                        "on-primary-fixed": "#131b2e",
+                        "outline-variant": "#c6c6cd",
+                        "error-container": "#ffdad6",
+                        "outline": "#76777d",
+                        "on-tertiary-container": "#76859b",
+                        "tertiary": "#000000",
+                        "tertiary-fixed-dim": "#b9c7e0",
+                        "secondary-container": "#fed08c",
+                        "surface-container-highest": "#e0e3e5",
+                        "surface-variant": "#e0e3e5",
+                        "surface-bright": "#f7f9fb",
+                        "midnight-navy": "#0F172A",
+                        "on-secondary-container": "#79571f",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#191c1e",
+                        "surface-tint": "#565e74",
+                        "tertiary-fixed": "#d5e3fd",
+                        "secondary-fixed": "#ffddb0",
+                        "secondary": "#7a5820",
+                        "on-error": "#ffffff",
+                        "surface": "#f7f9fb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "section-gap": "80px",
+                        "margin-desktop": "40px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "container-max": "1280px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"],
+                        "caption": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "display-lg": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "caption": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hero-gradient {
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%);
+        }
+        .silk-shadow {
+            box-shadow: 0px 10px 30px rgba(15, 23, 42, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-paper-white text-on-surface font-body-md antialiased selection:bg-estate-gold/20 selection:text-midnight-navy">
+<!-- TopNavBar (Generated from JSON) -->
+<header class="bg-paper-white dark:bg-midnight-navy font-body-md text-body-md text-midnight-navy dark:text-paper-white docked full-width top-0 sticky border-b border-charcoal-slate/15 shadow-sm z-50 transition-all duration-200 ease-in-out">
+<div class="flex justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto md:px-margin-desktop px-margin-mobile">
+<a class="font-headline-md text-headline-md font-bold text-midnight-navy dark:text-paper-white" href="#">HomesByGurmeet</a>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-estate-gold border-b-2 border-estate-gold pb-1 font-label-md text-label-md" href="#">Home</a>
+<a class="text-midnight-navy dark:text-paper-white hover:text-estate-gold transition-colors font-label-md text-label-md hover:text-estate-gold duration-300" href="#">Listings</a>
+<a class="text-midnight-navy dark:text-paper-white hover:text-estate-gold transition-colors font-label-md text-label-md hover:text-estate-gold duration-300" href="#">Services</a>
+<a class="text-midnight-navy dark:text-paper-white hover:text-estate-gold transition-colors font-label-md text-label-md hover:text-estate-gold duration-300" href="#">About</a>
+<a class="text-midnight-navy dark:text-paper-white hover:text-estate-gold transition-colors font-label-md text-label-md hover:text-estate-gold duration-300" href="#">Contact</a>
+</nav>
+<button class="hidden md:flex bg-midnight-navy text-paper-white font-label-md text-label-md px-6 py-3 rounded hover:bg-estate-gold transition-colors duration-300 items-center gap-2">
+                Schedule Showing
+            </button>
+<!-- Mobile Menu Toggle -->
+<button aria-label="Open Menu" class="md:hidden text-midnight-navy p-2">
+<span class="material-symbols-outlined text-[24px]" data-icon="menu">menu</span>
+</button>
+</div>
+</header>
+<!-- Hero Section -->
+<section class="relative h-[85vh] w-full flex items-center justify-center">
+<!-- Background Image -->
+<div class="absolute inset-0 z-0 bg-cover bg-center" data-alt="A sweeping, dramatic wide-angle photograph of a modern luxury estate at twilight. The home features expansive glass walls glowing warmly from within against the cool blue evening sky, reflecting in a sleek infinity pool. The architectural style is minimalist yet opulent, utilizing clean lines, natural stone, and dark steel accents. The mood is exclusive, serene, and highly aspirational, perfectly aligning with a high-end luxury real estate brand aesthetic characterized by deep navy and gold tones in the surrounding UI." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD5AsQEloaIDmSYDrwc7qZtmU1v7bHL_9tkHXiHEO36nLPqpr78rakJM_d-M8yYchjGayWPd8OXVnWzal1zdQqCWJIqHmJIM_IfT0eCGt7Ok2nKTucru0-WWbWRf5m7iIqwkPQa-Sf29mZNGaA2acT2r_jn9yo2q9WTGxI-Aud5zPYndBjjTDnF9fArk0OrzMlrYl1X4hyOeitvsXmAszbCtNumBYKDarVpRCUNu7m8fOB4btZyBDk')"></div>
+<div class="absolute inset-0 z-0 hero-gradient"></div>
+<div class="relative z-10 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center flex flex-col items-center">
+<h1 class="font-display-lg text-display-lg text-paper-white mb-6 max-w-4xl drop-shadow-lg">Elevating Your Standard of Living</h1>
+<p class="font-body-lg text-body-lg text-surface-container-low mb-10 max-w-2xl drop-shadow-md">Discover unparalleled luxury properties and bespoke real estate services tailored for the discerning buyer.</p>
+<div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+<button class="bg-estate-gold text-midnight-navy font-label-md text-label-md px-8 py-4 rounded hover:bg-paper-white transition-colors duration-300 flex items-center justify-center gap-2">
+                    Schedule a Showing
+                </button>
+<button class="bg-transparent border-2 border-paper-white text-paper-white font-label-md text-label-md px-8 py-4 rounded hover:bg-paper-white/10 transition-colors duration-300 flex items-center justify-center gap-2">
+                    Get a Free Valuation
+                </button>
+</div>
+</div>
+<!-- Floating Search/Filter Bar -->
+<div class="absolute -bottom-8 left-1/2 -translate-x-1/2 w-full max-w-5xl px-margin-mobile md:px-0 z-20">
+<div class="bg-paper-white rounded-lg silk-shadow p-6 border border-charcoal-slate/15 flex flex-col md:flex-row gap-4 items-end">
+<div class="flex-1 w-full">
+<label class="block font-label-md text-label-md text-charcoal-slate mb-2">Location</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" data-icon="location_on">location_on</span>
+<input class="w-full pl-10 pr-4 py-3 border border-charcoal-slate/15 rounded focus:outline-none focus:border-estate-gold focus:ring-1 focus:ring-estate-gold font-body-md text-body-md text-midnight-navy bg-surface-container-lowest" placeholder="City, Neighborhood, or Zip" type="text"/>
+</div>
+</div>
+<div class="w-full md:w-48">
+<label class="block font-label-md text-label-md text-charcoal-slate mb-2">Property Type</label>
+<select class="w-full px-4 py-3 border border-charcoal-slate/15 rounded focus:outline-none focus:border-estate-gold focus:ring-1 focus:ring-estate-gold font-body-md text-body-md text-midnight-navy bg-surface-container-lowest appearance-none">
+<option>Any</option>
+<option>Single Family</option>
+<option>Condo</option>
+<option>Estate</option>
+</select>
+</div>
+<div class="w-full md:w-48">
+<label class="block font-label-md text-label-md text-charcoal-slate mb-2">Max Price</label>
+<select class="w-full px-4 py-3 border border-charcoal-slate/15 rounded focus:outline-none focus:border-estate-gold focus:ring-1 focus:ring-estate-gold font-body-md text-body-md text-midnight-navy bg-surface-container-lowest appearance-none">
+<option>No Max</option>
+<option>$1,000,000</option>
+<option>$5,000,000</option>
+<option>$10,000,000+</option>
+</select>
+</div>
+<button class="w-full md:w-auto bg-midnight-navy text-paper-white px-8 py-3 rounded font-label-md text-label-md hover:bg-estate-gold transition-colors duration-300 h-[50px] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="search">search</span> Search
+                </button>
+</div>
+</div>
+</section>
+<!-- Featured Properties Bento Grid -->
+<section class="py-section-gap px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto mt-16">
+<div class="flex justify-between items-end mb-12">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-midnight-navy mb-2">Featured Residences</h2>
+<p class="font-body-md text-body-md text-charcoal-slate">Curated selections from our exclusive portfolio.</p>
+</div>
+<a class="hidden md:flex font-label-md text-label-md text-estate-gold hover:text-midnight-navy transition-colors items-center gap-1" href="#">
+                View All Properties <span class="material-symbols-outlined text-[16px]" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[300px]">
+<!-- Featured Property 1 - Large -->
+<div class="md:col-span-8 md:row-span-2 group relative overflow-hidden rounded-lg border border-charcoal-slate/15 cursor-pointer">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="A stunning interior shot of a luxury penthouse living room overlooking a glittering city skyline at night. The room features floor-to-ceiling windows, high-end minimalist furniture with plush textures in neutral tones, and subtle ambient lighting. The atmosphere is sophisticated, modern, and deeply serene, fitting the prestige aesthetic of a top-tier real estate platform using navy and white color cues." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCiuhGulcEHN87iCenRcqxXmc4ANMKFlSrz7Kzmy04OjzG2c-Kwk6bhXxv0CFioofK-aSlXw_MB8VvnpEO1Ra6pWHxot5Rx-TpAtchCd3M5r1FajWfEDtFpC59G5LB2flrsYMp2K5ZIhGnvPqXSWzFPED6b1AWkx92wiF4otKfwc1I_B2q6f0MyfLX8K6JkDxlZUu7Rrge8Q7Xo2Oqt6BE0gLVSNvA8jCL9XTFiVusSU0PY_mTJpcM')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-midnight-navy/90 via-midnight-navy/20 to-transparent"></div>
+<div class="absolute top-4 left-4 bg-paper-white text-midnight-navy font-label-md text-label-md px-3 py-1 rounded">
+                    Featured
+                </div>
+<div class="absolute bottom-0 left-0 w-full p-8 text-paper-white">
+<h3 class="font-headline-md text-headline-md mb-1">$8,500,000</h3>
+<p class="font-body-lg text-body-lg mb-4 opacity-90">1420 Skyline Boulevard, Penthouse C</p>
+<div class="flex gap-6 font-label-md text-label-md">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]" data-icon="bed">bed</span> 4 Beds</span>
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]" data-icon="bathtub">bathtub</span> 5.5 Baths</span>
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]" data-icon="square_foot">square_foot</span> 6,200 SqFt</span>
+</div>
+</div>
+</div>
+<!-- Property 2 -->
+<div class="md:col-span-4 md:row-span-1 group relative overflow-hidden rounded-lg border border-charcoal-slate/15 cursor-pointer">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="An exterior view of a sleek, contemporary beachfront villa at golden hour. The architecture highlights crisp white stucco walls contrasted with dark wood paneling and expansive glass doors opening onto a manicured terrace. The lighting is warm and inviting, casting long elegant shadows, emphasizing a relaxed yet highly exclusive luxury lifestyle consistent with a premium real estate brand." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD2c-RD1s58dTXIYjTUdMyR_foUPgogB3L2gpVYexWr-3AQqtekh0zFeqsBo15eP9VLBAN8yG1ks2ThGRMGI0GjBoLodVXZgB9K0gd7Bv57wKXfF-KWGRJEc_i2vpSv7FPlucp4Cyt4g77sS_iMeKaWFIzwdYwSnZUVAOgk1QPgSsC5gNO8QlEk66bnRDe2V4ZiFqpOOGndpHxcnZqOh22W5DX1UYFmSQvEzlxqqj0DnF7hI6CzdU4')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-midnight-navy/90 via-transparent to-transparent"></div>
+<div class="absolute bottom-0 left-0 w-full p-5 text-paper-white">
+<h3 class="font-headline-md text-[20px] leading-tight mb-1">$4,250,000</h3>
+<p class="font-body-md text-body-md mb-2 opacity-90 truncate">88 Coastal Highway</p>
+<div class="flex gap-4 font-label-md text-[12px]">
+<span>3 Beds</span>
+<span>3 Baths</span>
+</div>
+</div>
+</div>
+<!-- Property 3 -->
+<div class="md:col-span-4 md:row-span-1 group relative overflow-hidden rounded-lg border border-charcoal-slate/15 cursor-pointer bg-surface-container-low flex flex-col justify-center items-center text-center p-6 border-estate-gold/30">
+<div class="w-12 h-12 rounded-full bg-estate-gold/10 flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-estate-gold text-[24px]" data-icon="notifications_active">notifications_active</span>
+</div>
+<h3 class="font-headline-md text-[20px] text-midnight-navy mb-2">Off-Market Exclusives</h3>
+<p class="font-body-md text-body-md text-charcoal-slate mb-4">Access properties before they list.</p>
+<button class="text-estate-gold font-label-md text-label-md border-b border-estate-gold pb-1 hover:text-midnight-navy hover:border-midnight-navy transition-colors">Join Private List</button>
+</div>
+</div>
+<div class="mt-8 text-center md:hidden">
+<button class="w-full bg-transparent border border-midnight-navy text-midnight-navy font-label-md text-label-md px-6 py-3 rounded hover:bg-surface-container-low transition-colors duration-300">
+                View All Properties
+            </button>
+</div>
+</section>
+<!-- Agent Intro Section (Asymmetric Layout) -->
+<section class="bg-surface-container-low py-section-gap">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
+<div class="md:col-span-5 relative">
+<div class="aspect-[4/5] rounded-lg overflow-hidden border border-charcoal-slate/15 relative z-10">
+<img class="w-full h-full object-cover" data-alt="A highly professional, well-lit studio portrait of a successful real estate agent. The agent is dressed in sharp, modern business attire (a dark navy suit) exuding confidence, warmth, and authority. The background is a subtle, clean white-to-light-grey gradient, ensuring the subject stands out. The lighting is soft and flattering, suitable for a premium corporate brand identity focused on high-net-worth clients." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCF7J44zj7srfpH9BKJtOfeYi7fJKyR1hMN_703vMH9w5bmCM0-RAENUIUYl8LzMRS5A1FldyqYmnGuqP2DMZvIsigLUcjkcUbY5J4cFT97ITybJ0qdaw1NZtEPp1G1CfDdQ6oygbsCLX-33S83WZV6yKYWS9e_pI1xHDDNQ0NrSeUcP3Z8CjjzdobXBNRY71FE_nW3uzvfU8SwOJojNxpj7UAleKC8afoLSMdhwxWMYqPQEB71gpE"/>
+</div>
+<!-- Decorative element -->
+<div class="absolute -bottom-6 -right-6 w-2/3 h-2/3 bg-estate-gold/10 rounded-lg z-0"></div>
+</div>
+<div class="md:col-span-7">
+<span class="font-label-md text-label-md text-estate-gold uppercase tracking-wider block mb-4">About Gurmeet</span>
+<h2 class="font-display-lg text-display-lg text-midnight-navy mb-6">Expertise Driven by Experience.</h2>
+<p class="font-body-lg text-body-lg text-charcoal-slate mb-6">
+                    With over a decade navigating the complexities of the luxury real estate market, I provide more than just transactions—I provide strategic counsel. My commitment is to deliver an exceptional, discreet, and highly personalized experience for every client, ensuring your real estate goals are met with precision.
+                </p>
+<p class="font-body-md text-body-md text-charcoal-slate mb-8">
+                    Whether you are acquiring a legacy estate or divesting a portfolio asset, expect unwavering dedication, sophisticated marketing, and rigorous negotiation.
+                </p>
+<div class="flex gap-8 mb-8 border-t border-charcoal-slate/15 pt-8">
+<div>
+<div class="font-headline-lg text-headline-lg text-midnight-navy">$250M+</div>
+<div class="font-label-md text-label-md text-charcoal-slate">Career Volume</div>
+</div>
+<div>
+<div class="font-headline-lg text-headline-lg text-midnight-navy">Top 1%</div>
+<div class="font-label-md text-label-md text-charcoal-slate">Nationwide</div>
+</div>
+</div>
+<button class="bg-transparent border-2 border-midnight-navy text-midnight-navy font-label-md text-label-md px-8 py-3 rounded hover:bg-midnight-navy hover:text-paper-white transition-colors duration-300">
+                    Read Full Bio
+                </button>
+</div>
+</div>
+</section>
+<!-- Footer (Generated from JSON) -->
+<footer class="bg-midnight-navy dark:bg-primary-container text-paper-white font-body-md text-body-md full-width flat no shadows">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-desktop py-section-gap max-w-container-max mx-auto md:px-margin-desktop px-margin-mobile">
+<!-- Brand & Copyright -->
+<div class="md:col-span-1 flex flex-col gap-4">
+<a class="font-headline-md text-headline-md text-paper-white opacity-90 hover:opacity-100 transition-opacity" href="#">HomesByGurmeet</a>
+<p class="font-caption text-caption text-paper-white/60">
+                    © 2024 HomesByGurmeet. All rights reserved.
+                </p>
+</div>
+<!-- Links Column 1 -->
+<div class="md:col-span-1">
+<h4 class="font-label-md text-label-md text-estate-gold mb-4 uppercase">Social</h4>
+<ul class="flex flex-col gap-2">
+<li><a class="text-paper-white/80 hover:text-estate-gold transition-colors duration-300 opacity-90 hover:opacity-100" href="#">Facebook</a></li>
+<li><a class="text-paper-white/80 hover:text-estate-gold transition-colors duration-300 opacity-90 hover:opacity-100" href="#">Instagram</a></li>
+<li><a class="text-paper-white/80 hover:text-estate-gold transition-colors duration-300 opacity-90 hover:opacity-100" href="#">LinkedIn</a></li>
+</ul>
+</div>
+<!-- Links Column 2 -->
+<div class="md:col-span-1">
+<h4 class="font-label-md text-label-md text-estate-gold mb-4 uppercase">Profiles</h4>
+<ul class="flex flex-col gap-2">
+<li><a class="text-paper-white/80 hover:text-estate-gold transition-colors duration-300 opacity-90 hover:opacity-100" href="#">Google Reviews</a></li>
+<li><a class="text-paper-white/80 hover:text-estate-gold transition-colors duration-300 opacity-90 hover:opacity-100" href="#">Zillow Profile</a></li>
+<li><a class="text-paper-white/80 hover:text-estate-gold transition-colors duration-300 opacity-90 hover:opacity-100" href="#">Redfin Partner</a></li>
+</ul>
+</div>
+<!-- Contact (Added for structural balance) -->
+<div class="md:col-span-1">
+<h4 class="font-label-md text-label-md text-estate-gold mb-4 uppercase">Contact</h4>
+<p class="text-paper-white/80 font-body-md text-body-md mb-2">1-800-LUXE-HOM</p>
+<p class="text-paper-white/80 font-body-md text-body-md">inquiries@homesbygurmeet.com</p>
+</div>
+</div>
+</footer>
+</body></html>

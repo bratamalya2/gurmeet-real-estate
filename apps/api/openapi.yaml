@@ -1,0 +1,592 @@
+openapi: 3.0.3
+info:
+  title: HomesByGurmeet API
+  version: 1.0.0
+  description: |
+    REST API for public property browsing and lead capture, plus the authenticated
+    HomesByGurmeet staff dashboard. The API is served by Express on port 4000.
+    
+    Admin sessions use the HTTP-only `hbg_session` cookie issued by the login endpoint.
+servers:
+  - url: http://localhost:4000/api
+    description: Local Docker development API
+tags:
+  - name: Public
+  - name: Authentication
+  - name: Properties
+  - name: Leads
+  - name: Staff administration
+  - name: Data sync
+paths:
+  /health:
+    get:
+      tags: [Public]
+      summary: Check API availability
+      security: []
+      responses:
+        '200':
+          description: API is available
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { ok: { type: boolean, example: true } }
+  /properties:
+    get:
+      tags: [Properties]
+      summary: List public properties
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/StatusQuery'
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+      responses:
+        '200':
+          description: Paginated public properties
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProperties'
+  /properties/featured:
+    get:
+      tags: [Properties]
+      summary: List up to six featured properties
+      security: []
+      responses:
+        '200':
+          description: Featured public properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PublicProperty' }
+  /properties/{slug}:
+    get:
+      tags: [Properties]
+      summary: Get a public property by URL slug
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PropertySlug'
+      responses:
+        '200':
+          description: Property details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicProperty' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /leads:
+    post:
+      tags: [Leads]
+      summary: Submit a public lead form
+      security: []
+      description: |
+        Creates an inquiry, showing request, valuation request, or general contact lead.
+        Requests are rate limited to 10 submissions per 15 minutes per client. If Turnstile is configured,
+        `turnstileToken` is required and verified server-side.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateLead' }
+      responses:
+        '201':
+          description: Lead stored
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ok' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429':
+          description: Submission rate limit exceeded
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Sign in a staff account
+      security: []
+      description: Sets an HTTP-only `hbg_session` cookie valid for eight hours.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        '200':
+          description: Authenticated staff account
+          headers:
+            Set-Cookie:
+              schema: { type: string }
+              description: HTTP-only `hbg_session` session cookie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: '#/components/schemas/CurrentUser' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: End the current staff session
+      security: [{ CookieAuth: [] }]
+      responses:
+        '200':
+          description: Session cookie cleared
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ok' }
+  /auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get the authenticated staff account
+      security: [{ CookieAuth: [] }]
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CurrentUser' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /admin/properties:
+    get:
+      tags: [Staff administration]
+      summary: List all properties for staff management
+      security: [{ CookieAuth: [] }]
+      responses:
+        '200':
+          description: All property records, including source and override metadata
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Property' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Staff administration]
+      summary: Create a manual property
+      security: [{ CookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateProperty' }
+      responses:
+        '201':
+          description: Property created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Property' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /admin/properties/{id}:
+    patch:
+      tags: [Staff administration]
+      summary: Update a property
+      description: Send only the fields to update. Set `manualOverrides` to preserve manually edited price, description, or images during a later data sync.
+      security: [{ CookieAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/ObjectId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateProperty' }
+      responses:
+        '200':
+          description: Updated property
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Property' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [Staff administration]
+      summary: Delete a property
+      security: [{ CookieAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/ObjectId' }]
+      responses:
+        '204': { description: Property deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /admin/uploads:
+    post:
+      tags: [Staff administration]
+      summary: Upload listing images
+      description: Upload up to 12 image files; each file may be at most 8 MB. Use the returned paths in a property `images` array.
+      security: [{ CookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [images]
+              properties:
+                images:
+                  type: array
+                  maxItems: 12
+                  items: { type: string, format: binary }
+      responses:
+        '200':
+          description: Managed image paths
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paths:
+                    type: array
+                    items: { type: string, example: /uploads/497ec3e1af85d3b7 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /admin/leads:
+    get:
+      tags: [Staff administration]
+      summary: List submitted leads
+      security: [{ CookieAuth: [] }]
+      responses:
+        '200':
+          description: Leads newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Lead' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /admin/logs:
+    get:
+      tags: [Staff administration]
+      summary: List recent sync logs
+      security: [{ CookieAuth: [] }]
+      responses:
+        '200':
+          description: Up to 30 logs, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SystemLog' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /admin/users:
+    get:
+      tags: [Staff administration]
+      summary: List staff accounts
+      security: [{ CookieAuth: [] }]
+      responses:
+        '200':
+          description: Staff accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/StaffUser' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Staff administration]
+      summary: Create an editor or administrator
+      security: [{ CookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password, minLength: 8 }
+                role: { $ref: '#/components/schemas/UserRole' }
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StaffUser' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/users/{id}:
+    patch:
+      tags: [Staff administration]
+      summary: Change a staff member's role or active state
+      security: [{ CookieAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/ObjectId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role: { $ref: '#/components/schemas/UserRole' }
+                active: { type: boolean }
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StaffUser' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/sync:
+    post:
+      tags: [Data sync]
+      summary: Manually run configured listing-source syncs
+      description: |
+        Runs the configured source adapters and creates a SystemLog. Each adapter must point to an authorized JSON listing feed.
+        This endpoint does not grant authorization to crawl third-party websites.
+      security: [{ CookieAuth: [] }]
+      responses:
+        '200':
+          description: Sync attempt completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created: { type: integer, example: 2 }
+                  updated: { type: integer, example: 5 }
+                  failed:
+                    type: array
+                    items: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/scrape:
+    post:
+      tags: [Data sync]
+      summary: Scrape an explicitly authorized URL through Decodo
+      description: |
+        The target must use HTTPS and have an exact hostname listed in the backend `AUTHORIZED_SCRAPE_HOSTS` environment variable.
+        The endpoint invokes Decodo Scraper API with backend-only credentials and returns a maximum 50,000-character content preview.
+        It does not parse the response into properties; add a source-specific authorized mapper only after the source schema is established.
+      security: [{ CookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url: { type: string, format: uri, example: https://approved.example.com/feed }
+      responses:
+        '200':
+          description: Authorized target fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string, format: uri }
+                  providerStatus: { type: integer, example: 200 }
+                  contentLength: { type: integer }
+                  contentPreview: { type: string }
+                  contentTruncated: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: hbg_session
+      description: HTTP-only JWT cookie returned by POST /auth/login.
+  parameters:
+    PropertySlug:
+      name: slug
+      in: path
+      required: true
+      schema: { type: string, example: 123-example-street }
+    ObjectId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, pattern: '^[a-fA-F0-9]{24}$' }
+    StatusQuery:
+      name: status
+      in: query
+      schema: { type: string, enum: [Active, Pending, Sold] }
+  responses:
+    Unauthorized:
+      description: Missing, expired, or invalid session cookie
+    Forbidden:
+      description: Authenticated account lacks the required administrator role
+    NotFound:
+      description: Resource was not found
+    ValidationError:
+      description: Invalid submitted data
+      content:
+        application/json:
+          schema:
+            type: object
+            properties: { error: { type: string } }
+  schemas:
+    Ok:
+      type: object
+      properties: { ok: { type: boolean, example: true } }
+    UserRole:
+      type: string
+      enum: [admin, editor]
+      default: editor
+    CurrentUser:
+      type: object
+      properties:
+        _id: { type: string }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/UserRole' }
+        active: { type: boolean }
+    StaffUser:
+      type: object
+      required: [email, role]
+      properties:
+        _id: { type: string }
+        id: { type: string }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/UserRole' }
+        active: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    Address:
+      type: object
+      properties:
+        street: { type: string, example: 123 Example Street }
+        city: { type: string, example: San Jose }
+        state: { type: string, example: CA }
+        zip: { type: string, example: '95112' }
+    Coordinates:
+      type: object
+      properties:
+        lat: { type: number, format: double, example: 37.3382 }
+        lng: { type: number, format: double, example: -121.8863 }
+    PublicProperty:
+      type: object
+      properties:
+        _id: { type: string }
+        title: { type: string, example: Contemporary Hillside Residence }
+        slug: { type: string, example: 123-example-street }
+        address: { $ref: '#/components/schemas/Address' }
+        price: { type: number, example: 2450000 }
+        beds: { type: number, example: 4 }
+        baths: { type: number, example: 3.5 }
+        sqft: { type: number, example: 2800 }
+        description: { type: string }
+        status: { type: string, enum: [Active, Pending, Sold] }
+        featured: { type: boolean }
+        images:
+          type: array
+          items: { type: string, example: /uploads/listing-image.jpg }
+        coordinates: { $ref: '#/components/schemas/Coordinates' }
+        source:
+          type: object
+          properties:
+            name: { type: string, example: manual }
+            url: { type: string, format: uri }
+        createdAt: { type: string, format: date-time }
+    Property:
+      allOf:
+        - $ref: '#/components/schemas/PublicProperty'
+        - type: object
+          properties:
+            source:
+              type: object
+              properties:
+                name: { type: string, example: manual }
+                externalId: { type: string }
+                url: { type: string, format: uri }
+                lastSyncedAt: { type: string, format: date-time }
+            scraped:
+              type: object
+              properties:
+                price: { type: number }
+                status: { type: string }
+                description: { type: string }
+                images: { type: array, items: { type: string } }
+            manualOverrides:
+              type: object
+              properties:
+                price: { type: boolean }
+                description: { type: boolean }
+                images: { type: boolean }
+    CreateProperty:
+      type: object
+      required: [title, address]
+      properties:
+        title: { type: string }
+        slug: { type: string, description: Optional; generated from title/address if omitted. }
+        address: { $ref: '#/components/schemas/Address' }
+        price: { type: number, minimum: 0 }
+        beds: { type: number, minimum: 0 }
+        baths: { type: number, minimum: 0 }
+        sqft: { type: number, minimum: 0 }
+        description: { type: string }
+        status: { type: string, enum: [Active, Pending, Sold], default: Active }
+        featured: { type: boolean, default: false }
+        images: { type: array, items: { type: string } }
+        coordinates: { $ref: '#/components/schemas/Coordinates' }
+        manualOverrides:
+          type: object
+          properties:
+            price: { type: boolean }
+            description: { type: boolean }
+            images: { type: boolean }
+    UpdateProperty:
+      type: object
+      description: Partial property update; provide only fields to change.
+      properties:
+        title: { type: string }
+        slug: { type: string }
+        address: { $ref: '#/components/schemas/Address' }
+        price: { type: number, minimum: 0 }
+        beds: { type: number, minimum: 0 }
+        baths: { type: number, minimum: 0 }
+        sqft: { type: number, minimum: 0 }
+        description: { type: string }
+        status: { type: string, enum: [Active, Pending, Sold] }
+        featured: { type: boolean }
+        images: { type: array, items: { type: string } }
+        coordinates: { $ref: '#/components/schemas/Coordinates' }
+        manualOverrides:
+          type: object
+          properties:
+            price: { type: boolean }
+            description: { type: boolean }
+            images: { type: boolean }
+    PaginatedProperties:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/PublicProperty' } }
+        total: { type: integer }
+        page: { type: integer }
+        pages: { type: integer }
+    CreateLead:
+      type: object
+      required: [type, name, email, phone]
+      properties:
+        type: { type: string, enum: [inquiry, showing, valuation, contact] }
+        name: { type: string, minLength: 2 }
+        email: { type: string, format: email }
+        phone: { type: string, minLength: 6 }
+        message: { type: string, maxLength: 2000 }
+        property: { type: string, description: MongoDB property ID }
+        preferredDate: { type: string, format: date-time }
+        propertyAddress: { type: string }
+        squareFootage: { type: number }
+        condition: { type: string }
+        turnstileToken: { type: string, description: Required only when Turnstile is configured. }
+    Lead:
+      allOf:
+        - $ref: '#/components/schemas/CreateLead'
+        - type: object
+          properties:
+            _id: { type: string }
+            createdAt: { type: string, format: date-time }
+    SystemLog:
+      type: object
+      properties:
+        _id: { type: string }
+        source: { type: string, example: manual }
+        status: { type: string, enum: [running, success, partial, failed] }
+        startedAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time }
+        created: { type: integer }
+        updated: { type: integer }
+        error: { type: string }

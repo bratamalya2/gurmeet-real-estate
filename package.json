@@ -1,0 +1,15 @@
+{
+    "name": "homes-by-gurmeet",
+    "private": true,
+    "workspaces": [
+        "apps/*"
+    ],
+    "scripts": {
+        "dev": "concurrently \"npm:dev --workspace=@hbg/api\" \"npm:dev --workspace=@hbg/web\"",
+        "build": "npm run build --workspace=@hbg/web",
+        "test": "npm run test --workspace=@hbg/api"
+    },
+    "devDependencies": {
+        "concurrently": "^9.1.0"
+    }
+}

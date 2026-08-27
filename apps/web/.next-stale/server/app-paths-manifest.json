@@ -1,0 +1,5 @@
+{
+  "/homes-for-sale/page": "app/homes-for-sale/page.js",
+  "/page": "app/page.js",
+  "/recently-sold/page": "app/recently-sold/page.js"
+}

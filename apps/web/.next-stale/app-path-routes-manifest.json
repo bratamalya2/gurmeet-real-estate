@@ -1,0 +1,15 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/sitemap.xml/route": "/sitemap.xml",
+  "/robots.txt/route": "/robots.txt",
+  "/admin/login/page": "/admin/login",
+  "/admin/page": "/admin",
+  "/page": "/",
+  "/homes-for-sale/page": "/homes-for-sale",
+  "/recently-sold/page": "/recently-sold",
+  "/about/page": "/about",
+  "/home-valuation/page": "/home-valuation",
+  "/services/page": "/services",
+  "/contact/page": "/contact",
+  "/properties/[slug]/page": "/properties/[slug]"
+}

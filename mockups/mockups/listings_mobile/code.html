@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HomesByGurmeet - Listings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&amp;family=Libre+Caslon+Text:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-surface": "#2d3133",
+                      "surface-container-low": "#f2f4f6",
+                      "background": "#f7f9fb",
+                      "outline": "#76777d",
+                      "on-surface-variant": "#45464d",
+                      "inverse-primary": "#bec6e0",
+                      "secondary": "#7a5820",
+                      "on-error-container": "#93000a",
+                      "surface-tint": "#565e74",
+                      "error": "#ba1a1a",
+                      "estate-gold": "#B48C4F",
+                      "on-secondary-fixed-variant": "#5f4109",
+                      "surface-dim": "#d8dadc",
+                      "surface-container-high": "#e6e8ea",
+                      "on-secondary-fixed": "#281800",
+                      "tertiary-container": "#0d1c2f",
+                      "primary-fixed": "#dae2fd",
+                      "outline-variant": "#c6c6cd",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed-variant": "#3f465c",
+                      "on-error": "#ffffff",
+                      "surface-container-highest": "#e0e3e5",
+                      "midnight-navy": "#0F172A",
+                      "secondary-container": "#fed08c",
+                      "primary": "#000000",
+                      "on-primary-fixed": "#131b2e",
+                      "paper-white": "#FFFFFF",
+                      "secondary-fixed": "#ffddb0",
+                      "tertiary-fixed-dim": "#b9c7e0",
+                      "tertiary-fixed": "#d5e3fd",
+                      "on-secondary-container": "#79571f",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "on-primary-container": "#7c839b",
+                      "primary-container": "#131b2e",
+                      "on-tertiary-fixed-variant": "#3a485c",
+                      "tertiary": "#000000",
+                      "on-tertiary-fixed": "#0d1c2f",
+                      "inverse-on-surface": "#eff1f3",
+                      "success-emerald": "#10B981",
+                      "surface-container": "#eceef0",
+                      "surface-variant": "#e0e3e5",
+                      "on-primary": "#ffffff",
+                      "surface-bright": "#f7f9fb",
+                      "charcoal-slate": "#334155",
+                      "on-surface": "#191c1e",
+                      "surface": "#f7f9fb",
+                      "secondary-fixed-dim": "#ecbf7d",
+                      "on-background": "#191c1e",
+                      "primary-fixed-dim": "#bec6e0",
+                      "on-tertiary-container": "#76859b"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "container-max": "1280px",
+                      "gutter": "24px",
+                      "base": "8px",
+                      "margin-mobile": "16px",
+                      "section-gap": "80px",
+                      "margin-desktop": "40px"
+              },
+              "fontFamily": {
+                      "caption": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "caption": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24
+        }
+      </style>
+</head>
+<body class="bg-background text-on-surface antialiased">
+<!-- TopNavBar -->
+<header class="docked full-width top-0 sticky border-b border-charcoal-slate/15 shadow-sm bg-paper-white dark:bg-midnight-navy z-50">
+<div class="flex justify-between items-center px-margin-mobile py-4 max-w-container-max mx-auto">
+<div class="font-headline-md text-headline-md font-bold text-midnight-navy dark:text-paper-white">HomesByGurmeet</div>
+<!-- Mobile Menu Toggle (Visible only on mobile) -->
+<button class="md:hidden text-midnight-navy dark:text-paper-white focus:outline-none">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<!-- Desktop Navigation -->
+<nav class="hidden md:flex space-x-6">
+<a class="font-body-md text-body-md text-midnight-navy dark:text-paper-white hover:text-estate-gold transition-colors hover:text-estate-gold duration-300 transition-all duration-200 ease-in-out" href="#">Home</a>
+<a class="font-body-md text-body-md text-estate-gold border-b-2 border-estate-gold pb-1 transition-all duration-200 ease-in-out" href="#">Listings</a>
+<a class="font-body-md text-body-md text-midnight-navy dark:text-paper-white hover:text-estate-gold transition-colors hover:text-estate-gold duration-300 transition-all duration-200 ease-in-out" href="#">Services</a>
+<a class="font-body-md text-body-md text-midnight-navy dark:text-paper-white hover:text-estate-gold transition-colors hover:text-estate-gold duration-300 transition-all duration-200 ease-in-out" href="#">About</a>
+<a class="font-body-md text-body-md text-midnight-navy dark:text-paper-white hover:text-estate-gold transition-colors hover:text-estate-gold duration-300 transition-all duration-200 ease-in-out" href="#">Contact</a>
+</nav>
+<a class="hidden md:inline-flex bg-midnight-navy text-paper-white font-label-md text-label-md px-4 py-2 rounded border border-midnight-navy hover:bg-estate-gold hover:border-estate-gold transition-colors duration-300 items-center justify-center" href="#">Schedule Showing</a>
+</div>
+</header>
+<!-- Main Content -->
+<main class="max-w-container-max mx-auto px-margin-mobile py-8 md:py-12">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-midnight-navy mb-6">Exclusive Listings</h1>
+<!-- Filters Section -->
+<section class="mb-8 p-4 bg-paper-white rounded-lg shadow-sm border border-charcoal-slate/15 flex flex-col gap-4">
+<div class="flex items-center gap-2 border-b border-charcoal-slate/15 pb-2">
+<span class="material-symbols-outlined text-outline">tune</span>
+<span class="font-label-md text-label-md text-midnight-navy uppercase">Filters</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<select class="w-full bg-surface-container-low border border-charcoal-slate/15 rounded text-body-md p-2 text-midnight-navy focus:ring-1 focus:ring-estate-gold focus:border-estate-gold outline-none">
+<option>Property Type</option>
+<option>Single Family</option>
+<option>Condo / Townhome</option>
+<option>Luxury Estate</option>
+</select>
+<select class="w-full bg-surface-container-low border border-charcoal-slate/15 rounded text-body-md p-2 text-midnight-navy focus:ring-1 focus:ring-estate-gold focus:border-estate-gold outline-none">
+<option>Price Range</option>
+<option>$500k - $1M</option>
+<option>$1M - $3M</option>
+<option>$3M+</option>
+</select>
+</div>
+<button class="w-full bg-midnight-navy text-paper-white font-label-md text-label-md py-3 rounded mt-2 hover:bg-estate-gold transition-colors duration-300">Apply Filters</button>
+</section>
+<!-- Listings List -->
+<section class="flex flex-col gap-6">
+<!-- Card 1 -->
+<article class="bg-paper-white rounded-lg overflow-hidden border border-charcoal-slate/15 shadow-[0px_4px_12px_rgba(15,23,42,0.05)] flex flex-col">
+<div class="relative w-full aspect-square">
+<img class="w-full h-full object-cover" data-alt="Exterior shot of a modern luxury single family home at dusk. The home features clean lines, large glass windows, and warm interior lighting illuminating a sleek minimalist interior. The landscaping is manicured, and the sky is a deep twilight blue. Professional real estate photography style, high-end corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRmm8RG0z9xD2A6vgCgdFZtHX5AqihHgU5k5eivr1eKDJ_dPIfmC3HHyywZj2brAhkTDKP-IKdb5pJoNQFBsKzELytaZyqppMjIihAMcL8p7EprPHO1xg_YX9_cws9WRal-iCLlkQWsdkH9QZzaJySk6XaBkaOuzJmN6Z4qOlC1BLF8m0iF-RKn1kEPBJWAzIl78leZboUpyIWzNbHwUSRmWBkgFiOUfYGCy47z-fyRutbJO4bsko"/>
+<div class="absolute top-4 left-4 bg-midnight-navy text-paper-white font-label-md text-label-md px-3 py-1 rounded shadow-sm">
+                        Active
+                    </div>
+</div>
+<div class="p-4 flex flex-col gap-2">
+<h2 class="font-headline-md text-headline-md text-midnight-navy">$2,450,000</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">1234 Azure Avenue, Bellevue, WA 98004</p>
+<div class="flex items-center gap-4 mt-2 font-label-md text-label-md text-charcoal-slate uppercase">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">bed</span> 4 Beds</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">bathtub</span> 3.5 Baths</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">straighten</span> 3,200 SqFt</span>
+</div>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="bg-paper-white rounded-lg overflow-hidden border border-charcoal-slate/15 shadow-[0px_4px_12px_rgba(15,23,42,0.05)] flex flex-col">
+<div class="relative w-full aspect-square">
+<img class="w-full h-full object-cover" data-alt="High-angle view of a sprawling luxury estate featuring a grand driveway, mature trees, and a classic architectural style with modern updates. The image is taken during a bright, clear afternoon, casting crisp shadows that highlight the property's scale and high-end finish. The aesthetic is prestigious and exclusive, aligning with high-net-worth real estate standards." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2wG1gawiKnw6s3ro7Om7WzRTd2Cdyh47gAY_PNII_1MGY4VB-1NvbpaE3boBVj0EoSypBJjp0KEnv6lFEj6rAxycyCoNAo0sWrB2y4qalpxxJTnq2ERWsjp3-LPXpJFA17G0CAi-udui6bSwIr3GDGRE_9fbfX60fVa-Iwj_HwQ30s-ml1obiLrG8BnzDeR_NO1hGG7xjJimoS9KPOYZ8K0c8yakzRVzMSgy3en9r1UBuGhLdx2Y"/>
+<div class="absolute top-4 left-4 bg-estate-gold text-midnight-navy font-label-md text-label-md px-3 py-1 rounded shadow-sm">
+                        Pending
+                    </div>
+</div>
+<div class="p-4 flex flex-col gap-2">
+<h2 class="font-headline-md text-headline-md text-midnight-navy">$4,100,000</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">8800 Summit Road, Medina, WA 98039</p>
+<div class="flex items-center gap-4 mt-2 font-label-md text-label-md text-charcoal-slate uppercase">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">bed</span> 5 Beds</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">bathtub</span> 4.5 Baths</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">straighten</span> 5,100 SqFt</span>
+</div>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="bg-paper-white rounded-lg overflow-hidden border border-charcoal-slate/15 shadow-[0px_4px_12px_rgba(15,23,42,0.05)] flex flex-col opacity-80 grayscale-[20%]">
+<div class="relative w-full aspect-square">
+<img class="w-full h-full object-cover" data-alt="Interior view of an opulent high-rise penthouse living room overlooking a glittering city skyline. The room features floor-to-ceiling windows, minimalist designer furniture in neutral tones, and rich hardwood floors. The lighting is sophisticated, emphasizing the exclusive, modern corporate aesthetic suitable for high-end buyers." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzQkStV3kx8lBYKbp74B2zkEmptc7xqE6C-WG0ClgyBiVtasdo5kEiD0rXY9d49BhLzz0lCbcDA4K3ki-UQP6IiyW5xCiSi_qepGgva7FXcuXRl3hfX7-r7L34WzVYwgoFB0kJZYKWl1-hSHTrGCm0AsJCREV8_IsoFHPVC3X0iZzMXoIVofJWXv1i3MqLYTDztpdPPA2MCEv8Biip4WAhNLo8oe0OYWxK9wOAmzQttbMdBkg5QAk"/>
+<div class="absolute top-4 left-4 bg-charcoal-slate text-paper-white font-label-md text-label-md px-3 py-1 rounded shadow-sm">
+                        Sold
+                    </div>
+</div>
+<div class="p-4 flex flex-col gap-2">
+<h2 class="font-headline-md text-headline-md text-midnight-navy">$1,850,000</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">500 Mercer St #PH2, Seattle, WA 98109</p>
+<div class="flex items-center gap-4 mt-2 font-label-md text-label-md text-charcoal-slate uppercase">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">bed</span> 2 Beds</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">bathtub</span> 2 Baths</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">straighten</span> 1,800 SqFt</span>
+</div>
+</div>
+</article>
+</section>
+<div class="mt-8 flex justify-center">
+<button class="bg-transparent border border-midnight-navy text-midnight-navy font-label-md text-label-md px-6 py-2 rounded hover:bg-midnight-navy hover:text-paper-white transition-colors duration-300">Load More</button>
+</div>
+</main>
+<!-- Footer -->
+<footer class="full-width bg-midnight-navy dark:bg-primary-container text-paper-white opacity-90 hover:opacity-100 transition-opacity">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-mobile py-section-gap max-w-container-max mx-auto">
+<div>
+<div class="font-headline-md text-headline-md text-paper-white mb-4">HomesByGurmeet</div>
+<p class="font-body-md text-body-md text-paper-white/80">© 2024 HomesByGurmeet. All rights reserved.</p>
+</div>
+<div class="flex flex-col gap-2">
+<a class="font-body-md text-body-md text-paper-white/80 hover:text-paper-white hover:text-estate-gold transition-colors" href="#">Facebook</a>
+<a class="font-body-md text-body-md text-paper-white/80 hover:text-paper-white hover:text-estate-gold transition-colors" href="#">Instagram</a>
+<a class="font-body-md text-body-md text-paper-white/80 hover:text-paper-white hover:text-estate-gold transition-colors" href="#">LinkedIn</a>
+</div>
+<div class="flex flex-col gap-2">
+<a class="font-body-md text-body-md text-paper-white/80 hover:text-paper-white hover:text-estate-gold transition-colors" href="#">Google Reviews</a>
+<a class="font-body-md text-body-md text-paper-white/80 hover:text-paper-white hover:text-estate-gold transition-colors" href="#">Zillow Profile</a>
+<a class="font-body-md text-body-md text-paper-white/80 hover:text-paper-white hover:text-estate-gold transition-colors" href="#">Redfin Partner</a>
+</div>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Contact Us - HomesByGurmeet</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&amp;family=Libre+Caslon+Text:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-surface": "#2d3133",
+                      "surface-container-low": "#f2f4f6",
+                      "background": "#f7f9fb",
+                      "outline": "#76777d",
+                      "on-surface-variant": "#45464d",
+                      "inverse-primary": "#bec6e0",
+                      "secondary": "#7a5820",
+                      "on-error-container": "#93000a",
+                      "surface-tint": "#565e74",
+                      "error": "#ba1a1a",
+                      "estate-gold": "#B48C4F",
+                      "on-secondary-fixed-variant": "#5f4109",
+                      "surface-dim": "#d8dadc",
+                      "surface-container-high": "#e6e8ea",
+                      "on-secondary-fixed": "#281800",
+                      "tertiary-container": "#0d1c2f",
+                      "primary-fixed": "#dae2fd",
+                      "outline-variant": "#c6c6cd",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed-variant": "#3f465c",
+                      "on-error": "#ffffff",
+                      "surface-container-highest": "#e0e3e5",
+                      "midnight-navy": "#0F172A",
+                      "secondary-container": "#fed08c",
+                      "primary": "#000000",
+                      "on-primary-fixed": "#131b2e",
+                      "paper-white": "#FFFFFF",
+                      "secondary-fixed": "#ffddb0",
+                      "tertiary-fixed-dim": "#b9c7e0",
+                      "tertiary-fixed": "#d5e3fd",
+                      "on-secondary-container": "#79571f",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "on-primary-container": "#7c839b",
+                      "primary-container": "#131b2e",
+                      "on-tertiary-fixed-variant": "#3a485c",
+                      "tertiary": "#000000",
+                      "on-tertiary-fixed": "#0d1c2f",
+                      "inverse-on-surface": "#eff1f3",
+                      "success-emerald": "#10B981",
+                      "surface-container": "#eceef0",
+                      "surface-variant": "#e0e3e5",
+                      "on-primary": "#ffffff",
+                      "surface-bright": "#f7f9fb",
+                      "charcoal-slate": "#334155",
+                      "on-surface": "#191c1e",
+                      "surface": "#f7f9fb",
+                      "secondary-fixed-dim": "#ecbf7d",
+                      "on-background": "#191c1e",
+                      "primary-fixed-dim": "#bec6e0",
+                      "on-tertiary-container": "#76859b"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "container-max": "1280px",
+                      "gutter": "24px",
+                      "base": "8px",
+                      "margin-mobile": "16px",
+                      "section-gap": "80px",
+                      "margin-desktop": "40px"
+              },
+              "fontFamily": {
+                      "caption": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "caption": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+</head>
+<body class="bg-paper-white text-midnight-navy font-body-md antialiased min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-paper-white dark:bg-midnight-navy font-body-md text-body-md full-width top-0 sticky shadow-sm z-50 transition-all duration-200 ease-in-out">
+<div class="flex justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto">
+<div class="font-headline-md text-headline-md font-bold text-midnight-navy dark:text-paper-white">HomesByGurmeet</div>
+<nav class="hidden md:flex space-x-gutter items-center">
+<a class="text-midnight-navy dark:text-paper-white hover:text-estate-gold transition-colors hover:text-estate-gold duration-300" href="#">Home</a>
+<a class="text-midnight-navy dark:text-paper-white hover:text-estate-gold transition-colors hover:text-estate-gold duration-300" href="#">Listings</a>
+<a class="text-midnight-navy dark:text-paper-white hover:text-estate-gold transition-colors hover:text-estate-gold duration-300" href="#">Services</a>
+<a class="text-midnight-navy dark:text-paper-white hover:text-estate-gold transition-colors hover:text-estate-gold duration-300" href="#">About</a>
+<a class="text-estate-gold border-b-2 border-estate-gold pb-1" href="#">Contact</a>
+</nav>
+<button class="hidden md:block bg-midnight-navy text-paper-white px-6 py-3 rounded hover:bg-estate-gold transition-colors font-label-md text-label-md">Schedule Showing</button>
+<button class="md:hidden text-midnight-navy">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">menu</span>
+</button>
+</div>
+</header>
+<main class="flex-grow">
+<!-- Hero Section -->
+<section class="relative pt-section-gap pb-margin-desktop px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="text-center max-w-3xl mx-auto">
+<h1 class="font-display-lg text-display-lg text-midnight-navy mb-6">Get in Touch</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">We're here to assist you with your luxury real estate needs. Reach out to schedule a private showing, request a property valuation, or simply start a conversation about the market.</p>
+</div>
+</section>
+<!-- Contact Content Split -->
+<section class="px-margin-mobile md:px-margin-desktop py-margin-desktop max-w-container-max mx-auto grid grid-cols-1 md:grid-cols-2 gap-gutter mb-section-gap">
+<!-- Contact Form -->
+<div class="bg-paper-white border border-charcoal-slate/15 p-8 rounded-lg shadow-sm">
+<h2 class="font-headline-md text-headline-md text-midnight-navy mb-6">Send a Message</h2>
+<form class="space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2" for="firstName">First Name</label>
+<input class="w-full bg-surface-container-lowest border-charcoal-slate/15 focus:border-estate-gold focus:ring-estate-gold rounded-DEFAULT p-3 font-body-md text-body-md text-midnight-navy" id="firstName" name="firstName" placeholder="Jane" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2" for="lastName">Last Name</label>
+<input class="w-full bg-surface-container-lowest border-charcoal-slate/15 focus:border-estate-gold focus:ring-estate-gold rounded-DEFAULT p-3 font-body-md text-body-md text-midnight-navy" id="lastName" name="lastName" placeholder="Doe" type="text"/>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2" for="email">Email Address</label>
+<input class="w-full bg-surface-container-lowest border-charcoal-slate/15 focus:border-estate-gold focus:ring-estate-gold rounded-DEFAULT p-3 font-body-md text-body-md text-midnight-navy" id="email" name="email" placeholder="jane@example.com" type="email"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2" for="phone">Phone Number</label>
+<input class="w-full bg-surface-container-lowest border-charcoal-slate/15 focus:border-estate-gold focus:ring-estate-gold rounded-DEFAULT p-3 font-body-md text-body-md text-midnight-navy" id="phone" name="phone" placeholder="(555) 123-4567" type="tel"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2" for="interest">I am interested in...</label>
+<select class="w-full bg-surface-container-lowest border-charcoal-slate/15 focus:border-estate-gold focus:ring-estate-gold rounded-DEFAULT p-3 font-body-md text-body-md text-midnight-navy" id="interest" name="interest">
+<option>Buying a Property</option>
+<option>Selling a Property</option>
+<option>Market Evaluation</option>
+<option>General Inquiry</option>
+</select>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2" for="message">Message</label>
+<textarea class="w-full bg-surface-container-lowest border-charcoal-slate/15 focus:border-estate-gold focus:ring-estate-gold rounded-DEFAULT p-3 font-body-md text-body-md text-midnight-navy" id="message" name="message" placeholder="How can we help you?" rows="4"></textarea>
+</div>
+<button class="w-full bg-midnight-navy text-paper-white py-4 rounded-DEFAULT font-label-md text-label-md hover:bg-estate-gold transition-colors duration-300" type="submit">Submit Inquiry</button>
+</form>
+</div>
+<!-- Contact Info & Map -->
+<div class="space-y-gutter">
+<!-- Info Cards -->
+<div class="bg-surface-container-low p-8 rounded-lg flex items-start space-x-4 border border-charcoal-slate/15">
+<div class="bg-paper-white p-3 rounded-full flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-estate-gold" style="font-variation-settings: 'FILL' 1;">location_on</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-midnight-navy mb-2">Office</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">90210 Wilshire Blvd, Suite 100<br/>Beverly Hills, CA 90210</p>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter">
+<div class="bg-surface-container-low p-6 rounded-lg flex items-center space-x-4 border border-charcoal-slate/15">
+<div class="bg-paper-white p-2 rounded-full flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-estate-gold">call</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Phone</p>
+<a class="font-body-md text-body-md text-midnight-navy hover:text-estate-gold transition-colors" href="tel:+13105550198">+1 (310) 555-0198</a>
+</div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg flex items-center space-x-4 border border-charcoal-slate/15">
+<div class="bg-paper-white p-2 rounded-full flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-estate-gold">mail</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Email</p>
+<a class="font-body-md text-body-md text-midnight-navy hover:text-estate-gold transition-colors truncate" href="mailto:inquiries@homesbygurmeet.com">inquiries@homesby...</a>
+</div>
+</div>
+</div>
+<!-- Map -->
+<div class="rounded-lg overflow-hidden border border-charcoal-slate/15 h-64 md:h-80 w-full relative">
+<img class="object-cover w-full h-full absolute inset-0" data-alt="A high-end, minimalist map view of Beverly Hills, California, styled with subtle grayscale tones and a single elegant gold marker indicating an office location. The aesthetic is clean, professional, and sophisticated, fitting a luxury real estate brand." data-location="Beverly Hills" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDg8THLbMf_TpDmAKEHNZCLOM4BUPVN3TQ2O1uodgJylSLvgl6hKJYDXk7v1HQEddQisfpRcdS-Yr1wne2YfqVwHfuictJ9czBeh98Z0jGnyvRA3ALN6dPHxR3kf94LB5kdPu5DmY7Muj8bvU1RnzbS-gFXwUxDJGqZGQIU0mQiG6hwcdQd6KT0Kaygz1uCguHBjoM3WpiftiizJ8U9Z7gTKcLQNuPIqAsb0uTTmQXAzqGfeV0bVpw"/>
+<!-- Faux Map Overlay for styling -->
+<div class="absolute inset-0 bg-midnight-navy/5 pointer-events-none"></div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-midnight-navy dark:bg-primary-container font-body-md text-body-md full-width grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-desktop py-section-gap max-w-container-max mx-auto opacity-90 hover:opacity-100 transition-opacity">
+<div class="col-span-1 md:col-span-1">
+<div class="font-headline-md text-headline-md text-paper-white mb-4">HomesByGurmeet</div>
+<p class="text-paper-white/80 font-caption text-caption">© 2024 HomesByGurmeet. All rights reserved.</p>
+</div>
+<div class="col-span-1 md:col-span-3 flex flex-wrap gap-4 md:justify-end items-center">
+<a class="text-paper-white/80 hover:text-paper-white hover:text-estate-gold transition-colors font-label-md text-label-md" href="#">Facebook</a>
+<a class="text-paper-white/80 hover:text-paper-white hover:text-estate-gold transition-colors font-label-md text-label-md" href="#">Instagram</a>
+<a class="text-paper-white/80 hover:text-paper-white hover:text-estate-gold transition-colors font-label-md text-label-md" href="#">LinkedIn</a>
+<a class="text-paper-white/80 hover:text-paper-white hover:text-estate-gold transition-colors font-label-md text-label-md" href="#">Google Reviews</a>
+<a class="text-paper-white/80 hover:text-paper-white hover:text-estate-gold transition-colors font-label-md text-label-md" href="#">Zillow Profile</a>
+<a class="text-paper-white/80 hover:text-paper-white hover:text-estate-gold transition-colors font-label-md text-label-md" href="#">Redfin Partner</a>
+</div>
+</footer>
+</body></html>

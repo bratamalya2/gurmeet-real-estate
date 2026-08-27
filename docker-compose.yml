@@ -1,0 +1,19 @@
+services:
+  mongo:
+    image: mongo:7
+    ports: ["27017:27017"]
+    volumes: [mongo_data:/data/db]
+  api:
+    build: ./apps/api
+    env_file: ./apps/api/.env
+    ports: ["4000:4000"]
+    volumes: [./apps/api/uploads:/app/uploads, ./data:/app/data:ro]
+    depends_on: [mongo]
+  web:
+    build: ./apps/web
+    env_file: ./apps/web/.env.local
+    environment:
+      API_INTERNAL_URL: http://api:4000/api
+    ports: ["3000:3000"]
+    depends_on: [api]
+volumes: { mongo_data: {} }
