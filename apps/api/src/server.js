@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { User, Property, Lead, SystemLog } from './models/index.js';
 import { syncSource } from './services/scraper.js';
 import { scrapeAuthorizedUrl } from './services/decodo-scraper.js';
+import { sendLeadNotification } from './services/mail.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -50,18 +51,21 @@ const numberQuery = value => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
 };
+const blankToUndefined = value => typeof value === 'string' && !value.trim() ? undefined : value;
+const optionalText = schema => z.preprocess(blankToUndefined, schema.optional());
+const optionalNumber = schema => z.preprocess(value => value === '' || value == null ? undefined : value, schema.optional());
 const leadSchema = z.object({
   type: z.enum(['inquiry', 'showing', 'valuation', 'contact']),
   name: z.string().trim().min(2).max(120),
   email: z.string().trim().email(),
   phone: z.string().trim().min(6).max(40),
-  message: z.string().trim().max(2000).optional(),
-  property: z.string().regex(/^[a-fA-F0-9]{24}$/).optional(),
-  preferredDate: z.string().min(1).max(100).optional(),
-  propertyAddress: z.string().trim().max(300).optional(),
-  squareFootage: z.coerce.number().positive().max(100000).optional(),
-  condition: z.string().trim().max(100).optional(),
-  turnstileToken: z.string().min(1).optional(),
+  message: optionalText(z.string().trim().max(2000)),
+  property: optionalText(z.string().regex(/^[a-fA-F0-9]{24}$/)),
+  preferredDate: optionalText(z.string().min(1).max(100)),
+  propertyAddress: optionalText(z.string().trim().max(300)),
+  squareFootage: optionalNumber(z.coerce.number().positive().max(100000)),
+  condition: optionalText(z.string().trim().max(100)),
+  turnstileToken: optionalText(z.string().min(1)),
 }).superRefine((lead, ctx) => {
   if (lead.type === 'showing' && !lead.preferredDate) ctx.addIssue({ code: 'custom', path: ['preferredDate'], message: 'Choose a preferred date and time.' });
   if (lead.type === 'valuation' && !lead.propertyAddress) ctx.addIssue({ code: 'custom', path: ['propertyAddress'], message: 'Enter the property address.' });
@@ -115,7 +119,14 @@ app.post('/api/leads', rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHe
       if (!verification.success) return res.status(422).json({ error: 'Anti-spam verification failed. Please try again.' });
     }
     const { turnstileToken, ...lead } = parsed.data;
-    await Lead.create(lead);
+    const savedLead = await Lead.create(lead);
+    try {
+      const notification = await sendLeadNotification(savedLead);
+      if (!notification.sent) console.warn(`Lead ${savedLead.id} saved without email notification: ${notification.reason}`);
+    } catch (mailError) {
+      // Preserve the lead even if email delivery is temporarily unavailable.
+      console.error(`Lead ${savedLead.id} email notification failed:`, mailError.message);
+    }
     return res.status(201).json({ ok: true });
   } catch (error) { return next(error); }
 });

@@ -563,12 +563,36 @@ footer {
 }
 .foot {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 30px;
 }
 .foot p {
   color: #e5e7eb;
   font-size: 14px;
+}
+.redfin-broker {
+  align-items: center;
+  color: #c82021;
+  display: inline-flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.redfin-logo {
+  flex: 0 0 28px;
+  height: 28px;
+  width: 28px;
+}
+.redfin-broker span {
+  display: grid;
+  line-height: 1;
+}
+.redfin-broker strong { font-size: 16px; }
+.redfin-broker small {
+  color: #e5e7eb;
+  font-size: 11px;
+  letter-spacing: .08em;
+  margin-top: 3px;
+  text-transform: uppercase;
 }
 .copyright {
   padding-top: 30px;
@@ -1023,4 +1047,3 @@ footer {
     grid-template-columns: 1fr;
   }
 }
-
