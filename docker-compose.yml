@@ -18,7 +18,10 @@ services:
       - mongo
 
   web:
-    build: ./apps/web
+    build:
+      context: ./apps/web
+      args:
+        NEXT_PUBLIC_API_URL: https://portal.homesbygurmeet.com/api
     env_file: ./apps/web/.env
     environment:
       API_INTERNAL_URL: http://api:4000/api
