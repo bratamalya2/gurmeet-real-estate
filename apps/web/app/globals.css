@@ -594,6 +594,36 @@ footer {
   margin-top: 3px;
   text-transform: uppercase;
 }
+.footer-phone {
+  display: inline-flex;
+  align-items: center;
+  color: #e5e7eb;
+  transition: color 0.2s;
+}
+.footer-phone:hover {
+  color: var(--gold);
+}
+.footer-social {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+.footer-social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #e5e7eb;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+.footer-social-link:hover {
+  color: var(--gold);
+}
+.footer-social-link svg {
+  font-size: 15px;
+  flex-shrink: 0;
+}
 .copyright {
   padding-top: 30px;
   margin-top: 25px;

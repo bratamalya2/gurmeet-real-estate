@@ -2,12 +2,16 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { FiMenu, FiX } from 'react-icons/fi';
+import { FiMenu, FiX, FiPhone } from 'react-icons/fi';
+import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 
 const links = [['Home', '/'], ['About', '/about'], ['Services', '/services'], ['Homes for Sale', '/homes-for-sale'], ['Recently Sold', '/recently-sold'], ['Contact', '/contact']];
 const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || 'Homes By Gurmeet';
 const brandOwner = process.env.NEXT_PUBLIC_BRAND_OWNER || 'Gurmeet Singh';
 const brandLogo = process.env.NEXT_PUBLIC_BRAND_LOGO || '/Homes BY Gurmeet Logo.png';
+const agentPhone = process.env.NEXT_PUBLIC_AGENT_PHONE || '';
+
+const socialIcons = { Facebook: FaFacebookF, Instagram: FaInstagram, LinkedIn: FaLinkedinIn };
 
 function Brand() { return brandLogo ? <img className="brand-logo" src={brandLogo} alt={brandName} /> : brandName; }
 
@@ -24,6 +28,27 @@ function RedfinBrokerMark() {
 }
 
 export function Footer() {
-  const social = [['Instagram', process.env.NEXT_PUBLIC_INSTAGRAM_URL], ['LinkedIn', process.env.NEXT_PUBLIC_LINKEDIN_URL], ['Facebook', process.env.NEXT_PUBLIC_FACEBOOK_URL]].filter(([, url]) => url);
-  return <footer><div className="container foot"><div><div className="brand"><Brand /></div><p>Exceptional service. Elevated living.</p></div><div><b>Contact</b><p>{process.env.NEXT_PUBLIC_AGENT_PHONE || `Contact ${brandOwner}`}</p><p>{process.env.NEXT_PUBLIC_AGENT_EMAIL || 'Available on request'}</p></div><div className="credentials"><b>Credentials</b><p>California BRE - 206527881</p><RedfinBrokerMark /></div><div><b>Follow</b>{social.length ? social.map(([label, url]) => <p key={label}><a href={url} target="_blank" rel="noreferrer">{label}</a></p>) : <p>Social links coming soon.</p>}</div></div><div className="container copyright">© {new Date().getFullYear()} {brandName}. All rights reserved.</div></footer>;
+  const social = [['Facebook', process.env.NEXT_PUBLIC_FACEBOOK_URL], ['Instagram', process.env.NEXT_PUBLIC_INSTAGRAM_URL], ['LinkedIn', process.env.NEXT_PUBLIC_LINKEDIN_URL]].filter(([, url]) => url);
+  return <footer>
+    <div className="container foot">
+      <div><div className="brand"><Brand /></div><p>Exceptional service. Elevated living.</p></div>
+      <div>
+        <b>Contact</b>
+        {agentPhone && <p><a href={`tel:${agentPhone.replace(/\D/g, '')}`} className="footer-phone"><FiPhone style={{ fontSize: 13, marginRight: 6, verticalAlign: '-2px' }} />{agentPhone}</a></p>}
+        <p>{process.env.NEXT_PUBLIC_AGENT_EMAIL || 'Available on request'}</p>
+      </div>
+      <div className="credentials">
+        <b>Credentials</b>
+        <p>California BRE - 01521930</p>
+        <RedfinBrokerMark />
+        <p style={{ marginTop: 6 }}>DRE - 01479256</p>
+      </div>
+      <div>
+        <b>Follow</b>
+        {social.length ? <div className="footer-social">{social.map(([label, url]) => { const Icon = socialIcons[label]; return <a key={label} href={url} target="_blank" rel="noreferrer" className="footer-social-link" aria-label={label}>{Icon && <Icon />}<span>{label}</span></a>; })}</div> : <p>Social links coming soon.</p>}
+      </div>
+    </div>
+    <div className="container copyright">© {new Date().getFullYear()} {brandName}. All rights reserved.</div>
+  </footer>;
 }
+
