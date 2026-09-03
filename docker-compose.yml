@@ -22,6 +22,18 @@ services:
       context: ./apps/web
       args:
         NEXT_PUBLIC_API_URL: https://portal.homesbygurmeet.com/api
+        NEXT_PUBLIC_SITE_URL: https://homesbygurmeet.com
+        NEXT_PUBLIC_GOOGLE_MAPS_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_KEY:-AIzaSyBm7oFRuX7MhliMJxvvBa9F6m7xHfBgX3Q}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-0x4AAAAAAEPJ8eSfO7m0AkeB}
+        NEXT_PUBLIC_AGENT_PHONE: ${NEXT_PUBLIC_AGENT_PHONE:-+1510-209-7718}
+        NEXT_PUBLIC_AGENT_EMAIL: ${NEXT_PUBLIC_AGENT_EMAIL:-gurmeet.realty1@gmail.com}
+        NEXT_PUBLIC_AGENT_ADDRESS: ${NEXT_PUBLIC_AGENT_ADDRESS:-Fremont, California}
+        NEXT_PUBLIC_BRAND_OWNER: ${NEXT_PUBLIC_BRAND_OWNER:-Gurmeet}
+        NEXT_PUBLIC_BRAND_NAME: ${NEXT_PUBLIC_BRAND_NAME:-Homes By Gurmeet}
+        NEXT_PUBLIC_FACEBOOK_URL: ${NEXT_PUBLIC_FACEBOOK_URL:-https://www.facebook.com/510gurmeetsingh/}
+        NEXT_PUBLIC_INSTAGRAM_URL: ${NEXT_PUBLIC_INSTAGRAM_URL:-https://www.instagram.com/homesbygurmeetsingh}
+        NEXT_PUBLIC_LINKEDIN_URL: ${NEXT_PUBLIC_LINKEDIN_URL:-https://www.linkedin.com/in/gurmeet-singh-2a846941}
+        NEXT_PUBLIC_BRAND_LOGO: ${NEXT_PUBLIC_BRAND_LOGO:-/Homes BY Gurmeet Logo.png}
     env_file: ./apps/web/.env
     environment:
       API_INTERNAL_URL: http://api:4000/api
