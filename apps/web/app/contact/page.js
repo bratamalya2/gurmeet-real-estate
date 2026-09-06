@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Header, Footer } from "../../components/SiteChrome";
-import LeadForm from "../../components/LeadForm";
+import DirectContactForm from "../../components/DirectContactForm";
 import {
   FiPhone,
   FiMail,
@@ -233,7 +233,7 @@ export default function Contact() {
               <p style={{ color: "#64748b", fontSize: 14, marginBottom: 24 }}>
                 Fill out the form below and Gurmeet will get back to you promptly.
               </p>
-              <LeadForm />
+              <DirectContactForm />
             </div>
           </div>
         </section>
