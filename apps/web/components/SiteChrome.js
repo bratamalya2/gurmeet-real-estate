@@ -17,7 +17,7 @@ function Brand() { return brandLogo ? <img className="brand-logo" src={brandLogo
 
 export function Header() {
   const [open, setOpen] = useState(false);
-  return <header className="header"><div className="container head"><Link href="/" className="brand" aria-label={brandName}><Brand /></Link><nav>{links.map(([label, url]) => <Link key={url} href={url}>{label}</Link>)}</nav><Link className="schedule" href="/home-valuation">Home Valuation</Link><button className="menu" aria-label="Toggle navigation" onClick={() => setOpen(!open)}>{open ? <FiX /> : <FiMenu />}</button>{open && <div className="mobile-nav">{links.map(([label, url]) => <Link key={url} href={url} onClick={() => setOpen(false)}>{label}</Link>)}<Link className="btn" href="/home-valuation" onClick={() => setOpen(false)}>Home Valuation</Link></div>}</div></header>;
+  return <header className="header"><div className="container head"><Link href="/" className="brand" aria-label={brandName}><Brand /></Link><nav>{links.map(([label, url]) => <Link key={url} href={url}>{label}</Link>)}</nav><Link className="schedule" href="/home-valuation">Home Valuation</Link><button className="menu" aria-label="Toggle navigation" aria-controls="mobile-navigation" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? <FiX /> : <FiMenu />}</button>{open && <div className="mobile-nav" id="mobile-navigation">{links.map(([label, url]) => <Link key={url} href={url} onClick={() => setOpen(false)}>{label}</Link>)}<Link className="btn" href="/home-valuation" onClick={() => setOpen(false)}>Home Valuation</Link></div>}</div></header>;
 }
 
 function RedfinBrokerMark() {
