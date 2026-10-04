@@ -2,7 +2,7 @@ import { serverApiUrl } from '../lib/api';
 
 export default async function sitemap() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  const staticPages = ['', '/about', '/services', '/homes-for-sale', '/recently-sold', '/contact', '/home-valuation'].map(path => ({ url: `${baseUrl}${path}`, lastModified: new Date(), changeFrequency: 'weekly', priority: path === '' ? 1 : 0.7 }));
+  const staticPages = ['', '/about', '/services', '/homes-for-sale', '/bought-with-gurmeet', '/sold-by-gurmeet', '/market-insights', '/contact', '/home-valuation'].map(path => ({ url: `${baseUrl}${path}`, lastModified: new Date(), changeFrequency: 'weekly', priority: path === '' ? 1 : 0.7 }));
   try {
     const response = await fetch(serverApiUrl('properties?limit=24&page=1'), { cache: 'no-store' });
     if (!response.ok) return staticPages;

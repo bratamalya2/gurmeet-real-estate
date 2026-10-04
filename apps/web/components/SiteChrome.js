@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { FiMenu, FiX, FiPhone } from 'react-icons/fi';
 import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 
-const links = [['Home', '/'], ['About', '/about'], ['Services', '/services'], ['Homes for Sale', '/homes-for-sale'], ['Recently Sold', '/recently-sold'], ['Contact', '/contact']];
+const links = [['Home', '/'], ['About', '/about'], ['Services', '/services'], ['Bought with Gurmeet', '/bought-with-gurmeet'], ['Sold by Gurmeet', '/sold-by-gurmeet'], ['Market Insights', '/market-insights'], ['Contact', '/contact']];
 const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || 'Homes By Gurmeet';
 const brandOwner = process.env.NEXT_PUBLIC_BRAND_OWNER || 'Gurmeet Singh';
 const brandLogo = process.env.NEXT_PUBLIC_BRAND_LOGO || '/Homes BY Gurmeet Logo.png';
@@ -51,4 +51,3 @@ export function Footer() {
     <div className="container copyright">© {new Date().getFullYear()} {brandName}. All rights reserved.</div>
   </footer>;
 }
-

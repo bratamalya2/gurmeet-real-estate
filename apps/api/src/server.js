@@ -20,11 +20,13 @@ import { scrapeAuthorizedUrl } from './services/decodo-scraper.js';
 import { sendLeadNotification } from './services/mail.js';
 import { WorkbookImportError, mergeWorkbookRows, parseWorkbook, rebuildProperties, snapshotForDocument } from './services/workbook-import.js';
 import { AnalyticsRangeError, getAnalytics } from './services/analytics.js';
+import { propertySideFilter } from './services/property-filters.js';
+import { getMarketInsights } from './services/market-insights.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDirectory = path.resolve(__dirname, '../uploads');
-const publicFields = 'title slug address price beds baths sqft description status featured images coordinates source createdAt updatedAt transaction.soldDate';
+const publicFields = 'title slug address price beds baths sqft description status featured images coordinates source createdAt updatedAt transaction.soldDate transaction.side';
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: process.env.WEB_ORIGIN || 'http://localhost:3000', credentials: true }));
@@ -102,12 +104,15 @@ app.post('/api/analytics/events', rateLimit({ windowMs: 15 * 60 * 1000, max: 120
 app.get('/api/properties', async (req, res, next) => {
   try {
     const status = ['Active', 'Pending', 'Sold'].includes(req.query.status) ? req.query.status : undefined;
+    const side = ['buyer', 'seller'].includes(req.query.side) ? req.query.side : undefined;
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(24, Math.max(1, Number(req.query.limit) || 9));
     const minPrice = numberQuery(req.query.minPrice), maxPrice = numberQuery(req.query.maxPrice), beds = numberQuery(req.query.beds), baths = numberQuery(req.query.baths);
     const city = String(req.query.city || '').trim(), term = String(req.query.q || '').trim();
     const filter = {};
     if (status) filter.status = status;
+    const sideFilter = propertySideFilter(side);
+    if (sideFilter) Object.assign(filter, sideFilter);
     if (minPrice !== undefined || maxPrice !== undefined) filter.price = { ...(minPrice !== undefined ? { $gte: minPrice } : {}), ...(maxPrice !== undefined ? { $lte: maxPrice } : {}) };
     if (beds !== undefined) filter.beds = { $gte: beds };
     if (baths !== undefined) filter.baths = { $gte: baths };
@@ -123,6 +128,7 @@ app.get('/api/properties', async (req, res, next) => {
     res.json({ items, total, page, pages: Math.ceil(total / limit), limit });
   } catch (error) { next(error); }
 });
+app.get('/api/market-insights', async (req, res, next) => { try { return res.json(await getMarketInsights()); } catch (error) { return next(error); } });
 app.get('/api/properties/featured', async (req, res, next) => {
   try {
     const featured = await Property.find({ featured: true, status: { $in: ['Active', 'Pending'] } }).select(publicFields).sort({ updatedAt: -1 }).limit(6);

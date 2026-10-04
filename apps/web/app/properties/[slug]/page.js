@@ -20,6 +20,13 @@ async function getProperty(slug) {
 
 const cleanJson = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
 
+function soldPortfolioHref(property) {
+  const side = String(property.transaction?.side || '').toLowerCase();
+  return side.includes('buyer') && !side.includes('seller')
+    ? '/bought-with-gurmeet'
+    : '/sold-by-gurmeet';
+}
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const property = await getProperty(slug);
@@ -101,9 +108,7 @@ export default async function Detail({ params }) {
         <div className="container detail-back">
           <Link
             className="muted"
-            href={
-              property.status === "Sold" ? "/recently-sold" : "/homes-for-sale"
-            }
+            href={property.status === "Sold" ? soldPortfolioHref(property) : "/homes-for-sale"}
           >
             ← Back to listings
           </Link>

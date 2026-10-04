@@ -6,7 +6,7 @@ import { publicApiUrl } from '../lib/api';
 
 const initialFilters = { q: '', city: '', minPrice: '', maxPrice: '', beds: '', baths: '' };
 
-export default function PropertyGrid({ status, featured = false, showFilters = false }) {
+export default function PropertyGrid({ status, side, featured = false, showFilters = false }) {
   const [data, setData] = useState({ items: [], total: 0, page: 1, pages: 1 });
   const [page, setPage] = useState(1);
   const [draft, setDraft] = useState(initialFilters);
@@ -14,6 +14,7 @@ export default function PropertyGrid({ status, featured = false, showFilters = f
   const [loading, setLoading] = useState(true);
   const query = new URLSearchParams({ page: String(page) });
   if (status) query.set('status', status);
+  if (side) query.set('side', side);
   Object.entries(filters).forEach(([key, value]) => { if (value) query.set(key, value); });
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export default function PropertyGrid({ status, featured = false, showFilters = f
       if (!cancelled) setData(featured ? { items: result, total: result.length, page: 1, pages: 1 } : result);
     }).catch(() => { if (!cancelled) setData({ items: [], total: 0, page: 1, pages: 1 }); }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [featured, page, status, JSON.stringify(filters)]);
+  }, [featured, page, status, side, JSON.stringify(filters)]);
 
   function applyFilters(event) { event.preventDefault(); setPage(1); setFilters(draft); }
   function clearFilters() { setDraft(initialFilters); setFilters(initialFilters); setPage(1); }
@@ -39,7 +40,7 @@ export default function PropertyGrid({ status, featured = false, showFilters = f
       <select aria-label="Minimum bathrooms" value={draft.baths} onChange={event => setDraft({ ...draft, baths: event.target.value })}><option value="">Any baths</option><option value="2">2+ baths</option><option value="3">3+ baths</option></select>
       <button className="btn" type="submit">Apply filters</button><button className="text-button" type="button" onClick={clearFilters}>Clear</button>
     </form>}
-    {!featured && !loading && <p className="listing-count">{data.total} {status === 'Sold' ? 'sold properties' : 'properties'} found</p>}
+    {!featured && !loading && <p className="listing-count">{data.total} {side === 'buyer' ? 'homes bought with Gurmeet' : side === 'seller' ? 'homes sold by Gurmeet' : status === 'Sold' ? 'sold properties' : 'properties'} found</p>}
     {loading ? <div className="empty">Loading properties…</div> : data.items.length ? <div className="grid three">{data.items.map(property => <PropertyCard key={property._id} p={property} />)}</div> : <div className="empty">{featured ? 'Featured residences will appear here soon.' : 'No properties match those filters.'}</div>}
     {!featured && data.pages > 1 && <nav className="pagination" aria-label="Listing pages"><button className="btn alt" disabled={page <= 1} onClick={() => setPage(current => current - 1)}>Previous</button><span>Page {data.page} of {data.pages}</span><button className="btn alt" disabled={page >= data.pages} onClick={() => setPage(current => current + 1)}>Next</button></nav>}
   </>;

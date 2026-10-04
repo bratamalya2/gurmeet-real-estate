@@ -38,6 +38,7 @@ paths:
       security: []
       parameters:
         - $ref: '#/components/parameters/StatusQuery'
+        - $ref: '#/components/parameters/SideQuery'
         - name: page
           in: query
           schema: { type: integer, minimum: 1, default: 1 }
@@ -61,6 +62,32 @@ paths:
               schema:
                 type: array
                 items: { $ref: '#/components/schemas/PublicProperty' }
+  /market-insights:
+    get:
+      tags: [Public]
+      summary: Get sold-property market insights
+      security: []
+      responses:
+        '200':
+          description: Aggregated insights from sold properties
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  soldCount: { type: integer }
+                  totalSalesVolume: { type: number }
+                  averageSalePrice: { type: number }
+                  medianSalePrice: { type: number }
+                  averagePricePerSqft: { type: number }
+                  averageSqft: { type: number }
+                  averageBeds: { type: number }
+                  averageBaths: { type: number }
+                  coverage: { type: object }
+                  byYear: { type: array, items: { type: object } }
+                  byCity: { type: array, items: { type: object } }
+                  priceBands: { type: array, items: { type: object } }
+                  recentSales: { type: array, items: { type: object } }
   /properties/{slug}:
     get:
       tags: [Properties]
@@ -498,6 +525,11 @@ components:
       name: status
       in: query
       schema: { type: string, enum: [Active, Pending, Sold] }
+    SideQuery:
+      name: side
+      in: query
+      description: Filter sold properties by Gurmeet's transaction representation.
+      schema: { type: string, enum: [buyer, seller] }
   responses:
     Unauthorized:
       description: Missing, expired, or invalid session cookie
