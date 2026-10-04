@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Header, Footer } from "../../../components/SiteChrome";
 import LeadForm from "../../../components/LeadForm";
+import AnalyticsTracker from "../../../components/AnalyticsTracker";
 import { publicAssetUrl, serverApiUrl } from "../../../lib/api";
 
 export const dynamic = "force-dynamic";
@@ -92,6 +93,7 @@ export default async function Detail({ params }) {
     <>
       <Header />
       <main>
+        <AnalyticsTracker type="listing_view" propertyId={property._id} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: cleanJson(jsonLd) }}

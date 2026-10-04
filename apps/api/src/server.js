@@ -14,10 +14,12 @@ import { fileURLToPath } from 'url';
 import slugify from 'slugify';
 import swaggerUi from 'swagger-ui-express';
 import { z } from 'zod';
-import { User, Property, Lead, SystemLog } from './models/index.js';
+import { User, Property, Lead, SystemLog, WorkbookImport, AnalyticsEvent } from './models/index.js';
 import { syncSource } from './services/scraper.js';
 import { scrapeAuthorizedUrl } from './services/decodo-scraper.js';
 import { sendLeadNotification } from './services/mail.js';
+import { WorkbookImportError, mergeWorkbookRows, parseWorkbook, rebuildProperties, snapshotForDocument } from './services/workbook-import.js';
+import { AnalyticsRangeError, getAnalytics } from './services/analytics.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -46,6 +48,16 @@ const upload = multer({
   limits: { fileSize: 8 * 1024 * 1024, files: 12 },
   fileFilter: (req, file, callback) => callback(null, /^image\/(jpeg|png|webp|gif)$/i.test(file.mimetype)),
 });
+const workbookUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 16 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, callback) => {
+    if (/\.xlsx$/i.test(file.originalname) || file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') return callback(null, true);
+    const error = new Error('Only .xlsx workbook files are allowed.');
+    error.statusCode = 422;
+    return callback(error);
+  },
+});
 const numberQuery = value => {
   if (value === undefined || value === '') return undefined;
   const parsed = Number(value);
@@ -70,8 +82,23 @@ const leadSchema = z.object({
   if (lead.type === 'showing' && !lead.preferredDate) ctx.addIssue({ code: 'custom', path: ['preferredDate'], message: 'Choose a preferred date and time.' });
   if (lead.type === 'valuation' && !lead.propertyAddress) ctx.addIssue({ code: 'custom', path: ['propertyAddress'], message: 'Enter the property address.' });
 });
+const analyticsEventSchema = z.object({
+  type: z.enum(['page_view', 'listing_view']),
+  path: z.string().trim().min(1).max(300).regex(/^\//, 'Path must begin with /.').refine(path => !path.includes('?') && !path.includes('#'), 'Path must not include a query string or hash.'),
+  propertyId: z.preprocess(value => value === '' || value == null ? undefined : value, z.string().regex(/^[a-fA-F0-9]{24}$/).optional()),
+}).superRefine((event, ctx) => {
+  if (event.type === 'listing_view' && !event.propertyId) ctx.addIssue({ code: 'custom', path: ['propertyId'], message: 'A listing view requires a property ID.' });
+});
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
+app.post('/api/analytics/events', rateLimit({ windowMs: 15 * 60 * 1000, max: 120, standardHeaders: true, legacyHeaders: false }), async (req, res, next) => {
+  try {
+    const parsed = analyticsEventSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(422).json({ error: parsed.error.issues[0]?.message || 'Invalid analytics event.' });
+    await AnalyticsEvent.create({ type: parsed.data.type, path: parsed.data.path, property: parsed.data.propertyId });
+    return res.sendStatus(204);
+  } catch (error) { return next(error); }
+});
 app.get('/api/properties', async (req, res, next) => {
   try {
     const status = ['Active', 'Pending', 'Sold'].includes(req.query.status) ? req.query.status : undefined;
@@ -143,12 +170,40 @@ app.post('/api/admin/uploads', auth(), upload.array('images', 12), (req, res) =>
 app.delete('/api/admin/uploads/:filename', auth(), async (req, res, next) => { try { const filename = path.basename(req.params.filename); if (filename !== req.params.filename) return res.sendStatus(400); const target = path.resolve(uploadsDirectory, filename); if (!target.startsWith(`${uploadsDirectory}${path.sep}`)) return res.sendStatus(400); await fs.unlink(target).catch(error => { if (error.code !== 'ENOENT') throw error; }); await Property.updateMany({ images: `/uploads/${filename}` }, { $pull: { images: `/uploads/${filename}` } }); return res.sendStatus(204); } catch (error) { return next(error); } });
 app.get('/api/admin/leads', auth(), async (req, res, next) => { try { res.json(await Lead.find().populate('property', 'title slug').sort({ createdAt: -1 })); } catch (error) { next(error); } });
 app.get('/api/admin/logs', auth(), async (req, res, next) => { try { res.json(await SystemLog.find().sort({ createdAt: -1 }).limit(30)); } catch (error) { next(error); } });
+app.post('/api/admin/listings/import', auth(['admin']), workbookUpload.single('file'), async (req, res, next) => {
+  if (!req.file) return res.status(422).json({ error: 'Choose an .xlsx workbook to import.' });
+  const log = await SystemLog.create({ source: 'workbook', status: 'running', startedAt: new Date(), filename: req.file.originalname });
+  let parsed;
+  let previousSnapshot;
+  try {
+    parsed = parseWorkbook(req.file.buffer, req.file.originalname);
+    previousSnapshot = await WorkbookImport.findOne({ source: parsed.source }).lean();
+    await WorkbookImport.findOneAndUpdate({ source: parsed.source }, snapshotForDocument(parsed), { upsert: true, new: true, setDefaultsOnInsert: true });
+    const snapshots = await WorkbookImport.find({ source: { $in: ['redfin', 'zillow'] } }).lean();
+    const redfinRows = snapshots.find(snapshot => snapshot.source === 'redfin')?.rows || (parsed.source === 'redfin' ? parsed.rows : []);
+    const zillowRows = snapshots.find(snapshot => snapshot.source === 'zillow')?.rows || (parsed.source === 'zillow' ? parsed.rows : []);
+    const result = await rebuildProperties(mergeWorkbookRows(redfinRows, zillowRows));
+    await SystemLog.findByIdAndUpdate(log.id, { source: `workbook:${parsed.source}`, status: 'success', completedAt: new Date(), created: result.created, updated: result.updated, removed: result.removed, sourceRows: parsed.rows.length, totalListings: result.totalListings });
+    return res.status(200).json({ ok: true, source: parsed.source, filename: parsed.filename, sourceRows: parsed.rows.length, ...result });
+  } catch (error) {
+    if (parsed) {
+      if (previousSnapshot) await WorkbookImport.replaceOne({ source: parsed.source }, previousSnapshot).catch(() => {});
+      else await WorkbookImport.deleteOne({ source: parsed.source }).catch(() => {});
+    }
+    await SystemLog.findByIdAndUpdate(log.id, { source: parsed ? `workbook:${parsed.source}` : 'workbook', status: 'failed', completedAt: new Date(), error: String(error.message || error).slice(0, 1000) }).catch(() => {});
+    if (error instanceof WorkbookImportError) return res.status(error.statusCode).json({ error: error.message });
+    return next(error);
+  }
+});
 app.post('/api/admin/scrape', auth(['admin']), async (req, res, next) => { const parsed = z.object({ url: z.string().url() }).safeParse(req.body); if (!parsed.success) return res.status(422).json({ error: 'Provide a valid URL.' }); const log = await SystemLog.create({ source: 'decodo', startedAt: new Date(), status: 'running', created: 0, updated: 0 }); try { const result = await scrapeAuthorizedUrl(parsed.data.url); await SystemLog.findByIdAndUpdate(log.id, { status: 'success', completedAt: new Date() }); return res.json(result); } catch (error) { const message = error.response?.status ? `Decodo request failed with status ${error.response.status}` : error.message; await SystemLog.findByIdAndUpdate(log.id, { status: 'failed', completedAt: new Date(), error: String(message).slice(0, 1000) }); return res.status(error.response?.status || 422).json({ error: message }); } });
+app.get('/api/admin/analytics', auth(), async (req, res, next) => {
+  try { return res.json(await getAnalytics(req.query)); } catch (error) { if (error instanceof AnalyticsRangeError) return res.status(error.statusCode).json({ error: error.message }); return next(error); }
+});
 app.get('/api/admin/users', auth(['admin']), async (req, res, next) => { try { res.json(await User.find().select('email role active createdAt')); } catch (error) { next(error); } });
 app.post('/api/admin/users', auth(['admin']), async (req, res, next) => { try { const user = await User.create({ email: req.body.email, passwordHash: await bcrypt.hash(req.body.password, 12), role: req.body.role || 'editor' }); res.status(201).json({ id: user.id, email: user.email, role: user.role }); } catch (error) { next(error); } });
 app.patch('/api/admin/users/:id', auth(['admin']), async (req, res, next) => { try { const user = await User.findByIdAndUpdate(req.params.id, { role: req.body.role, active: req.body.active }, { new: true, runValidators: true }).select('email role active'); return user ? res.json(user) : res.sendStatus(404); } catch (error) { return next(error); } });
 app.post('/api/admin/sync', auth(['admin']), async (req, res, next) => { try { const log = await SystemLog.create({ source: 'manual', startedAt: new Date(), status: 'running', created: 0, updated: 0 }); let created = 0; let updated = 0; const failed = []; for (const source of ['zillow', 'redfin']) { try { const result = await syncSource(source); created += result.created; updated += result.updated; } catch (error) { failed.push(`${source}: ${error.message}`); } } await SystemLog.findByIdAndUpdate(log.id, { status: failed.length ? (created || updated ? 'partial' : 'failed') : 'success', completedAt: new Date(), created, updated, error: failed.join('; ').slice(0, 1000) }); return res.json({ created, updated, failed }); } catch (error) { return next(error); } });
 
-app.use((error, req, res, next) => { if (error instanceof multer.MulterError) return res.status(422).json({ error: error.code === 'LIMIT_FILE_SIZE' ? 'Each image must be 8 MB or smaller.' : error.message }); if (error?.code === 11000) return res.status(409).json({ error: 'A record with that unique value already exists.' }); console.error(error); return res.status(500).json({ error: 'An unexpected server error occurred.' }); });
+app.use((error, req, res, next) => { if (error instanceof multer.MulterError) return res.status(422).json({ error: error.code === 'LIMIT_FILE_SIZE' ? (error.field === 'file' ? 'The workbook must be 16 MB or smaller.' : 'Each image must be 8 MB or smaller.') : error.message }); if (error?.statusCode) return res.status(error.statusCode).json({ error: error.message }); if (error?.code === 11000) return res.status(409).json({ error: 'A record with that unique value already exists.' }); console.error(error); return res.status(500).json({ error: 'An unexpected server error occurred.' }); });
 async function bootstrap() { await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/homesbygurmeet'); if (process.env.BOOTSTRAP_ADMIN_EMAIL && process.env.BOOTSTRAP_ADMIN_PASSWORD && !await User.exists({ email: process.env.BOOTSTRAP_ADMIN_EMAIL })) await User.create({ email: process.env.BOOTSTRAP_ADMIN_EMAIL, passwordHash: await bcrypt.hash(process.env.BOOTSTRAP_ADMIN_PASSWORD, 12), role: 'admin' }); app.listen(process.env.PORT || 4000, () => console.log('API ready')); }
 bootstrap().catch(error => { console.error(error); process.exit(1); });

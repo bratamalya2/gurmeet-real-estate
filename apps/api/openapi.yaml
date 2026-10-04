@@ -98,6 +98,25 @@ paths:
         '422': { $ref: '#/components/responses/ValidationError' }
         '429':
           description: Submission rate limit exceeded
+  /analytics/events:
+    post:
+      tags: [Public]
+      summary: Record an anonymous page or listing view
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, path]
+              properties:
+                type: { type: string, enum: [page_view, listing_view] }
+                path: { type: string, example: /homes-for-sale }
+                propertyId: { type: string, pattern: '^[a-fA-F0-9]{24}$' }
+      responses:
+        '204': { description: Analytics event recorded }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /auth/login:
     post:
       tags: [Authentication]
@@ -266,6 +285,79 @@ paths:
                 type: array
                 items: { $ref: '#/components/schemas/SystemLog' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /admin/analytics:
+    get:
+      tags: [Staff administration]
+      summary: Get listing, lead, traffic, and data-health analytics
+      security: [{ CookieAuth: [] }]
+      parameters:
+        - name: from
+          in: query
+          schema: { type: string, format: date, example: 2026-09-01 }
+        - name: to
+          in: query
+          schema: { type: string, format: date, example: 2026-10-04 }
+        - name: range
+          in: query
+          description: Use all for all retained analytics data.
+          schema: { type: string, enum: [all] }
+      responses:
+        '200':
+          description: Aggregated analytics response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  range: { type: object }
+                  overview: { type: object }
+                  traffic: { type: object }
+                  leads: { type: object }
+                  inventory: { type: object }
+                  dataHealth: { type: object }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /admin/listings/import:
+    post:
+      tags: [Staff administration]
+      summary: Import a Redfin or Zillow workbook
+      description: |
+        Upload one .xlsx workbook. The latest workbook from the other source is retained,
+        duplicate addresses are merged with Redfin precedence, and the public Property
+        collection is rebuilt from the combined source snapshots. Listings absent from
+        the combined data are removed.
+      security: [{ CookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Redfin or Zillow .xlsx workbook
+      responses:
+        '200':
+          description: Workbook imported and listings rebuilt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  source: { type: string, enum: [redfin, zillow] }
+                  filename: { type: string }
+                  sourceRows: { type: integer }
+                  totalListings: { type: integer }
+                  created: { type: integer }
+                  updated: { type: integer }
+                  removed: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /admin/users:
     get:
       tags: [Staff administration]
@@ -589,4 +681,8 @@ components:
         completedAt: { type: string, format: date-time }
         created: { type: integer }
         updated: { type: integer }
+        removed: { type: integer }
+        sourceRows: { type: integer }
+        totalListings: { type: integer }
+        filename: { type: string }
         error: { type: string }

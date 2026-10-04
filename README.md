@@ -15,3 +15,7 @@ The backend OpenAPI 3.0 document is at `apps/api/openapi.yaml`. Import it into [
 ## Workbook import
 
 To import the supplied `data/Redfin.xlsx` transactions workbook into MongoDB, run `docker compose run --rm api npm run import:workbook -- /app/data/Redfin.xlsx`. The importer upserts by workbook ID or normalized address, maps active/sold statuses, and stores confidence, verification, transaction-side, notes, original source URL, and image-search references as metadata.
+
+Administrators can also import a Redfin or Zillow `.xlsx` workbook from the Admin dashboard under **Sync**. Uploads are processed one at a time; the latest workbook from the other source is retained, duplicate addresses are merged with Redfin precedence, and the public listing dataset is rebuilt. Listings absent from the combined source data are removed, and workbook data resets manual listing fields such as images and featured status.
+
+The Admin dashboard **Analytics** tab reports current inventory, pricing, lead activity, workbook freshness, and first-party page/listing views. Traffic events are anonymous, contain no query strings or personal data, and are retained for 24 months.

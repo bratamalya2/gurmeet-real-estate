@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { publicApiUrl, publicAssetUrl } from "../../lib/api";
+import AdminAnalytics from "../../components/AdminAnalytics";
 
 const emptyProperty = {
   title: "",
@@ -34,6 +35,7 @@ function Panel({ title, children }) {
 export default function Admin() {
   const router = useRouter();
   const uploadRef = useRef();
+  const workbookRef = useRef();
   const [tab, setTab] = useState("dashboard");
   const [data, setData] = useState({
     properties: [],
@@ -44,6 +46,7 @@ export default function Admin() {
   });
   const [property, setProperty] = useState(emptyProperty);
   const [notice, setNotice] = useState("");
+  const [importing, setImporting] = useState(false);
 
   async function load() {
     try {
@@ -208,6 +211,30 @@ export default function Admin() {
     if (response.ok) await load();
     else setNotice("Staff account could not be updated.");
   }
+  async function importWorkbook(event) {
+    event.preventDefault();
+    const file = workbookRef.current?.files?.[0];
+    if (!file) return setNotice("Choose an .xlsx workbook first.");
+    setImporting(true);
+    setNotice("Validating and importing workbook…");
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const response = await request("admin/listings/import", {
+        method: "POST",
+        body,
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Workbook import failed.");
+      if (workbookRef.current) workbookRef.current.value = "";
+      setNotice(`${result.source} workbook imported: ${result.totalListings} listings (${result.created} created, ${result.updated} updated, ${result.removed} removed).`);
+      await load();
+    } catch (error) {
+      setNotice(error.message || "Workbook import failed.");
+    } finally {
+      setImporting(false);
+    }
+  }
 
   const propertyName = property.title || property.street || 'this property';
   if (!data.user) return null;
@@ -219,6 +246,7 @@ export default function Admin() {
         </div>
         {[
           "dashboard",
+          "analytics",
           "properties",
           "leads",
           "sync",
@@ -259,6 +287,7 @@ export default function Admin() {
             </div>
           </Panel>
         )}
+        {tab === "analytics" && <AdminAnalytics />}
         {tab === "properties" && (
           <>
             <Panel title={property.id ? "Edit property" : "Add property"}>
@@ -489,15 +518,20 @@ export default function Admin() {
         {tab === "sync" && (
           <>
             <Panel title="Listing data">
-              <p>
-                Properties are managed from the imported workbook and the
-                Properties tab. The legacy third-party sync is intentionally not
-                run from this dashboard.
-              </p>
-              <p className="muted">
-                To import an updated workbook, run the documented Docker import
-                command from the project folder.
-              </p>
+              <p>Upload the latest Redfin or Zillow workbook to update the website listings.</p>
+              <p className="muted">The import keeps the latest workbook from the other source, merges duplicate addresses with Redfin as the primary source, and removes listings missing from the combined data.</p>
+              {data.user.role === "admin" ? (
+                <form className="fields" onSubmit={importWorkbook}>
+                  <label>
+                    Excel workbook (.xlsx)
+                    <input ref={workbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+                  </label>
+                  <p className="warning">Warning: this replaces the complete public listing dataset. Manual images, featured flags, descriptions, and coordinates are not retained.</p>
+                  <button className="btn" disabled={importing}>{importing ? "Importing…" : "Import workbook"}</button>
+                </form>
+              ) : (
+                <p className="muted">Only administrators can replace listing data. You can review import activity below.</p>
+              )}
             </Panel>
             <Panel title="Data activity history">
               <table className="admin-table">
