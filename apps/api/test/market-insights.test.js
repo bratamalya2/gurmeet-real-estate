@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildMarketInsights } from '../src/services/market-insights.js';
-import { propertySideFilter } from '../src/services/property-filters.js';
+import { propertySideFilter, propertySourceFilter } from '../src/services/property-filters.js';
 
 const soldProperties = [
   { _id: 'one', slug: 'one', address: { street: '1 Main St', city: 'Fremont' }, price: 500000, beds: 3, baths: 2, sqft: 1000, transaction: { soldDate: new Date('2024-01-15') }, updatedAt: new Date('2024-02-01') },
@@ -15,6 +15,10 @@ test('property side filters include Buyer & Seller records', () => {
   assert.equal(propertySideFilter('seller')['transaction.side'].test('Seller'), true);
   assert.equal(propertySideFilter('seller')['transaction.side'].test('Buyer & Seller'), true);
   assert.equal(propertySideFilter('unknown'), null);
+  const redfin = propertySourceFilter('redfin');
+  assert.equal(redfin.$or[0]['source.name'].test('redfin'), true);
+  assert.equal(redfin.$or[1]['source.providers'].test('Redfin'), true);
+  assert.equal(propertySourceFilter('all'), null);
 });
 
 test('market insights calculate price, size, city, year, and price-band metrics', () => {

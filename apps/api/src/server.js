@@ -18,10 +18,11 @@ import { User, Property, Lead, SystemLog, WorkbookImport, AnalyticsEvent } from 
 import { syncSource } from './services/scraper.js';
 import { scrapeAuthorizedUrl } from './services/decodo-scraper.js';
 import { sendLeadNotification } from './services/mail.js';
-import { WorkbookImportError, mergeWorkbookRows, parseWorkbook, rebuildProperties, snapshotForDocument } from './services/workbook-import.js';
+import { WorkbookImportError, mergeWorkbookRows, parseWorkbook, rebuildProperties, snapshotForDocument, validateExpectedWorkbookSource } from './services/workbook-import.js';
 import { AnalyticsRangeError, getAnalytics } from './services/analytics.js';
-import { propertySideFilter } from './services/property-filters.js';
+import { propertySideFilter, propertySourceFilter } from './services/property-filters.js';
 import { getMarketInsights } from './services/market-insights.js';
+import { featuredPropertyFilter, featuredPropertySort } from './services/featured-properties.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -105,6 +106,7 @@ app.get('/api/properties', async (req, res, next) => {
   try {
     const status = ['Active', 'Pending', 'Sold'].includes(req.query.status) ? req.query.status : undefined;
     const side = ['buyer', 'seller'].includes(req.query.side) ? req.query.side : undefined;
+    const source = ['redfin', 'zillow'].includes(req.query.source) ? req.query.source : undefined;
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(24, Math.max(1, Number(req.query.limit) || 9));
     const minPrice = numberQuery(req.query.minPrice), maxPrice = numberQuery(req.query.maxPrice), beds = numberQuery(req.query.beds), baths = numberQuery(req.query.baths);
@@ -113,14 +115,18 @@ app.get('/api/properties', async (req, res, next) => {
     if (status) filter.status = status;
     const sideFilter = propertySideFilter(side);
     if (sideFilter) Object.assign(filter, sideFilter);
+    const sourceFilter = propertySourceFilter(source);
+    const compoundFilters = [];
+    if (sourceFilter) compoundFilters.push(sourceFilter);
     if (minPrice !== undefined || maxPrice !== undefined) filter.price = { ...(minPrice !== undefined ? { $gte: minPrice } : {}), ...(maxPrice !== undefined ? { $lte: maxPrice } : {}) };
     if (beds !== undefined) filter.beds = { $gte: beds };
     if (baths !== undefined) filter.baths = { $gte: baths };
     if (city) filter['address.city'] = new RegExp(`^${city.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
     if (term) {
       const termExpression = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-      filter.$or = [{ title: termExpression }, { 'address.street': termExpression }, { 'address.city': termExpression }, { 'address.zip': termExpression }];
+      compoundFilters.push({ $or: [{ title: termExpression }, { 'address.street': termExpression }, { 'address.city': termExpression }, { 'address.zip': termExpression }] });
     }
+    if (compoundFilters.length) filter.$and = compoundFilters;
     const [items, total] = await Promise.all([
       Property.find(filter).select(publicFields).sort({ featured: -1, createdAt: -1 }).skip((page - 1) * limit).limit(limit),
       Property.countDocuments(filter),
@@ -131,12 +137,8 @@ app.get('/api/properties', async (req, res, next) => {
 app.get('/api/market-insights', async (req, res, next) => { try { return res.json(await getMarketInsights()); } catch (error) { return next(error); } });
 app.get('/api/properties/featured', async (req, res, next) => {
   try {
-    const featured = await Property.find({ featured: true, status: { $in: ['Active', 'Pending'] } }).select(publicFields).sort({ updatedAt: -1 }).limit(6);
-    if (featured.length) return res.json(featured);
-
-    // Keep the landing page useful until active listings are explicitly featured.
-    const recentProperties = await Property.find({ status: { $in: ['Active', 'Pending', 'Sold'] } }).select(publicFields).sort({ updatedAt: -1 }).limit(6);
-    return res.json(recentProperties);
+    const properties = await Property.find(featuredPropertyFilter).select(publicFields).sort(featuredPropertySort).limit(6);
+    return res.json(properties);
   } catch (error) { return next(error); }
 });
 app.get('/api/properties/map', async (req, res, next) => { try { res.json(await Property.find({ status: { $in: ['Active', 'Pending'] }, 'coordinates.lat': { $ne: null }, 'coordinates.lng': { $ne: null } }).select('title slug address price status coordinates').limit(250)); } catch (error) { next(error); } });
@@ -178,13 +180,17 @@ app.get('/api/admin/leads', auth(), async (req, res, next) => { try { res.json(a
 app.get('/api/admin/logs', auth(), async (req, res, next) => { try { res.json(await SystemLog.find().sort({ createdAt: -1 }).limit(30)); } catch (error) { next(error); } });
 app.post('/api/admin/listings/import', auth(['admin']), workbookUpload.single('file'), async (req, res, next) => {
   if (!req.file) return res.status(422).json({ error: 'Choose an .xlsx workbook to import.' });
+  const expectedSource = req.body.expectedSource;
   const log = await SystemLog.create({ source: 'workbook', status: 'running', startedAt: new Date(), filename: req.file.originalname });
   let parsed;
   let previousSnapshot;
+  let snapshotChanged = false;
   try {
     parsed = parseWorkbook(req.file.buffer, req.file.originalname);
+    validateExpectedWorkbookSource(parsed.source, expectedSource);
     previousSnapshot = await WorkbookImport.findOne({ source: parsed.source }).lean();
     await WorkbookImport.findOneAndUpdate({ source: parsed.source }, snapshotForDocument(parsed), { upsert: true, new: true, setDefaultsOnInsert: true });
+    snapshotChanged = true;
     const snapshots = await WorkbookImport.find({ source: { $in: ['redfin', 'zillow'] } }).lean();
     const redfinRows = snapshots.find(snapshot => snapshot.source === 'redfin')?.rows || (parsed.source === 'redfin' ? parsed.rows : []);
     const zillowRows = snapshots.find(snapshot => snapshot.source === 'zillow')?.rows || (parsed.source === 'zillow' ? parsed.rows : []);
@@ -192,7 +198,7 @@ app.post('/api/admin/listings/import', auth(['admin']), workbookUpload.single('f
     await SystemLog.findByIdAndUpdate(log.id, { source: `workbook:${parsed.source}`, status: 'success', completedAt: new Date(), created: result.created, updated: result.updated, removed: result.removed, sourceRows: parsed.rows.length, totalListings: result.totalListings });
     return res.status(200).json({ ok: true, source: parsed.source, filename: parsed.filename, sourceRows: parsed.rows.length, ...result });
   } catch (error) {
-    if (parsed) {
+    if (parsed && snapshotChanged) {
       if (previousSnapshot) await WorkbookImport.replaceOne({ source: parsed.source }, previousSnapshot).catch(() => {});
       else await WorkbookImport.deleteOne({ source: parsed.source }).catch(() => {});
     }

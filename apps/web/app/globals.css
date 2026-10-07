@@ -151,6 +151,21 @@ a {
   background: #fef2f2;
   color: #b91c1c;
 }
+.workbook-imports {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.workbook-imports form {
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: #f8fafc;
+}
+.workbook-imports label small {
+  display: block;
+  margin-top: 5px;
+  font-weight: 400;
+}
 .listing-filters {
   display: grid;
   grid-template-columns: 2fr repeat(5, 1fr) auto auto;
@@ -159,6 +174,36 @@ a {
   border: 1px solid var(--line);
   margin-bottom: 22px;
   background: #f8fafc;
+}
+.listing-source-filter {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 12px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 700;
+}
+.source-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.source-pill {
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+  cursor: pointer;
+}
+.source-pill:hover,
+.source-pill.active {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #fff;
 }
 .text-button {
   border: 0;
@@ -337,6 +382,14 @@ a {
     font-size: 40px !important;
   }
   .listing-filters {
+    grid-template-columns: 1fr;
+  }
+  .listing-source-filter {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .workbook-imports {
     grid-template-columns: 1fr;
   }
   .pagination {

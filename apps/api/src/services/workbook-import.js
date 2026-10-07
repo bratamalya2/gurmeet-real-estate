@@ -6,12 +6,23 @@ import { Property } from '../models/index.js';
 const SOURCE_NAMES = new Set(['redfin', 'zillow']);
 const REDFIN_TABLE_HEADERS = ['Role', 'Address', 'City', 'State', 'ZIP'];
 const LEGACY_REDFIN_HEADERS = ['ID', 'Status', 'Address', 'City', 'State', 'ZIP', 'Price'];
+const ZILLOW_ALL_PROPERTIES_HEADERS = ['Status', 'Full property address', 'Price', 'Date', 'Beds', 'Baths', 'Sq Ft', 'Gurmeet’s side', 'Confidence'];
 
 export class WorkbookImportError extends Error {
   constructor(message) {
     super(message);
     this.name = 'WorkbookImportError';
     this.statusCode = 422;
+  }
+}
+
+export function validateExpectedWorkbookSource(source, expectedSource) {
+  const expected = text(expectedSource).toLowerCase();
+  if (!expected) return;
+  if (!SOURCE_NAMES.has(expected)) throw new WorkbookImportError('Choose either the Redfin or Zillow import control.');
+  if (source !== expected) {
+    const label = source === 'redfin' ? 'Redfin' : 'Zillow';
+    throw new WorkbookImportError(`This file is a ${label} workbook. Use the ${label} import control instead.`);
   }
 }
 
@@ -57,7 +68,7 @@ function addressFrom(row, indices) {
   };
 }
 
-function makeRecord({ source, address, price, status, beds, baths, sqft, soldDate, side, verification, notes, url, externalId }) {
+function makeRecord({ source, address, price, status, beds, baths, sqft, soldDate, side, verification, confidence, notes, imageSearchUrl, url, externalId }) {
   const normalized = normalizeAddress(address);
   const key = streetCityKey(address) || normalized;
   if (!address.street || !address.city || !key) return null;
@@ -90,7 +101,9 @@ function makeRecord({ source, address, price, status, beds, baths, sqft, soldDat
       soldDate,
       side,
       verification,
+      confidence,
       notes,
+      imageSearchUrl,
     },
   };
 }
@@ -199,7 +212,81 @@ function parseBathsAndSqft(value) {
   return { baths: numeric(baths), sqft: numeric(sqft) };
 }
 
+function fullAddress(value) {
+  const match = text(value).match(/^(.+?),\s*(.+?),\s*([A-Z]{2})\s*(\d{5}(?:-\d{4})?)$/i);
+  if (!match) return null;
+  return { street: match[1].trim(), city: match[2].trim(), state: match[3].toUpperCase(), zip: match[4] };
+}
+
+function zillowSide(value) {
+  const side = text(value);
+  if (!side || /^not stated$/i.test(side)) return undefined;
+  if (/buyer\s+(?:and|&)\s+seller/i.test(side)) return 'Buyer & Seller';
+  if (/^buyer$/i.test(side)) return 'Buyer';
+  if (/^seller$/i.test(side)) return 'Seller';
+  return side;
+}
+
+function zillowViewedOn(workbook) {
+  const sheet = workbook.Sheets['Read Me'];
+  if (!sheet) return undefined;
+  const row = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true }).find(item => text(item[0]) === 'Viewed on');
+  return dateValue(row?.[1]);
+}
+
+function estimatedZillowSoldDate(value, viewedOn) {
+  if (!viewedOn) return undefined;
+  const match = text(value).match(/^(\d+)\s+(month|year)s?\s+ago$/i);
+  if (!match) return undefined;
+  const amount = Number(match[1]);
+  const estimated = new Date(Date.UTC(viewedOn.getUTCFullYear(), viewedOn.getUTCMonth(), viewedOn.getUTCDate()));
+  if (match[2].toLowerCase() === 'month') estimated.setUTCMonth(estimated.getUTCMonth() - amount);
+  else estimated.setUTCFullYear(estimated.getUTCFullYear() - amount);
+  return estimated;
+}
+
+function parseAllPropertiesZillow(workbook) {
+  const sheet = workbook.Sheets['All Properties'];
+  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
+  const headerRowIndex = findHeaderRow(rows, ZILLOW_ALL_PROPERTIES_HEADERS);
+  if (headerRowIndex < 0) throw new WorkbookImportError('The Zillow All Properties workbook is missing required columns.');
+  const indices = headerIndex(rows[headerRowIndex]);
+  const viewedOn = zillowViewedOn(workbook);
+  const records = [];
+  for (const [rowIndex, row] of rowsAfterHeader(rows, headerRowIndex).entries()) {
+    if (!row.some(value => text(value))) continue;
+    const statusValue = text(row[indices.Status]).toLowerCase();
+    if (statusValue === 'for rent') continue;
+    if (statusValue !== 'sold' && statusValue !== 'for sale') continue;
+    const addressText = text(row[indices['Full property address']]);
+    if (/property details could not be loaded|^\(undisclosed address\)/i.test(addressText)) continue;
+    const address = fullAddress(addressText);
+    if (!address) continue;
+    const isSold = statusValue === 'sold';
+    const estimatedSoldDate = isSold ? estimatedZillowSoldDate(row[indices.Date], viewedOn) : undefined;
+    records.push(makeRecord({
+      source: 'zillow',
+      address,
+      price: numeric(row[indices.Price]),
+      status: isSold ? 'Sold' : 'Active',
+      beds: numeric(row[indices.Beds]),
+      baths: numeric(row[indices.Baths]),
+      sqft: numeric(row[indices['Sq Ft']]),
+      soldDate: estimatedSoldDate,
+      side: zillowSide(row[indices['Gurmeet’s side']]),
+      verification: isSold && estimatedSoldDate ? `Sold date estimated from Zillow’s ${text(row[indices.Date])} label.` : 'Zillow profile workbook',
+      confidence: text(row[indices.Confidence]),
+      imageSearchUrl: text(row[indices['House image search link']]),
+      url: text(row[indices['Primary source link']]) || 'https://www.zillow.com/profile/Gurmeet%20Singh',
+      externalId: `zillow-all-properties-${rowIndex + headerRowIndex + 2}`,
+    }));
+  }
+  if (!records.length) throw new WorkbookImportError('The Zillow All Properties workbook contains no valid listing rows.');
+  return records.filter(Boolean);
+}
+
 function parseZillow(workbook) {
+  if (workbook.SheetNames.includes('All Properties')) return parseAllPropertiesZillow(workbook);
   const sheet = workbook.Sheets['Profile and activity'];
   if (!sheet) throw new WorkbookImportError('The Zillow workbook must include a Profile and activity sheet.');
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
@@ -251,7 +338,7 @@ function parseZillow(workbook) {
 }
 
 export function detectWorkbookSource(workbook) {
-  if (workbook.SheetNames.includes('Profile and activity')) return 'zillow';
+  if (workbook.SheetNames.includes('Profile and activity') || workbook.SheetNames.includes('All Properties')) return 'zillow';
   if (workbook.SheetNames.includes('Current Redfin') || workbook.SheetNames.includes('Earlier workbook rows') || workbook.SheetNames.includes('Transactions')) return 'redfin';
   throw new WorkbookImportError('Unsupported workbook. Upload a Redfin or Zillow workbook with the expected sheets.');
 }

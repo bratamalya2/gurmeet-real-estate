@@ -6,15 +6,17 @@ import { publicApiUrl } from '../lib/api';
 
 const initialFilters = { q: '', city: '', minPrice: '', maxPrice: '', beds: '', baths: '' };
 
-export default function PropertyGrid({ status, side, featured = false, showFilters = false }) {
+export default function PropertyGrid({ status, side, featured = false, showFilters = false, showSourceFilters = false }) {
   const [data, setData] = useState({ items: [], total: 0, page: 1, pages: 1 });
   const [page, setPage] = useState(1);
+  const [source, setSource] = useState('all');
   const [draft, setDraft] = useState(initialFilters);
   const [filters, setFilters] = useState(initialFilters);
   const [loading, setLoading] = useState(true);
   const query = new URLSearchParams({ page: String(page) });
   if (status) query.set('status', status);
   if (side) query.set('side', side);
+  if (showSourceFilters && source !== 'all') query.set('source', source);
   Object.entries(filters).forEach(([key, value]) => { if (value) query.set(key, value); });
 
   useEffect(() => {
@@ -25,12 +27,18 @@ export default function PropertyGrid({ status, side, featured = false, showFilte
       if (!cancelled) setData(featured ? { items: result, total: result.length, page: 1, pages: 1 } : result);
     }).catch(() => { if (!cancelled) setData({ items: [], total: 0, page: 1, pages: 1 }); }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [featured, page, status, side, JSON.stringify(filters)]);
+  }, [featured, page, status, side, source, showSourceFilters, JSON.stringify(filters)]);
 
   function applyFilters(event) { event.preventDefault(); setPage(1); setFilters(draft); }
-  function clearFilters() { setDraft(initialFilters); setFilters(initialFilters); setPage(1); }
+  function clearFilters() { setDraft(initialFilters); setFilters(initialFilters); setSource('all'); setPage(1); }
 
   return <>
+    {showSourceFilters && <div className="listing-source-filter" role="group" aria-label="Filter portfolio by listing source">
+      <span>Listing source</span>
+      <div className="source-pills">
+        {['all', 'zillow', 'redfin'].map(option => <button key={option} type="button" className={source === option ? 'source-pill active' : 'source-pill'} aria-pressed={source === option} onClick={() => { setSource(option); setPage(1); }}>{option === 'all' ? 'All' : option[0].toUpperCase() + option.slice(1)}</button>)}
+      </div>
+    </div>}
     {showFilters && <form className="listing-filters" onSubmit={applyFilters}>
       <input aria-label="Search listings" placeholder="Search address, city, or ZIP" value={draft.q} onChange={event => setDraft({ ...draft, q: event.target.value })} />
       <input aria-label="City" placeholder="City" value={draft.city} onChange={event => setDraft({ ...draft, city: event.target.value })} />

@@ -366,6 +366,10 @@ paths:
                   type: string
                   format: binary
                   description: Redfin or Zillow .xlsx workbook
+                expectedSource:
+                  type: string
+                  enum: [redfin, zillow]
+                  description: Optional source selected in the admin dashboard. A mismatch with the detected workbook returns 422.
       responses:
         '200':
           description: Workbook imported and listings rebuilt
