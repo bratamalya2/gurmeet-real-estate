@@ -137,7 +137,7 @@ app.get('/api/properties', async (req, res, next) => {
 app.get('/api/market-insights', async (req, res, next) => { try { return res.json(await getMarketInsights()); } catch (error) { return next(error); } });
 app.get('/api/properties/featured', async (req, res, next) => {
   try {
-    const properties = await Property.find(featuredPropertyFilter).select(publicFields).sort(featuredPropertySort).limit(6);
+    const properties = await Property.find(featuredPropertyFilter).select(publicFields).sort(featuredPropertySort).limit(10);
     return res.json(properties);
   } catch (error) { return next(error); }
 });

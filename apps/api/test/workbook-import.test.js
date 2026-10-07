@@ -49,15 +49,15 @@ test('rejects a workbook uploaded through the wrong source control', () => {
   assert.doesNotThrow(() => validateExpectedWorkbookSource('zillow', 'zillow'));
 });
 
-test('keeps only the six highest-priced active or pending listings for homepage features', () => {
+test('keeps the ten highest-priced listings for homepage features, including sold residences', () => {
   const properties = [
     { _id: 'sold', status: 'Sold', price: 9000000, updatedAt: '2026-10-04' },
     { _id: 'unpriced', status: 'Active', updatedAt: '2026-10-04' },
-    ...[700, 600, 500, 400, 300, 200, 100].map((price, index) => ({
+    ...[800, 700, 600, 500, 400, 300, 200, 100, 50, 25, 10].map((price, index) => ({
       _id: String(index), status: index % 2 ? 'Pending' : 'Active', price, updatedAt: `2026-10-${String(index + 1).padStart(2, '0')}`,
     })),
   ];
-  assert.deepEqual(highestValueProperties(properties).map(property => property.price), [700, 600, 500, 400, 300, 200]);
+  assert.deepEqual(highestValueProperties(properties).map(property => property.price), [9000000, 800, 700, 600, 500, 400, 300, 200, 100, 50]);
 });
 
 test('rejects unsupported workbooks before any database work', () => {

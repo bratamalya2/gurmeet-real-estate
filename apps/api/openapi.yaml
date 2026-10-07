@@ -52,7 +52,7 @@ paths:
   /properties/featured:
     get:
       tags: [Properties]
-      summary: List up to six featured properties
+      summary: List up to ten highest-priced properties
       security: []
       responses:
         '200':

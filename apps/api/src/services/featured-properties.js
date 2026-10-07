@@ -1,4 +1,4 @@
-const eligible = property => ['Active', 'Pending'].includes(property?.status) && Number(property.price) > 0;
+const eligible = property => Number(property?.price) > 0;
 
 const updatedAt = property => {
   const value = new Date(property?.updatedAt || 0).valueOf();
@@ -6,7 +6,6 @@ const updatedAt = property => {
 };
 
 export const featuredPropertyFilter = {
-  status: { $in: ['Active', 'Pending'] },
   price: { $gt: 0 },
 };
 
@@ -22,5 +21,5 @@ export function highestValueProperties(properties = []) {
       if (byUpdatedAt) return byUpdatedAt;
       return String(left._id || '').localeCompare(String(right._id || ''));
     })
-    .slice(0, 6);
+    .slice(0, 10);
 }
