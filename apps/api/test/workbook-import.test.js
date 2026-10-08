@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import XLSX from 'xlsx';
-import { WorkbookImportError, mergeWorkbookRows, parseWorkbook, validateExpectedWorkbookSource } from '../src/services/workbook-import.js';
+import { WorkbookImportError, buildWorkbookListings, parseWorkbook, validateExpectedWorkbookSource } from '../src/services/workbook-import.js';
 import { highestValueProperties } from '../src/services/featured-properties.js';
 
 const projectRoot = path.resolve(import.meta.dirname, '../../..');
@@ -20,27 +20,30 @@ test('parses the supplied Redfin Transactions workbook', async () => {
 test('parses the supplied Zillow All Properties workbook and excludes non-listings', async () => {
   const parsed = parseWorkbook(await readWorkbook('Gurmeet_Singh_All_Zillow_Properties.xlsx'), 'zillow.xlsx');
   assert.equal(parsed.source, 'zillow');
-  assert.equal(parsed.rows.length, 192);
+  assert.equal(parsed.rows.length, 207);
   assert.equal(parsed.rows.filter(row => row.status === 'Active').length, 2);
   assert.equal(parsed.rows.some(row => /undisclosed|could not be loaded/i.test(row.address.street)), false);
-  const active = parsed.rows.find(row => row.address.street === '478 Ribier Ct');
+  const active = parsed.rows.find(row => row.address.street === '478 Ribier Ct' && row.status === 'Active');
   assert.equal(active.status, 'Active');
   assert.equal(active.transaction.soldDate, undefined);
   const dualRepresentation = parsed.rows.find(row => row.address.street === '3806 Amy Ct');
   assert.equal(dualRepresentation.transaction.side, 'Buyer & Seller');
   assert.equal(dualRepresentation.transaction.soldDate.toISOString(), '2019-10-05T00:00:00.000Z');
   assert.match(dualRepresentation.transaction.verification, /estimated/i);
+  const repeatedAddress = parsed.rows.filter(row => row.address.street === '478 Ribier Ct');
+  assert.equal(repeatedAddress.length, 2);
+  assert.equal(new Set(repeatedAddress.map(row => row.source.externalId)).size, 2);
 });
 
-test('merges duplicate addresses with Redfin as primary and keeps source-only listings', async () => {
+test('keeps source rows separate when addresses are repeated across workbooks', async () => {
   const redfin = parseWorkbook(await readWorkbook('Gurmeet_Singh_Full_Property_Data_For_Website.xlsx'));
   const zillow = parseWorkbook(await readWorkbook('Gurmeet_Singh_All_Zillow_Properties.xlsx'));
-  const merged = mergeWorkbookRows(redfin.rows, zillow.rows);
-  const duplicate = merged.find(row => row.address.street === '3586 Somerset Ave');
-  assert.deepEqual(duplicate.source.providers, ['redfin', 'zillow']);
-  assert.equal(duplicate.source.name, 'workbook');
-  assert.equal(duplicate.price, 949000);
-  assert.equal(merged.some(row => row.address.street === '3806 Amy Ct'), true);
+  const listings = buildWorkbookListings(redfin.rows, zillow.rows);
+  const duplicates = listings.filter(row => row.address.street === '3586 Somerset Ave');
+  assert.equal(duplicates.length, 2);
+  assert.deepEqual(duplicates.map(row => row.source.name).sort(), ['redfin', 'zillow']);
+  assert.equal(new Set(duplicates.map(row => row.slug)).size, 2);
+  assert.equal(listings.some(row => row.address.street === '3806 Amy Ct'), true);
 });
 
 test('rejects a workbook uploaded through the wrong source control', () => {

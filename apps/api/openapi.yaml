@@ -39,6 +39,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/StatusQuery'
         - $ref: '#/components/parameters/SideQuery'
+        - name: source
+          in: query
+          schema: { type: string, enum: [redfin, zillow] }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [price_desc, price_asc] }
         - name: page
           in: query
           schema: { type: integer, minimum: 1, default: 1 }
@@ -347,12 +353,11 @@ paths:
   /admin/listings/import:
     post:
       tags: [Staff administration]
-      summary: Import a Redfin or Zillow workbook
+      summary: Atomically import paired Redfin and Zillow workbooks
       description: |
-        Upload one .xlsx workbook. The latest workbook from the other source is retained,
-        duplicate addresses are merged with Redfin precedence, and the public Property
-        collection is rebuilt from the combined source snapshots. Listings absent from
-        the combined data are removed.
+        Upload both .xlsx workbooks together. Both are validated before one transaction
+        replaces their snapshots and rebuilds the public Property collection. Every valid
+        source row is retained, including duplicate addresses.
       security: [{ CookieAuth: [] }]
       requestBody:
         required: true
@@ -360,16 +365,16 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [file]
+              required: [redfinFile, zillowFile]
               properties:
-                file:
+                redfinFile:
                   type: string
                   format: binary
-                  description: Redfin or Zillow .xlsx workbook
-                expectedSource:
+                  description: Redfin .xlsx workbook
+                zillowFile:
                   type: string
-                  enum: [redfin, zillow]
-                  description: Optional source selected in the admin dashboard. A mismatch with the detected workbook returns 422.
+                  format: binary
+                  description: Zillow .xlsx workbook
       responses:
         '200':
           description: Workbook imported and listings rebuilt
@@ -379,9 +384,7 @@ paths:
                 type: object
                 properties:
                   ok: { type: boolean, example: true }
-                  source: { type: string, enum: [redfin, zillow] }
-                  filename: { type: string }
-                  sourceRows: { type: integer }
+                  sources: { type: array, items: { type: object } }
                   totalListings: { type: integer }
                   created: { type: integer }
                   updated: { type: integer }

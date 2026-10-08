@@ -47,7 +47,7 @@ export default function Admin() {
   });
   const [property, setProperty] = useState(emptyProperty);
   const [notice, setNotice] = useState("");
-  const [importingSource, setImportingSource] = useState("");
+  const [importingWorkbooks, setImportingWorkbooks] = useState(false);
 
   async function load() {
     try {
@@ -212,31 +212,31 @@ export default function Admin() {
     if (response.ok) await load();
     else setNotice("Staff account could not be updated.");
   }
-  async function importWorkbook(source, event) {
+  async function importWorkbooks(event) {
     event.preventDefault();
-    const ref = source === "redfin" ? redfinWorkbookRef : zillowWorkbookRef;
-    const label = source === "redfin" ? "Redfin" : "Zillow";
-    const file = ref.current?.files?.[0];
-    if (!file) return setNotice(`Choose a ${label} .xlsx workbook first.`);
-    setImportingSource(source);
-    setNotice(`Validating and importing ${label} workbook…`);
+    const redfinFile = redfinWorkbookRef.current?.files?.[0];
+    const zillowFile = zillowWorkbookRef.current?.files?.[0];
+    if (!redfinFile || !zillowFile) return setNotice("Choose both Redfin and Zillow .xlsx workbooks first.");
+    setImportingWorkbooks(true);
+    setNotice("Validating and importing both workbooks…");
     try {
       const body = new FormData();
-      body.append("file", file);
-      body.append("expectedSource", source);
+      body.append("redfinFile", redfinFile);
+      body.append("zillowFile", zillowFile);
       const response = await request("admin/listings/import", {
         method: "POST",
         body,
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Workbook import failed.");
-      if (ref.current) ref.current.value = "";
-      setNotice(`${result.source} workbook imported: ${result.totalListings} listings (${result.created} created, ${result.updated} updated, ${result.removed} removed).`);
+      if (redfinWorkbookRef.current) redfinWorkbookRef.current.value = "";
+      if (zillowWorkbookRef.current) zillowWorkbookRef.current.value = "";
+      setNotice(`Redfin and Zillow workbooks imported: ${result.totalListings} listings (${result.created} created, ${result.updated} updated, ${result.removed} removed).`);
       await load();
     } catch (error) {
       setNotice(error.message || "Workbook import failed.");
     } finally {
-      setImportingSource("");
+      setImportingWorkbooks(false);
     }
   }
 
@@ -526,25 +526,24 @@ export default function Admin() {
               <p className="muted">Each import keeps the latest workbook from the other source, merges duplicate addresses with Redfin as the primary source, and removes listings missing from the combined data. After the first source upload, that source temporarily represents the complete dataset until the other workbook is imported.</p>
               {data.user.role === "admin" ? (
                 <>
-                  <div className="workbook-imports">
-                    <form className="fields" onSubmit={(event) => importWorkbook("redfin", event)}>
+                  <form className="fields workbook-imports" onSubmit={importWorkbooks}>
+                    <div>
                       <label>
                         Redfin workbook (.xlsx)
                         <small className="muted">Expected format: Gurmeet_Singh_Full_Property_Data_For_Website.xlsx</small>
-                        <input ref={redfinWorkbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={Boolean(importingSource)} />
+                        <input ref={redfinWorkbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbooks} />
                       </label>
-                      <button className="btn" disabled={Boolean(importingSource)}>{importingSource === "redfin" ? "Importing Redfin…" : "Import Redfin workbook"}</button>
-                    </form>
-                    <form className="fields" onSubmit={(event) => importWorkbook("zillow", event)}>
+                    </div>
+                    <div>
                       <label>
                         Zillow workbook (.xlsx)
                         <small className="muted">Expected format: Gurmeet_Singh_All_Zillow_Properties.xlsx</small>
-                        <input ref={zillowWorkbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={Boolean(importingSource)} />
+                        <input ref={zillowWorkbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbooks} />
                       </label>
-                      <button className="btn" disabled={Boolean(importingSource)}>{importingSource === "zillow" ? "Importing Zillow…" : "Import Zillow workbook"}</button>
-                    </form>
-                  </div>
-                  <p className="warning">Warning: each import replaces the complete public listing dataset. Manual images, featured flags, descriptions, and coordinates are not retained.</p>
+                    </div>
+                    <button className="btn" disabled={importingWorkbooks}>{importingWorkbooks ? "Importing both workbooks…" : "Import Redfin & Zillow workbooks"}</button>
+                  </form>
+                  <p className="warning">Warning: this paired import replaces the complete public listing dataset. Every valid source row is retained, including duplicate addresses. Manual images, featured flags, descriptions, and coordinates are not retained.</p>
                 </>
               ) : (
                 <p className="muted">Only administrators can replace listing data. You can review import activity below.</p>

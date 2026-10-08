@@ -353,61 +353,30 @@ export function parseWorkbook(buffer, filename = 'uploaded.xlsx') {
   }
   const source = detectWorkbookSource(workbook);
   const rows = source === 'redfin' ? parseRedfin(workbook) : parseZillow(workbook);
-  const uniqueRows = new Map();
-  for (const row of rows) uniqueRows.set(row.key, row);
-  if (!uniqueRows.size) throw new WorkbookImportError('The workbook contains no valid listing addresses.');
+  if (!rows.length) throw new WorkbookImportError('The workbook contains no valid listing addresses.');
+  const occurrences = new Map();
+  const identifiedRows = rows.map(row => {
+    const baseId = row.source.externalId || `${source}-${row.address.normalized}`;
+    const occurrence = (occurrences.get(baseId) || 0) + 1;
+    occurrences.set(baseId, occurrence);
+    return {
+      ...row,
+      source: { ...row.source, externalId: occurrence === 1 ? baseId : `${baseId}--${occurrence}` },
+    };
+  });
   return {
     source,
     filename,
     checksum: crypto.createHash('sha256').update(buffer).digest('hex'),
-    rows: [...uniqueRows.values()],
+    rows: identifiedRows,
   };
 }
 
-function mergeRecord(primary, supplement) {
-  const merged = {
-    ...primary,
-    address: {
-      street: primary.address.street || supplement.address.street,
-      city: primary.address.city || supplement.address.city,
-      state: primary.address.state || supplement.address.state,
-      zip: primary.address.zip || supplement.address.zip,
-    },
-    price: primary.price ?? supplement.price,
-    beds: primary.beds ?? supplement.beds,
-    baths: primary.baths ?? supplement.baths,
-    sqft: primary.sqft ?? supplement.sqft,
-    description: primary.description || supplement.description,
-    transaction: { ...supplement.transaction, ...primary.transaction },
-    source: { ...supplement.source, ...primary.source },
-    providers: [...new Set([...(primary.providers || [primary.source.name]), supplement.source.name])],
-  };
-  merged.address.normalized = normalizeAddress(merged.address);
-  merged.key = streetCityKey(merged.address) || merged.address.normalized;
-  return merged;
-}
-
-export function mergeWorkbookRows(redfinRows = [], zillowRows = []) {
-  const merged = new Map();
-  const add = (row, primary) => {
-    const keys = [row.key, normalizeAddress(row.address)].filter(Boolean);
-    const existingKey = keys.find(key => merged.has(key));
-    if (!existingKey) {
-      const record = { ...row, providers: [row.source.name], source: { ...row.source } };
-      for (const key of keys) merged.set(key, record);
-      return;
-    }
-    const existing = merged.get(existingKey);
-    const combined = primary ? mergeRecord(row, existing) : mergeRecord(existing, row);
-    for (const key of [...keys, existing.key, normalizeAddress(existing.address)]) merged.set(key, combined);
-  };
-  redfinRows.forEach(row => add(row, true));
-  zillowRows.forEach(row => add(row, false));
-
-  const unique = [...new Set(merged.values())];
+export function buildWorkbookListings(redfinRows = [], zillowRows = []) {
   const usedSlugs = new Set();
-  return unique.map((row, index) => {
-    const baseSlug = slugify(`${row.address.street}-${row.address.city}-${row.address.state}-${row.address.zip}`, { lower: true, strict: true }) || `property-${index + 1}`;
+  return [...redfinRows, ...zillowRows].map((row, index) => {
+    const sourceName = row.source.name;
+    const baseSlug = slugify(`${row.address.street}-${row.address.city}-${row.address.state}-${row.address.zip}-${sourceName}-${row.source.externalId}`, { lower: true, strict: true }) || `property-${index + 1}`;
     let slug = baseSlug;
     let suffix = 2;
     while (usedSlugs.has(slug)) slug = `${baseSlug}-${suffix++}`;
@@ -416,11 +385,11 @@ export function mergeWorkbookRows(redfinRows = [], zillowRows = []) {
       ...row,
       slug,
       source: {
-        name: 'workbook',
+        name: sourceName,
         externalId: row.source.externalId,
         url: row.source.url,
         lastSyncedAt: new Date(),
-        providers: row.providers,
+        providers: [sourceName],
       },
       images: [],
       featured: false,
@@ -429,6 +398,9 @@ export function mergeWorkbookRows(redfinRows = [], zillowRows = []) {
     };
   });
 }
+
+// Retained for callers upgrading from the former merged-workbook API.
+export const mergeWorkbookRows = buildWorkbookListings;
 
 export function snapshotForDocument(parsed) {
   return {
@@ -453,18 +425,19 @@ function cleanValue(value) {
   return value;
 }
 
-function propertyMatchKeys(property) {
-  const address = property.address || {};
-  return [address.normalized, streetCityKey(address)].filter(Boolean);
+function listingIdentity(listing) {
+  return `${listing.source?.name || 'workbook'}:${listing.source?.externalId || ''}`;
 }
 
-export async function rebuildProperties(listings) {
-  const existing = await Property.find().lean();
-  const existingByKey = new Map();
+export async function rebuildProperties(listings, { session } = {}) {
+  const existing = await Property.find().session(session || null).lean();
+  const existingByIdentity = new Map();
+  const existingByExternalId = new Map();
   for (const property of existing) {
-    for (const key of propertyMatchKeys(property)) {
-      if (!existingByKey.has(key)) existingByKey.set(key, property);
-    }
+    const identity = listingIdentity(property);
+    if (!existingByIdentity.has(identity)) existingByIdentity.set(identity, property);
+    const externalId = property.source?.externalId;
+    if (externalId && !existingByExternalId.has(externalId)) existingByExternalId.set(externalId, property);
   }
 
   const matchedIds = new Set();
@@ -472,8 +445,7 @@ export async function rebuildProperties(listings) {
   let updated = 0;
   let created = 0;
   for (const listing of listings) {
-    const match = [listing.key, normalizeAddress(listing.address)]
-      .map(key => existingByKey.get(key))
+    const match = [existingByIdentity.get(listingIdentity(listing)), existingByExternalId.get(listing.source.externalId)]
       .find(property => property && !matchedIds.has(String(property._id)));
     const payload = cleanValue({
       title: listing.title,
@@ -502,7 +474,7 @@ export async function rebuildProperties(listings) {
   }
 
   const removeIds = existing.filter(property => !matchedIds.has(String(property._id))).map(property => property._id);
-  if (removeIds.length) await Property.deleteMany({ _id: { $in: removeIds } });
-  if (operations.length) await Property.bulkWrite(operations, { ordered: true });
+  if (removeIds.length) await Property.deleteMany({ _id: { $in: removeIds } }, { session });
+  if (operations.length) await Property.bulkWrite(operations, { ordered: true, session });
   return { created, updated, removed: removeIds.length, totalListings: listings.length };
 }

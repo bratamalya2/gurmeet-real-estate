@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { publicAssetUrl } from "../lib/api";
+import { relativeTransactionLabel } from "../lib/transaction.mjs";
 
 export default function PropertyCard({ p }) {
   const photo = p.images?.[0];
   const propertyName = p.title || p.address?.street || "this property";
+  const transactionLabel = p.status === "Sold" ? relativeTransactionLabel(p.transaction) : "";
   return (
     <article className="card property-card">
       <Link
@@ -34,6 +36,7 @@ export default function PropertyCard({ p }) {
               .filter(Boolean)
               .join("  ·  ")}
           </small>
+          {transactionLabel && <small className="transaction-age">{transactionLabel}</small>}
         </div>
       </Link>
     </article>
