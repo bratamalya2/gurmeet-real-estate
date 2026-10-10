@@ -2,7 +2,7 @@ services:
   mongo:
     image: mongo:7
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
-    restart: unless-stoped
+    restart: unless-stopped
     volumes:
       - mongo_data:/data/db
     healthcheck:
@@ -16,7 +16,7 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
-    restart: unless-stopped
+    restart: "no"
     command:
       - bash
       - -c
