@@ -1,4 +1,4 @@
-const eligible = property => ['Active', 'Pending'].includes(property?.status) && Number(property?.price) > 0;
+const eligible = (property, statuses) => statuses.includes(property?.status) && Number(property?.price) > 0;
 
 export function featuredAddressKey(property) {
   const normalized = property?.address?.normalized;
@@ -22,11 +22,16 @@ export const featuredPropertyFilter = {
   price: { $gt: 0 },
 };
 
+export const soldFeaturedPropertyFilter = {
+  status: 'Sold',
+  price: { $gt: 0 },
+};
+
 export const featuredPropertySort = { price: -1, updatedAt: -1, _id: 1 };
 
-export function highestValueProperties(properties = []) {
+export function highestValueProperties(properties = [], { statuses = ['Active', 'Pending'] } = {}) {
   const sorted = [...properties]
-    .filter(eligible)
+    .filter(property => eligible(property, statuses))
     .sort((left, right) => {
       const byPrice = Number(right.price) - Number(left.price);
       if (byPrice) return byPrice;
@@ -41,4 +46,11 @@ export function highestValueProperties(properties = []) {
     seen.add(key);
     return true;
   }).slice(0, 10);
+}
+
+export function selectFeaturedProperties(activePending = [], sold = []) {
+  const available = highestValueProperties(activePending, { statuses: ['Active', 'Pending'] });
+  return available.length
+    ? available
+    : highestValueProperties(sold, { statuses: ['Sold'] });
 }

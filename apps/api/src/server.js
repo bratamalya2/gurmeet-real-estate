@@ -22,7 +22,7 @@ import { WorkbookImportError, parseWorkbook, rebuildManifestProperties, snapshot
 import { AnalyticsRangeError, getAnalytics } from './services/analytics.js';
 import { propertySideFilter, propertySourceFilter } from './services/property-filters.js';
 import { getMarketInsights } from './services/market-insights.js';
-import { featuredPropertyFilter, featuredPropertySort, highestValueProperties } from './services/featured-properties.js';
+import { featuredPropertyFilter, featuredPropertySort, highestValueProperties, soldFeaturedPropertyFilter } from './services/featured-properties.js';
 import { DriveImageImportError, stageDriveFolderImages, commitStagedDriveImages, removeCommittedDriveImages, applyDriveImageUpdates } from './services/drive-images.js';
 
 const app = express();
@@ -149,8 +149,15 @@ app.get('/api/properties', async (req, res, next) => {
 app.get('/api/market-insights', async (req, res, next) => { try { return res.json(await getMarketInsights()); } catch (error) { return next(error); } });
 app.get('/api/properties/featured', async (req, res, next) => {
   try {
-    const candidates = await Property.find(featuredPropertyFilter).select(publicFields).sort(featuredPropertySort).lean();
-    const properties = highestValueProperties(candidates);
+    let candidates = await Property.find(featuredPropertyFilter).select(publicFields).sort(featuredPropertySort).lean();
+    let statuses = ['Active', 'Pending'];
+    if (!candidates.length) {
+      console.info('[featured] No priced Active/Pending listings; checking sold portfolio fallback.');
+      candidates = await Property.find(soldFeaturedPropertyFilter).select(publicFields).sort(featuredPropertySort).lean();
+      statuses = ['Sold'];
+      if (!candidates.length) console.info('[featured] No priced Sold listings available for featured fallback.');
+    }
+    const properties = highestValueProperties(candidates, { statuses });
     return res.json(properties);
   } catch (error) { return next(error); }
 });
