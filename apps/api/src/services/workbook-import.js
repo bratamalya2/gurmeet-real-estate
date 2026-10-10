@@ -2,6 +2,9 @@ import crypto from 'crypto';
 import slugify from 'slugify';
 import XLSX from 'xlsx';
 import { Property } from '../models/index.js';
+import { PROPERTY_PLACEHOLDER_IMAGE } from '../constants/property-assets.js';
+
+export { PROPERTY_PLACEHOLDER_IMAGE };
 
 const SOURCE_NAMES = new Set(['redfin', 'zillow', 'workbook']);
 const REDFIN_TABLE_HEADERS = ['Role', 'Address', 'City', 'State', 'ZIP'];
@@ -477,28 +480,103 @@ function manifestPhotoDocument(row, importedAt) {
     photoSource: row.photoSource,
     verificationNotes: row.verificationNotes,
     pages: row.pages,
+    imageUrls: row.imageUrls,
+    originalImageUrls: row.originalImageUrls,
+    propertyPages: row.propertyPages,
+    photoSources: row.photoSources,
     importedAt,
   };
 }
 
-function uniqueManifestRows(rows = []) {
-  const seen = new Set();
-  const unique = [];
-  let ignored = 0;
+function hasValue(value) {
+  return value !== undefined && value !== null && value !== '';
+}
+
+function rowCompleteness(row = {}) {
+  return [
+    row.title,
+    row.address?.street,
+    row.address?.city,
+    row.address?.state,
+    row.address?.zip,
+    row.price,
+    row.beds,
+    row.baths,
+    row.sqft,
+    row.transaction?.soldDate,
+    row.transactionSide,
+    row.verificationNotes,
+    row.confidence,
+    row.notes,
+    row.imageUrl,
+    row.propertySlug,
+    row.propertyPage,
+    row.photoSource,
+  ].filter(hasValue).length;
+}
+
+function uniqueValues(values) {
+  return [...new Set(values.filter(hasValue))];
+}
+
+function mergedTransactionSide(rows) {
+  const sides = new Set();
   for (const row of rows) {
-    const identity = row.propertySlug || row.source?.externalId || row.address?.normalized;
-    if (seen.has(identity)) {
-      ignored++;
-      continue;
-    }
-    seen.add(identity);
-    unique.push(row);
+    const side = text(row.transactionSide).toLowerCase();
+    if (side.includes('buyer')) sides.add('Buyer');
+    if (side.includes('seller')) sides.add('Seller');
   }
-  return { rows: unique, ignored };
+  if (sides.has('Buyer') && sides.has('Seller')) return 'Buyer & Seller';
+  return sides.has('Buyer') ? 'Buyer' : sides.has('Seller') ? 'Seller' : undefined;
+}
+
+function mergeDuplicateRows(group = []) {
+  const ordered = group
+    .map((row, index) => ({ row, index }))
+    .sort((left, right) => rowCompleteness(right.row) - rowCompleteness(left.row) || Boolean(right.row.imageUrl) - Boolean(left.row.imageUrl) || Boolean(right.row.propertySlug) - Boolean(left.row.propertySlug) || left.index - right.index)
+    .map(item => item.row);
+  const winner = ordered[0];
+  const merged = { ...winner, address: { ...(winner.address || {}) } };
+
+  for (const field of ['title', 'price', 'status', 'beds', 'baths', 'sqft', 'description', 'propertySlug', 'propertyPage', 'propertySource', 'photoSource', 'confidence', 'imageSearchUrl']) {
+    if (!hasValue(merged[field])) {
+      const fallback = ordered.find(row => hasValue(row[field]));
+      if (fallback) merged[field] = fallback[field];
+    }
+  }
+  for (const field of ['street', 'city', 'state', 'zip', 'normalized']) {
+    if (!hasValue(merged.address[field])) {
+      const fallback = ordered.find(row => hasValue(row.address?.[field]));
+      if (fallback) merged.address[field] = fallback.address[field];
+    }
+  }
+
+  merged.transactionSide = mergedTransactionSide(ordered);
+  merged.imageUrls = uniqueValues(ordered.map(row => row.imageUrl));
+  merged.originalImageUrls = uniqueValues(ordered.map(row => row.originalImageUrl));
+  merged.propertySources = uniqueValues(ordered.map(row => row.propertySource));
+  merged.propertyPages = uniqueValues(ordered.map(row => row.propertyPage));
+  merged.photoSources = uniqueValues(ordered.map(row => row.photoSource));
+  merged.verificationNotes = uniqueValues(ordered.map(row => row.verificationNotes)).join(' ');
+  merged.originalImageUrl = merged.originalImageUrl || merged.originalImageUrls[0];
+  merged.imageUrl = merged.imageUrl || merged.imageUrls[0];
+  return merged;
+}
+
+export function deduplicateManifestRows(rows = []) {
+  const groups = new Map();
+  for (const row of rows) {
+    const key = row.address?.normalized || streetCityKey(row.address) || row.propertySlug || row.source?.externalId;
+    const group = groups.get(key) || [];
+    group.push(row);
+    groups.set(key, group);
+  }
+  const deduplicated = [...groups.values()].map(mergeDuplicateRows);
+  return { rows: deduplicated, ignored: rows.length - deduplicated.length };
 }
 
 export function buildManifestPropertyPlan(rows = [], existing = []) {
-  const { rows: uniqueRows, ignored } = uniqueManifestRows(rows);
+  const { rows: uniqueRows, ignored } = deduplicateManifestRows(rows);
   const matchedIds = new Set();
   const usedSlugs = new Set();
   const importedAt = new Date();
@@ -516,6 +594,11 @@ export function buildManifestPropertyPlan(rows = [], existing = []) {
 
     const existingTransaction = match?.transaction || {};
     const existingSource = match?.source || {};
+    const existingManagedImages = match?.photoManifest?.managedImagePaths || [];
+    const preservedManagedImages = (match?.images || []).filter(image => existingManagedImages.includes(image) && image !== PROPERTY_PLACEHOLDER_IMAGE);
+    const preservedManualImages = (match?.images || []).filter(image => !existingManagedImages.includes(image) && image !== match?.photoManifest?.imageUrl && image !== PROPERTY_PLACEHOLDER_IMAGE);
+    const publicImages = [...new Set([...preservedManualImages, ...preservedManagedImages])];
+    if (!publicImages.length) publicImages.push(PROPERTY_PLACEHOLDER_IMAGE);
     const payload = cleanValue({
       title: row.title || match?.title || `${row.address.street}, ${row.address.city}`,
       slug,
@@ -527,15 +610,15 @@ export function buildManifestPropertyPlan(rows = [], existing = []) {
       description: match?.description,
       status: 'Sold',
       featured: false,
-      images: row.imageUrl ? [row.imageUrl] : [],
-      photoManifest: manifestPhotoDocument(row, importedAt),
+      images: publicImages,
+      photoManifest: { ...(match?.photoManifest || {}), ...manifestPhotoDocument(row, importedAt), managedImagePaths: existingManagedImages },
       coordinates: match?.coordinates,
       source: {
         name: 'workbook',
         externalId: row.source?.externalId || row.propertySlug,
         url: row.propertyPage,
         lastSyncedAt: importedAt,
-        providers: row.propertySource ? [row.propertySource] : (existingSource.providers || []),
+        providers: uniqueValues([...(existingSource.providers || []), ...(row.propertySources || []), row.propertySource]),
       },
       manualOverrides: match?.manualOverrides || { price: false, description: false, images: false },
       transaction: {

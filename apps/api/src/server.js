@@ -23,6 +23,7 @@ import { AnalyticsRangeError, getAnalytics } from './services/analytics.js';
 import { propertySideFilter, propertySourceFilter } from './services/property-filters.js';
 import { getMarketInsights } from './services/market-insights.js';
 import { featuredPropertyFilter, featuredPropertySort, highestValueProperties } from './services/featured-properties.js';
+import { DriveImageImportError, stageDriveFolderImages, commitStagedDriveImages, removeCommittedDriveImages, applyDriveImageUpdates } from './services/drive-images.js';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -208,6 +209,37 @@ app.post('/api/admin/listings/import', auth(['admin']), workbookUpload.single('f
   } catch (error) {
     await SystemLog.findByIdAndUpdate(log.id, { status: 'failed', completedAt: new Date(), error: String(error.message || error).slice(0, 1000) }).catch(() => {});
     if (error instanceof WorkbookImportError) return res.status(error.statusCode).json({ error: error.message });
+    return next(error);
+  } finally {
+    await session?.endSession();
+  }
+});
+app.post('/api/admin/listings/drive-images-import', auth(['admin']), async (req, res, next) => {
+  const folderUrl = typeof req.body?.folderUrl === 'string' ? req.body.folderUrl.trim() : '';
+  let staged;
+  let committed = [];
+  let session;
+  const log = await SystemLog.create({ source: 'drive:images', status: 'running', startedAt: new Date() });
+  try {
+    staged = await stageDriveFolderImages(folderUrl, { apiKey: process.env.GOOGLE_DRIVE_API_KEY, stagingRoot: uploadsDirectory });
+    committed = await commitStagedDriveImages(staged, uploadsDirectory);
+    session = await mongoose.startSession();
+    let plan;
+    await session.withTransaction(async () => {
+      plan = await applyDriveImageUpdates(committed, { folderUrl, session });
+      await WorkbookImport.findOneAndUpdate(
+        { source: 'photos' },
+        { source: 'photos', filename: folderUrl, checksum: staged.batchId, rowCount: committed.length, rows: committed.map(file => ({ id: file.id, name: file.name, mimeType: file.mimeType, localPath: file.localPath, originalUrl: file.originalUrl })), uploadedAt: new Date() },
+        { upsert: true, new: true, setDefaultsOnInsert: true, session },
+      );
+    });
+    await removeCommittedDriveImages(plan.obsoletePaths.map(localPath => ({ targetPath: path.resolve(uploadsDirectory, path.basename(localPath)) })));
+    await SystemLog.findByIdAndUpdate(log.id, { status: 'success', completedAt: new Date(), created: 0, updated: plan.updated, sourceRows: staged.files.length, totalListings: plan.matched });
+    return res.json({ ok: true, folderUrl, filesFound: staged.filesFound, downloaded: committed.length, matched: plan.matched, updated: plan.updated, ignored: staged.ignored + plan.ignored, errors: plan.ignoredFiles || [] });
+  } catch (error) {
+    if (committed.length) await removeCommittedDriveImages(committed);
+    await SystemLog.findByIdAndUpdate(log.id, { status: 'failed', completedAt: new Date(), error: String(error.message || error).slice(0, 1000) }).catch(() => {});
+    if (error instanceof DriveImageImportError) return res.status(error.statusCode).json({ error: error.message });
     return next(error);
   } finally {
     await session?.endSession();

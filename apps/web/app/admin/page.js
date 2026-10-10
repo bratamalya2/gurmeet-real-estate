@@ -36,6 +36,7 @@ export default function Admin() {
   const router = useRouter();
   const uploadRef = useRef();
   const workbookRef = useRef();
+  const driveFolderRef = useRef();
   const [tab, setTab] = useState("dashboard");
   const [data, setData] = useState({
     properties: [],
@@ -47,6 +48,7 @@ export default function Admin() {
   const [property, setProperty] = useState(emptyProperty);
   const [notice, setNotice] = useState("");
   const [importingWorkbook, setImportingWorkbook] = useState(false);
+  const [importingDriveImages, setImportingDriveImages] = useState(false);
 
   async function load() {
     try {
@@ -233,6 +235,25 @@ export default function Admin() {
       setNotice(error.message || "Workbook import failed.");
     } finally {
       setImportingWorkbook(false);
+    }
+  }
+  async function importDriveImages(event) {
+    event.preventDefault();
+    const folderUrl = driveFolderRef.current?.value?.trim();
+    if (!folderUrl) return setNotice("Enter a public Google Drive folder URL first.");
+    setImportingDriveImages(true);
+    setNotice("Listing and downloading Google Drive images…");
+    try {
+      const response = await request("admin/listings/drive-images-import", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ folderUrl }) });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Google Drive image import failed.");
+      if (driveFolderRef.current) driveFolderRef.current.value = "";
+      setNotice(`Google Drive images imported: ${result.downloaded} downloaded, ${result.matched} properties matched, ${result.updated} updated${result.ignored ? `, ${result.ignored} ignored` : ""}.`);
+      await load();
+    } catch (error) {
+      setNotice(error.message || "Google Drive image import failed.");
+    } finally {
+      setImportingDriveImages(false);
     }
   }
 
@@ -528,9 +549,17 @@ export default function Admin() {
                       <small className="muted">Expected format: Homes By Gurmeet — Bought &amp; Sold Photos (251 listings).xlsx</small>
                       <input ref={workbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbook} />
                     </label>
-                    <button className="btn" disabled={importingWorkbook}>{importingWorkbook ? "Importing portfolio workbook…" : "Replace listing dataset"}</button>
+                    <button className="btn" disabled={importingWorkbook || importingDriveImages}>{importingWorkbook ? "Importing portfolio workbook…" : "Replace listing dataset"}</button>
                   </form>
                   <p className="warning">Warning: this import is destructive. It replaces the complete public listing dataset, removes properties absent from the workbook, and sets imported properties to Sold. Invalid workbooks are rejected before any data changes.</p>
+                  <div className="drive-import-panel">
+                    <h3>Download folder images</h3>
+                    <p className="muted">Enter a publicly accessible Google Drive folder. Image filenames should contain the property slug or normalized address. Only matched properties are updated; existing manually uploaded images are preserved.</p>
+                    <form className="fields" onSubmit={importDriveImages}>
+                      <input ref={driveFolderRef} type="url" placeholder="https://drive.google.com/drive/folders/..." disabled={importingDriveImages || importingWorkbook} aria-label="Google Drive folder URL" />
+                      <button className="btn" disabled={importingDriveImages || importingWorkbook}>{importingDriveImages ? "Downloading folder images…" : "Download folder images"}</button>
+                    </form>
+                  </div>
                 </>
               ) : (
                 <p className="muted">Only administrators can replace listing data. You can review import activity below.</p>

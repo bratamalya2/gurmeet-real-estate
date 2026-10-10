@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import XLSX from 'xlsx';
-import { WorkbookImportError, buildManifestPropertyPlan, driveImageUrl, findManifestPropertyMatch, parseWorkbook, validateExpectedWorkbookSource } from '../src/services/workbook-import.js';
+import { WorkbookImportError, PROPERTY_PLACEHOLDER_IMAGE, buildManifestPropertyPlan, deduplicateManifestRows, driveImageUrl, findManifestPropertyMatch, parseWorkbook, validateExpectedWorkbookSource } from '../src/services/workbook-import.js';
 import { highestValueProperties } from '../src/services/featured-properties.js';
 
 const projectRoot = path.resolve(import.meta.dirname, '../../..');
@@ -84,7 +84,31 @@ test('builds a manifest replacement plan with stable matching and preserved fiel
   assert.deepEqual(plan.listings[0].payload.coordinates, { lat: 1, lng: 2 });
   assert.equal(plan.listings[0].payload.transaction.soldDate.toISOString(), '2024-01-01T00:00:00.000Z');
   assert.equal(plan.listings[0].payload.transaction.side, 'Seller');
-  assert.deepEqual(plan.listings[0].payload.images, ['https://drive.google.com/uc?export=view&id=image']);
+  assert.deepEqual(plan.listings[0].payload.images, [PROPERTY_PLACEHOLDER_IMAGE]);
+  assert.deepEqual(plan.listings[0].payload.photoManifest.imageUrls, ['https://drive.google.com/uc?export=view&id=image']);
+});
+
+test('deduplicates the supplied 251-row workbook by address', async () => {
+  const parsed = parseWorkbook(await readWorkbook('Homes By Gurmeet — Bought & Sold Photos (251 listings).xlsx'), 'photos.xlsx');
+  const plan = buildManifestPropertyPlan(parsed.rows, []);
+  assert.equal(parsed.rows.length, 251);
+  assert.equal(plan.totalListings, 203);
+  assert.equal(plan.ignored, 48);
+  assert.equal(plan.listings.every(({ payload }) => payload.images.includes(PROPERTY_PLACEHOLDER_IMAGE)), true);
+});
+
+test('merges duplicate address sides and metadata while keeping the most complete row', () => {
+  const rows = [
+    { address: { street: '1 Main St', city: 'Fremont', state: 'CA', zip: '94536', normalized: '1mainstfremontca94536' }, title: 'Main Street', propertySlug: 'main-st', transactionSide: 'Buyer', propertySource: 'zillow', verificationNotes: 'Buyer verified' },
+    { address: { street: '1 Main St', city: 'Fremont', state: 'CA', zip: '94536', normalized: '1mainstfremontca94536' }, title: 'Main Street, Fremont', propertySlug: 'main-st-redfin', transactionSide: 'Seller', propertySource: 'redfin', price: 900000, imageUrl: 'https://example.com/main.jpg', verificationNotes: 'Seller verified' },
+  ];
+  const result = deduplicateManifestRows(rows);
+  assert.equal(result.ignored, 1);
+  assert.equal(result.rows.length, 1);
+  assert.equal(result.rows[0].transactionSide, 'Buyer & Seller');
+  assert.equal(result.rows[0].price, 900000);
+  assert.deepEqual(result.rows[0].propertySources, ['redfin', 'zillow']);
+  assert.deepEqual(result.rows[0].imageUrls, ['https://example.com/main.jpg']);
 });
 
 test('creates unmatched sold rows, removes absent properties, and ignores duplicate stable identities', () => {
