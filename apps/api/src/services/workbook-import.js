@@ -3,10 +3,11 @@ import slugify from 'slugify';
 import XLSX from 'xlsx';
 import { Property } from '../models/index.js';
 
-const SOURCE_NAMES = new Set(['redfin', 'zillow']);
+const SOURCE_NAMES = new Set(['redfin', 'zillow', 'photos']);
 const REDFIN_TABLE_HEADERS = ['Role', 'Address', 'City', 'State', 'ZIP'];
 const LEGACY_REDFIN_HEADERS = ['ID', 'Status', 'Address', 'City', 'State', 'ZIP', 'Price'];
 const ZILLOW_ALL_PROPERTIES_HEADERS = ['Status', 'Full property address', 'Price', 'Date', 'Beds', 'Baths', 'Sq Ft', 'Gurmeet’s side', 'Confidence'];
+const PHOTO_MANIFEST_HEADERS = ['Property name', 'Address', 'Google Drive image link', 'Status', 'Page(s)', 'Property page', 'Photo source', 'Verification notes'];
 
 export class WorkbookImportError extends Error {
   constructor(message) {
@@ -213,9 +214,62 @@ function parseBathsAndSqft(value) {
 }
 
 function fullAddress(value) {
-  const match = text(value).match(/^(.+?),\s*(.+?),\s*([A-Z]{2})\s*(\d{5}(?:-\d{4})?)$/i);
+  const match = text(value).match(/^(.+?),\s*(.+?),\s*([A-Z]{2})(?:\s+(\d{5}(?:-\d{4})?))?$/i);
   if (!match) return null;
-  return { street: match[1].trim(), city: match[2].trim(), state: match[3].toUpperCase(), zip: match[4] };
+  return { street: match[1].trim(), city: match[2].trim(), state: match[3].toUpperCase(), zip: match[4] || '' };
+}
+
+function propertySlugFromUrl(value) {
+  try {
+    const pathname = new URL(text(value)).pathname.replace(/\/+$/, '');
+    return decodeURIComponent(pathname.split('/').pop() || '');
+  } catch {
+    return '';
+  }
+}
+
+function sourceFromPropertySlug(slug) {
+  const match = text(slug).match(/-(redfin|zillow)-/i);
+  return match?.[1]?.toLowerCase();
+}
+
+export function driveImageUrl(value) {
+  const original = text(value);
+  const match = original.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:[^#]*&)?id=)([a-zA-Z0-9_-]+)/i);
+  return match ? `https://drive.google.com/uc?export=view&id=${match[1]}` : original;
+}
+
+function parsePhotoManifest(workbook) {
+  const sheetName = 'Portfolio — all listings';
+  if (!workbook.SheetNames.includes(sheetName)) throw new WorkbookImportError('The photo manifest must include a Portfolio — all listings sheet.');
+  const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '', raw: true });
+  const headerRowIndex = findHeaderRow(rows, PHOTO_MANIFEST_HEADERS);
+  if (headerRowIndex < 0) throw new WorkbookImportError('The photo manifest is missing required columns.');
+  const indices = headerIndex(rows[headerRowIndex]);
+  const records = [];
+  for (const row of rowsAfterHeader(rows, headerRowIndex)) {
+    if (!row.some(value => text(value))) continue;
+    const address = fullAddress(row[indices.Address]);
+    const propertyPage = text(row[indices['Property page']]);
+    const propertySlug = propertySlugFromUrl(propertyPage);
+    if (!address || !propertySlug) continue;
+    records.push({
+      source: { name: 'photos', externalId: propertySlug },
+      key: streetCityKey(address) || normalizeAddress(address),
+      title: text(row[indices['Property name']]),
+      address: { ...address, normalized: normalizeAddress(address) },
+      propertySlug,
+      propertySource: sourceFromPropertySlug(propertySlug),
+      imageUrl: driveImageUrl(row[indices['Google Drive image link']]),
+      originalImageUrl: text(row[indices['Google Drive image link']]),
+      pages: text(row[indices['Page(s)']]),
+      propertyPage,
+      photoSource: text(row[indices['Photo source']]),
+      verificationNotes: text(row[indices['Verification notes']]),
+    });
+  }
+  if (!records.length) throw new WorkbookImportError('The photo manifest contains no valid property rows.');
+  return records;
 }
 
 function zillowSide(value) {
@@ -338,9 +392,10 @@ function parseZillow(workbook) {
 }
 
 export function detectWorkbookSource(workbook) {
+  if (workbook.SheetNames.includes('Portfolio — all listings')) return 'photos';
   if (workbook.SheetNames.includes('Profile and activity') || workbook.SheetNames.includes('All Properties')) return 'zillow';
   if (workbook.SheetNames.includes('Current Redfin') || workbook.SheetNames.includes('Earlier workbook rows') || workbook.SheetNames.includes('Transactions')) return 'redfin';
-  throw new WorkbookImportError('Unsupported workbook. Upload a Redfin or Zillow workbook with the expected sheets.');
+  throw new WorkbookImportError('Unsupported workbook. Upload a Redfin, Zillow, or supported photo-manifest workbook with the expected sheets.');
 }
 
 export function parseWorkbook(buffer, filename = 'uploaded.xlsx') {
@@ -352,7 +407,7 @@ export function parseWorkbook(buffer, filename = 'uploaded.xlsx') {
     throw new WorkbookImportError('The uploaded file is not a readable .xlsx workbook.');
   }
   const source = detectWorkbookSource(workbook);
-  const rows = source === 'redfin' ? parseRedfin(workbook) : parseZillow(workbook);
+  const rows = source === 'redfin' ? parseRedfin(workbook) : source === 'zillow' ? parseZillow(workbook) : parsePhotoManifest(workbook);
   if (!rows.length) throw new WorkbookImportError('The workbook contains no valid listing addresses.');
   const occurrences = new Map();
   const identifiedRows = rows.map(row => {
@@ -372,7 +427,14 @@ export function parseWorkbook(buffer, filename = 'uploaded.xlsx') {
   };
 }
 
-export function buildWorkbookListings(redfinRows = [], zillowRows = []) {
+export function buildWorkbookListings(redfinRows = [], zillowRows = [], photoRows = []) {
+  const photoBySlug = new Map(photoRows.filter(row => row.propertySlug).map(row => [row.propertySlug, row]));
+  const photoBySourceAndAddress = new Map();
+  for (const row of photoRows) {
+    if (!row.propertySource || !row.address) continue;
+    const key = `${row.propertySource}:${streetCityKey(row.address)}`;
+    photoBySourceAndAddress.set(key, [...(photoBySourceAndAddress.get(key) || []), row]);
+  }
   const usedSlugs = new Set();
   return [...redfinRows, ...zillowRows].map((row, index) => {
     const sourceName = row.source.name;
@@ -381,6 +443,17 @@ export function buildWorkbookListings(redfinRows = [], zillowRows = []) {
     let suffix = 2;
     while (usedSlugs.has(slug)) slug = `${baseSlug}-${suffix++}`;
     usedSlugs.add(slug);
+    const sourceAddressMatches = photoBySourceAndAddress.get(`${sourceName}:${streetCityKey(row.address)}`) || [];
+    const photo = photoBySlug.get(baseSlug) || (sourceAddressMatches.length === 1 ? sourceAddressMatches[0] : null);
+    const photoManifest = photo ? {
+      imageUrl: photo.imageUrl,
+      originalImageUrl: photo.originalImageUrl,
+      propertyPage: photo.propertyPage,
+      photoSource: photo.photoSource,
+      verificationNotes: photo.verificationNotes,
+      pages: photo.pages,
+      importedAt: new Date(),
+    } : undefined;
     return {
       ...row,
       slug,
@@ -391,7 +464,8 @@ export function buildWorkbookListings(redfinRows = [], zillowRows = []) {
         lastSyncedAt: new Date(),
         providers: [sourceName],
       },
-      images: [],
+      images: photoManifest?.imageUrl ? [photoManifest.imageUrl] : [],
+      photoManifest,
       featured: false,
       manualOverrides: { price: false, description: false, images: false },
       createdBy: undefined,
@@ -415,6 +489,57 @@ export function snapshotForDocument(parsed) {
 
 export function sourceIsValid(source) {
   return SOURCE_NAMES.has(source);
+}
+
+function photoManifestDocument(row) {
+  return {
+    imageUrl: row.imageUrl,
+    originalImageUrl: row.originalImageUrl,
+    propertyPage: row.propertyPage,
+    photoSource: row.photoSource,
+    verificationNotes: row.verificationNotes,
+    pages: row.pages,
+    importedAt: new Date(),
+  };
+}
+
+export function findPhotoManifestMatch(property, photoRows = []) {
+  const exact = photoRows.find(row => row.propertySlug && row.propertySlug === property?.slug);
+  if (exact) return exact;
+  const normalized = property?.address?.normalized;
+  const addressKey = streetCityKey(property?.address || {});
+  if (!normalized && !addressKey) return null;
+  const source = property?.source?.name;
+  const matchesAddress = row => (normalized && row.address?.normalized === normalized) || (addressKey && streetCityKey(row.address || {}) === addressKey);
+  const sourceMatches = photoRows.filter(row => matchesAddress(row) && row.propertySource && row.propertySource === source);
+  if (sourceMatches.length === 1) return sourceMatches[0];
+  const addressMatches = photoRows.filter(matchesAddress);
+  return addressMatches.length === 1 ? addressMatches[0] : null;
+}
+
+export async function applyPhotoManifestToProperties(photoRows = [], { session } = {}) {
+  const existing = await Property.find().session(session || null).lean();
+  const matchedIds = new Set();
+  const operations = [];
+  let matched = 0;
+  for (const row of photoRows) {
+    const available = existing.filter(item => !matchedIds.has(String(item._id)));
+    let property = available.find(item => row.propertySlug && item.slug === row.propertySlug);
+    if (!property && row.propertySource) {
+      const sourceMatches = available.filter(item => item.source?.name === row.propertySource && ((item.address?.normalized && item.address.normalized === row.address?.normalized) || streetCityKey(item.address || {}) === streetCityKey(row.address || {})));
+      if (sourceMatches.length === 1) property = sourceMatches[0];
+    }
+    if (!property) {
+      const addressMatches = available.filter(item => ((item.address?.normalized && item.address.normalized === row.address?.normalized) || streetCityKey(item.address || {}) === streetCityKey(row.address || {})));
+      if (addressMatches.length === 1) property = addressMatches[0];
+    }
+    if (!property) continue;
+    matchedIds.add(String(property._id));
+    matched++;
+    operations.push({ updateOne: { filter: { _id: property._id }, update: { $set: { images: row.imageUrl ? [row.imageUrl] : [], photoManifest: photoManifestDocument(row) } } } });
+  }
+  if (operations.length) await Property.bulkWrite(operations, { ordered: true, session });
+  return { matched, updated: operations.length, ignored: photoRows.length - matched };
 }
 
 function cleanValue(value) {
@@ -458,7 +583,8 @@ export async function rebuildProperties(listings, { session } = {}) {
       description: listing.description,
       status: listing.status,
       featured: false,
-      images: [],
+      images: listing.images || [],
+      photoManifest: listing.photoManifest,
       source: listing.source,
       transaction: listing.transaction,
       manualOverrides: { price: false, description: false, images: false },
@@ -466,7 +592,9 @@ export async function rebuildProperties(listings, { session } = {}) {
     if (match) {
       matchedIds.add(String(match._id));
       updated++;
-      operations.push({ updateOne: { filter: { _id: match._id }, update: { $set: payload, $unset: { coordinates: 1, createdBy: 1, scraped: 1 } } } });
+      const unset = { coordinates: 1, createdBy: 1, scraped: 1 };
+      if (!listing.photoManifest) unset.photoManifest = 1;
+      operations.push({ updateOne: { filter: { _id: match._id }, update: { $set: payload, $unset: unset } } });
     } else {
       created++;
       operations.push({ insertOne: { document: payload } });

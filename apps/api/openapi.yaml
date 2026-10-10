@@ -392,6 +392,45 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /admin/listings/photos-import:
+    post:
+      tags: [Staff administration]
+      summary: Import the supplemental property photo manifest
+      description: |
+        Upload the supported photo-manifest workbook to attach verified image and
+        portfolio metadata to existing Redfin/Zillow properties. It does not create,
+        delete, or replace listing records.
+      security: [{ CookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Homes By Gurmeet photo manifest .xlsx workbook
+      responses:
+        '200':
+          description: Photo manifest applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  source: { type: string, example: photos }
+                  filename: { type: string }
+                  sourceRows: { type: integer }
+                  matched: { type: integer }
+                  updated: { type: integer }
+                  ignored: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /admin/users:
     get:
       tags: [Staff administration]

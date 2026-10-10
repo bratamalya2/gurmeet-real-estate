@@ -5,6 +5,12 @@ import PropertyCard from './PropertyCard';
 import { publicApiUrl } from '../lib/api';
 
 const initialFilters = { q: '', city: '', minPrice: '', maxPrice: '', beds: '', baths: '' };
+const featuredAddressKey = property => {
+  if (property?.address?.normalized) return property.address.normalized;
+  const address = property?.address || {};
+  const fallback = [address.street, address.city, address.state, address.zip].filter(Boolean).join('').toLowerCase().replace(/\W/g, '');
+  return fallback || property?._id;
+};
 
 export default function PropertyGrid({ status, side, featured = false, showFilters = false, showSourceFilters = false, showPriceSort = false }) {
   const [data, setData] = useState({ items: [], total: 0, page: 1, pages: 1 });
@@ -26,7 +32,10 @@ export default function PropertyGrid({ status, side, featured = false, showFilte
     setLoading(true);
     const endpoint = featured ? publicApiUrl('properties/featured') : publicApiUrl(`properties?${query.toString()}`);
     fetch(endpoint).then(response => response.ok ? response.json() : Promise.reject()).then(result => {
-      if (!cancelled) setData(featured ? { items: result, total: result.length, page: 1, pages: 1 } : result);
+      if (!cancelled) {
+        const items = featured ? result.filter((property, index, list) => list.findIndex(candidate => featuredAddressKey(candidate) === featuredAddressKey(property)) === index) : result.items;
+        setData(featured ? { items, total: items.length, page: 1, pages: 1 } : result);
+      }
     }).catch(() => { if (!cancelled) setData({ items: [], total: 0, page: 1, pages: 1 }); }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [featured, page, status, side, source, sort, showSourceFilters, showPriceSort, JSON.stringify(filters)]);
@@ -59,7 +68,7 @@ export default function PropertyGrid({ status, side, featured = false, showFilte
       <button className="btn" type="submit">Apply filters</button><button className="text-button" type="button" onClick={clearFilters}>Clear</button>
     </form>}
     {!featured && !loading && <p className="listing-count">{data.total} {side === 'buyer' ? 'homes bought with Gurmeet' : side === 'seller' ? 'homes sold by Gurmeet' : status === 'Sold' ? 'sold properties' : 'properties'} found</p>}
-    {loading ? <div className="empty">Loading properties…</div> : data.items.length ? <div className="grid three">{data.items.map(property => <PropertyCard key={property._id} p={property} />)}</div> : <div className="empty">{featured ? 'Featured residences will appear here soon.' : 'No properties match those filters.'}</div>}
+    {loading ? <div className="empty">Loading properties…</div> : data.items.length ? <div className="grid three">{data.items.map(property => <PropertyCard key={property._id} p={property} portfolioSide={side} />)}</div> : <div className="empty">{featured ? 'Featured residences will appear here soon.' : 'No properties match those filters.'}</div>}
     {!featured && data.pages > 1 && <nav className="pagination" aria-label="Listing pages"><button className="btn alt" disabled={page <= 1} onClick={() => setPage(current => current - 1)}>Previous</button><span>Page {data.page} of {data.pages}</span><button className="btn alt" disabled={page >= data.pages} onClick={() => setPage(current => current + 1)}>Next</button></nav>}
   </>;
 }

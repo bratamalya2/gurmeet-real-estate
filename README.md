@@ -20,4 +20,6 @@ To import the supplied Redfin and Zillow workbooks from the command line, run `d
 
 Administrators can import Redfin and Zillow `.xlsx` workbooks together from the Admin dashboard under **Sync**. Both workbooks are validated first, then their snapshots and the public listing dataset are rebuilt in one transaction. Every valid source row is retained, including duplicate addresses. Listings absent from the paired source data are removed, and workbook data resets manual listing fields such as images and featured status.
 
+The Sync tab also accepts `Homes By Gurmeet — Bought & Sold Photos (251 listings).xlsx` as a supplemental photo manifest. It matches existing listings by their source-specific property slug or normalized address, applies the verified Google Drive image and photo metadata, and reports unmatched rows. It does not create or delete listings and does not replace listing prices, statuses, or transaction dates.
+
 The Admin dashboard **Analytics** tab reports current inventory, pricing, lead activity, workbook freshness, and first-party page/listing views. Traffic events are anonymous, contain no query strings or personal data, and are retained for 24 months.

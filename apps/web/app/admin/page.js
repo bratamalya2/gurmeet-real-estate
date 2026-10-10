@@ -37,6 +37,7 @@ export default function Admin() {
   const uploadRef = useRef();
   const redfinWorkbookRef = useRef();
   const zillowWorkbookRef = useRef();
+  const photoManifestRef = useRef();
   const [tab, setTab] = useState("dashboard");
   const [data, setData] = useState({
     properties: [],
@@ -48,6 +49,7 @@ export default function Admin() {
   const [property, setProperty] = useState(emptyProperty);
   const [notice, setNotice] = useState("");
   const [importingWorkbooks, setImportingWorkbooks] = useState(false);
+  const [importingPhotoManifest, setImportingPhotoManifest] = useState(false);
 
   async function load() {
     try {
@@ -237,6 +239,27 @@ export default function Admin() {
       setNotice(error.message || "Workbook import failed.");
     } finally {
       setImportingWorkbooks(false);
+    }
+  }
+  async function importPhotoManifest(event) {
+    event.preventDefault();
+    const file = photoManifestRef.current?.files?.[0];
+    if (!file) return setNotice("Choose the photo manifest .xlsx workbook first.");
+    setImportingPhotoManifest(true);
+    setNotice("Validating and applying photo manifest…");
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const response = await request("admin/listings/photos-import", { method: "POST", body });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Photo manifest import failed.");
+      if (photoManifestRef.current) photoManifestRef.current.value = "";
+      setNotice(`Photo manifest imported: ${result.updated} properties updated, ${result.ignored} rows unmatched.`);
+      await load();
+    } catch (error) {
+      setNotice(error.message || "Photo manifest import failed.");
+    } finally {
+      setImportingPhotoManifest(false);
     }
   }
 
@@ -523,7 +546,7 @@ export default function Admin() {
           <>
             <Panel title="Listing data">
               <p>Upload the latest Redfin and Zillow workbooks to update the website listings.</p>
-              <p className="muted">Each import keeps the latest workbook from the other source, merges duplicate addresses with Redfin as the primary source, and removes listings missing from the combined data. After the first source upload, that source temporarily represents the complete dataset until the other workbook is imported.</p>
+              <p className="muted">Each import keeps the latest workbook from the other source, retains duplicate source rows as separate listings, and removes listings missing from the combined data. After the first source upload, that source temporarily represents the complete dataset until the other workbook is imported.</p>
               {data.user.role === "admin" ? (
                 <>
                   <form className="fields workbook-imports" onSubmit={importWorkbooks}>
@@ -531,19 +554,28 @@ export default function Admin() {
                       <label>
                         Redfin workbook (.xlsx)
                         <small className="muted">Expected format: Gurmeet_Singh_Full_Property_Data_For_Website.xlsx</small>
-                        <input ref={redfinWorkbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbooks} />
+                        <input ref={redfinWorkbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbooks || importingPhotoManifest} />
                       </label>
                     </div>
                     <div>
                       <label>
                         Zillow workbook (.xlsx)
                         <small className="muted">Expected format: Gurmeet_Singh_All_Zillow_Properties.xlsx</small>
-                        <input ref={zillowWorkbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbooks} />
+                        <input ref={zillowWorkbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbooks || importingPhotoManifest} />
                       </label>
                     </div>
-                    <button className="btn" disabled={importingWorkbooks}>{importingWorkbooks ? "Importing both workbooks…" : "Import Redfin & Zillow workbooks"}</button>
+                    <button className="btn" disabled={importingWorkbooks || importingPhotoManifest}>{importingWorkbooks ? "Importing both workbooks…" : "Import Redfin & Zillow workbooks"}</button>
                   </form>
                   <p className="warning">Warning: this paired import replaces the complete public listing dataset. Every valid source row is retained, including duplicate addresses. Manual images, featured flags, descriptions, and coordinates are not retained.</p>
+                  <form className="fields workbook-imports photo-manifest-import" onSubmit={importPhotoManifest}>
+                    <label>
+                      Photo manifest (.xlsx)
+                      <small className="muted">Expected format: Homes By Gurmeet — Bought &amp; Sold Photos (251 listings).xlsx</small>
+                      <input ref={photoManifestRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbooks || importingPhotoManifest} />
+                    </label>
+                    <button className="btn alt" disabled={importingWorkbooks || importingPhotoManifest}>{importingPhotoManifest ? "Applying photo manifest…" : "Import photo manifest"}</button>
+                  </form>
+                  <p className="muted">This supplemental workbook adds verified photo and portfolio metadata to existing Redfin/Zillow listings. It does not create or delete listings and does not replace listing prices, statuses, or transaction dates.</p>
                 </>
               ) : (
                 <p className="muted">Only administrators can replace listing data. You can review import activity below.</p>
