@@ -14,12 +14,12 @@ The backend OpenAPI 3.0 document is at `apps/api/openapi.yaml`. Import it into [
 
 ## Workbook import
 
-The Docker MongoDB service runs as a one-node replica set (`rs0`) so paired workbook imports are transactional. Set `MONGODB_URI=mongodb://mongo:27017/homesbygurmeet?replicaSet=rs0` in the API environment before starting the stack.
+The Docker MongoDB service runs as a one-node replica set (`rs0`) so the complete listing replacement is transactional. Set `MONGODB_URI=mongodb://mongo:27017/homesbygurmeet?replicaSet=rs0` in the API environment before starting the stack.
 
-To import the supplied Redfin and Zillow workbooks from the command line, run `docker compose run --rm api npm run import:workbook -- /app/data/Gurmeet_Singh_Full_Property_Data_For_Website.xlsx /app/data/Gurmeet_Singh_All_Zillow_Properties.xlsx`.
+The command-line importer uses the same parser and replacement logic: `docker compose run --rm api npm run import:workbook -- "/app/data/Homes By Gurmeet — Bought & Sold Photos (251 listings).xlsx"`.
 
-Administrators can import Redfin and Zillow `.xlsx` workbooks together from the Admin dashboard under **Sync**. Both workbooks are validated first, then their snapshots and the public listing dataset are rebuilt in one transaction. Every valid source row is retained, including duplicate addresses. Listings absent from the paired source data are removed, and workbook data resets manual listing fields such as images and featured status.
+The Admin dashboard **Sync** tab accepts `Homes By Gurmeet — Bought & Sold Photos (251 listings).xlsx`. The workbook is validated completely before one transaction stores its snapshot and replaces the public `Property` collection. Every valid portfolio row is retained, including distinct rows with the same address. Properties absent from the workbook are removed.
 
-The Sync tab also accepts `Homes By Gurmeet — Bought & Sold Photos (251 listings).xlsx` as a supplemental photo manifest. It matches existing listings by their source-specific property slug or normalized address, applies the verified Google Drive image and photo metadata, and reports unmatched rows. It does not create or delete listings and does not replace listing prices, statuses, or transaction dates.
+For matching properties, the import preserves listing fields that are not present in the workbook, such as price, dimensions, coordinates, descriptions, and transaction dates. Unmatched rows are created as sold properties with empty unavailable fields. The workbook supplies the title, address, image, buyer/seller classification, verification metadata, and portfolio source information.
 
 The Admin dashboard **Analytics** tab reports current inventory, pricing, lead activity, workbook freshness, and first-party page/listing views. Traffic events are anonymous, contain no query strings or personal data, and are retained for 24 months.

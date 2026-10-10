@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import XLSX from 'xlsx';
-import { WorkbookImportError, buildWorkbookListings, driveImageUrl, findPhotoManifestMatch, parseWorkbook, validateExpectedWorkbookSource } from '../src/services/workbook-import.js';
+import { WorkbookImportError, buildManifestPropertyPlan, driveImageUrl, findManifestPropertyMatch, parseWorkbook, validateExpectedWorkbookSource } from '../src/services/workbook-import.js';
 import { highestValueProperties } from '../src/services/featured-properties.js';
 
 const projectRoot = path.resolve(import.meta.dirname, '../../..');
@@ -35,53 +35,91 @@ test('parses the supplied Zillow All Properties workbook and excludes non-listin
   assert.equal(new Set(repeatedAddress.map(row => row.source.externalId)).size, 2);
 });
 
-test('keeps source rows separate when addresses are repeated across workbooks', async () => {
-  const redfin = parseWorkbook(await readWorkbook('Gurmeet_Singh_Full_Property_Data_For_Website.xlsx'));
-  const zillow = parseWorkbook(await readWorkbook('Gurmeet_Singh_All_Zillow_Properties.xlsx'));
-  const listings = buildWorkbookListings(redfin.rows, zillow.rows);
-  const duplicates = listings.filter(row => row.address.street === '3586 Somerset Ave');
-  assert.equal(duplicates.length, 2);
-  assert.deepEqual(duplicates.map(row => row.source.name).sort(), ['redfin', 'zillow']);
-  assert.equal(new Set(duplicates.map(row => row.slug)).size, 2);
-  assert.equal(listings.some(row => row.address.street === '3806 Amy Ct'), true);
-});
-
 test('parses the supplied 251-listing photo manifest', async () => {
   const parsed = parseWorkbook(await readWorkbook('Homes By Gurmeet — Bought & Sold Photos (251 listings).xlsx'), 'photos.xlsx');
-  assert.equal(parsed.source, 'photos');
+  assert.equal(parsed.source, 'workbook');
   assert.equal(parsed.rows.length, 251);
   assert.equal(parsed.rows.filter(row => row.pages === 'Bought with Gurmeet').length, 182);
   assert.equal(parsed.rows.filter(row => row.pages === 'Sold by Gurmeet').length, 69);
   assert.equal(parsed.rows[0].propertySlug, '1995-eleanor-loop-dublin-ca-94568-zillow-zillow-all-properties-8');
   assert.equal(parsed.rows[0].imageUrl, driveImageUrl('https://drive.google.com/file/d/1nb6xESBTDmwFUMzKJYr1hIGvpMyQ4wPO/view?usp=drivesdk'));
   assert.equal(parsed.rows[0].propertySource, 'zillow');
+  assert.equal(parsed.rows[0].transactionSide, 'Buyer');
 });
 
-test('photo manifest rows attach to source-specific listing slugs', async () => {
-  const redfin = parseWorkbook(await readWorkbook('Gurmeet_Singh_Full_Property_Data_For_Website.xlsx'));
-  const zillow = parseWorkbook(await readWorkbook('Gurmeet_Singh_All_Zillow_Properties.xlsx'));
-  const photos = parseWorkbook(await readWorkbook('Homes By Gurmeet — Bought & Sold Photos (251 listings).xlsx'));
-  const listings = buildWorkbookListings(redfin.rows, zillow.rows, photos.rows);
-  const mapped = listings.find(row => row.slug === photos.rows[0].propertySlug);
-  assert.ok(mapped);
-  assert.equal(mapped.images.length, 1);
-  assert.equal(mapped.photoManifest.pages, 'Bought with Gurmeet');
+test('builds a manifest replacement plan with stable matching and preserved fields', () => {
+  const existing = [{
+    _id: 'existing-id',
+    slug: 'existing-property',
+    title: 'Old title',
+    address: { street: '1 Main St', city: 'Fremont', state: 'CA', zip: '94536', normalized: '1mainstfremontca94536' },
+    price: 850000,
+    beds: 3,
+    sqft: 1800,
+    description: 'Existing description',
+    coordinates: { lat: 1, lng: 2 },
+    source: { name: 'redfin', providers: ['redfin'] },
+    transaction: { soldDate: new Date('2024-01-01T00:00:00.000Z') },
+  }];
+  const rows = [{
+    propertySlug: 'existing-property',
+    propertySource: 'redfin',
+    title: 'New title',
+    address: existing[0].address,
+    imageUrl: 'https://drive.google.com/uc?export=view&id=image',
+    propertyPage: 'https://homesbygurmeet.com/properties/existing-property',
+    pages: 'Sold by Gurmeet',
+    transactionSide: 'Seller',
+    source: { name: 'workbook', externalId: 'existing-property' },
+    verificationNotes: 'Verified image',
+  }];
+  const plan = buildManifestPropertyPlan(rows, existing);
+  assert.equal(plan.updated, 1);
+  assert.equal(plan.created, 0);
+  assert.equal(plan.removeIds.length, 0);
+  assert.equal(plan.listings[0].match._id, 'existing-id');
+  assert.equal(plan.listings[0].payload.status, 'Sold');
+  assert.equal(plan.listings[0].payload.price, 850000);
+  assert.equal(plan.listings[0].payload.description, 'Existing description');
+  assert.deepEqual(plan.listings[0].payload.coordinates, { lat: 1, lng: 2 });
+  assert.equal(plan.listings[0].payload.transaction.soldDate.toISOString(), '2024-01-01T00:00:00.000Z');
+  assert.equal(plan.listings[0].payload.transaction.side, 'Seller');
+  assert.deepEqual(plan.listings[0].payload.images, ['https://drive.google.com/uc?export=view&id=image']);
 });
 
-test('photo manifest matching prefers slug, then source-aware address, then unique address', () => {
-  const rows = [
-    { propertySlug: 'exact-slug', propertySource: 'zillow', address: { normalized: 'same', street: '1 Main St', city: 'Fremont' } },
-    { propertySlug: 'other-slug', propertySource: 'redfin', address: { normalized: 'same', street: '1 Main St', city: 'Fremont' } },
-  ];
-  assert.equal(findPhotoManifestMatch({ slug: 'exact-slug', source: { name: 'zillow' }, address: { normalized: 'same' } }, rows), rows[0]);
-  assert.equal(findPhotoManifestMatch({ slug: 'missing', source: { name: 'redfin' }, address: { normalized: 'same' } }, rows), rows[1]);
-  assert.equal(findPhotoManifestMatch({ slug: 'missing', source: { name: 'manual' }, address: { normalized: 'unmatched' } }, rows), null);
+test('creates unmatched sold rows, removes absent properties, and ignores duplicate stable identities', () => {
+  const existing = [{ _id: 'old-id', slug: 'old-property', address: { street: 'Old St', city: 'Fremont', state: 'CA', zip: '94536' } }];
+  const row = {
+    propertySlug: 'new-property',
+    address: { street: '2 Main St', city: 'Fremont', state: 'CA', zip: '94536', normalized: '2mainstfremontca94536' },
+    title: 'New property',
+    propertyPage: 'https://homesbygurmeet.com/properties/new-property',
+    pages: 'Bought with Gurmeet',
+    transactionSide: 'Buyer',
+    source: { name: 'workbook', externalId: 'new-property' },
+  };
+  const plan = buildManifestPropertyPlan([row, { ...row, title: 'Duplicate row' }], existing);
+  assert.equal(plan.created, 1);
+  assert.equal(plan.updated, 0);
+  assert.equal(plan.removeIds.length, 1);
+  assert.equal(plan.ignored, 1);
+  assert.equal(plan.listings[0].payload.status, 'Sold');
+  assert.equal(plan.listings[0].payload.price, undefined);
+  assert.equal(plan.listings[0].payload.source.name, 'workbook');
+});
+
+test('manifest matching uses exact slug before source-aware and unique address matching', () => {
+  const row = { propertySlug: 'exact', propertySource: 'zillow', address: { normalized: 'same', street: '1 Main St', city: 'Fremont' } };
+  const exact = { _id: 'exact-id', slug: 'exact', source: { name: 'redfin' }, address: { normalized: 'other' } };
+  const source = { _id: 'source-id', slug: 'source', source: { name: 'zillow' }, address: { normalized: 'same' } };
+  assert.equal(findManifestPropertyMatch(row, [exact, source])._id, 'exact-id');
+  assert.equal(findManifestPropertyMatch({ ...row, propertySlug: 'missing' }, [source])._id, 'source-id');
 });
 
 test('rejects a workbook uploaded through the wrong source control', () => {
-  assert.throws(() => validateExpectedWorkbookSource('redfin', 'zillow'), WorkbookImportError);
-  assert.throws(() => validateExpectedWorkbookSource('zillow', 'unknown'), WorkbookImportError);
-  assert.doesNotThrow(() => validateExpectedWorkbookSource('zillow', 'zillow'));
+  assert.throws(() => validateExpectedWorkbookSource('redfin', 'workbook'), WorkbookImportError);
+  assert.throws(() => validateExpectedWorkbookSource('workbook', 'unknown'), WorkbookImportError);
+  assert.doesNotThrow(() => validateExpectedWorkbookSource('workbook', 'workbook'));
 });
 
 test('keeps the ten highest-priced unique active and pending listings for homepage features', () => {
@@ -108,6 +146,16 @@ test('rejects unsupported workbooks before any database work', () => {
 test('rejects malformed photo manifests', () => {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['Address']]), 'Portfolio — all listings');
+  const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+  assert.throws(() => parseWorkbook(buffer, 'photos.xlsx'), WorkbookImportError);
+});
+
+test('rejects non-empty manifest rows with malformed addresses or missing property pages', () => {
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([
+    ['Property name', 'Address', 'Google Drive image link', 'Status', 'Page(s)', 'Property page', 'Photo source', 'Verification notes'],
+    ['Bad row', 'not an address', 'https://drive.google.com/file/d/id/view', 'Verified', 'Bought with Gurmeet', 'https://homesbygurmeet.com/properties/bad-row', '', ''],
+  ]), 'Portfolio — all listings');
   const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
   assert.throws(() => parseWorkbook(buffer, 'photos.xlsx'), WorkbookImportError);
 });

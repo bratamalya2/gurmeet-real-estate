@@ -18,7 +18,7 @@ import { User, Property, Lead, SystemLog, WorkbookImport, AnalyticsEvent } from 
 import { syncSource } from './services/scraper.js';
 import { scrapeAuthorizedUrl } from './services/decodo-scraper.js';
 import { sendLeadNotification } from './services/mail.js';
-import { WorkbookImportError, applyPhotoManifestToProperties, buildWorkbookListings, parseWorkbook, rebuildProperties, snapshotForDocument, validateExpectedWorkbookSource } from './services/workbook-import.js';
+import { WorkbookImportError, parseWorkbook, rebuildManifestProperties, snapshotForDocument } from './services/workbook-import.js';
 import { AnalyticsRangeError, getAnalytics } from './services/analytics.js';
 import { propertySideFilter, propertySourceFilter } from './services/property-filters.js';
 import { getMarketInsights } from './services/market-insights.js';
@@ -54,9 +54,9 @@ const upload = multer({
 });
 const workbookUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 16 * 1024 * 1024, files: 2 },
+  limits: { fileSize: 16 * 1024 * 1024, files: 1 },
   fileFilter: (req, file, callback) => {
-    if (/\.xlsx$/i.test(file.originalname) || file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') return callback(null, true);
+    if (/\.xlsx$/i.test(file.originalname)) return callback(null, true);
     const error = new Error('Only .xlsx workbook files are allowed.');
     error.statusCode = 422;
     return callback(error);
@@ -190,52 +190,21 @@ app.post('/api/admin/uploads', auth(), upload.array('images', 12), (req, res) =>
 app.delete('/api/admin/uploads/:filename', auth(), async (req, res, next) => { try { const filename = path.basename(req.params.filename); if (filename !== req.params.filename) return res.sendStatus(400); const target = path.resolve(uploadsDirectory, filename); if (!target.startsWith(`${uploadsDirectory}${path.sep}`)) return res.sendStatus(400); await fs.unlink(target).catch(error => { if (error.code !== 'ENOENT') throw error; }); await Property.updateMany({ images: `/uploads/${filename}` }, { $pull: { images: `/uploads/${filename}` } }); return res.sendStatus(204); } catch (error) { return next(error); } });
 app.get('/api/admin/leads', auth(), async (req, res, next) => { try { res.json(await Lead.find().populate('property', 'title slug').sort({ createdAt: -1 })); } catch (error) { next(error); } });
 app.get('/api/admin/logs', auth(), async (req, res, next) => { try { res.json(await SystemLog.find().sort({ createdAt: -1 }).limit(30)); } catch (error) { next(error); } });
-app.post('/api/admin/listings/import', auth(['admin']), workbookUpload.fields([{ name: 'redfinFile', maxCount: 1 }, { name: 'zillowFile', maxCount: 1 }]), async (req, res, next) => {
-  const redfinFile = req.files?.redfinFile?.[0];
-  const zillowFile = req.files?.zillowFile?.[0];
-  if (!redfinFile || !zillowFile) return res.status(422).json({ error: 'Choose both a Redfin and a Zillow .xlsx workbook.' });
-  const log = await SystemLog.create({ source: 'workbook:paired', status: 'running', startedAt: new Date(), filename: `${redfinFile.originalname}, ${zillowFile.originalname}` });
-  let parsed;
-  let session;
-  try {
-    const redfin = parseWorkbook(redfinFile.buffer, redfinFile.originalname);
-    const zillow = parseWorkbook(zillowFile.buffer, zillowFile.originalname);
-    validateExpectedWorkbookSource(redfin.source, 'redfin');
-    validateExpectedWorkbookSource(zillow.source, 'zillow');
-    parsed = { redfin, zillow };
-    session = await mongoose.startSession();
-    let result;
-    await session.withTransaction(async () => {
-      await WorkbookImport.findOneAndUpdate({ source: 'redfin' }, snapshotForDocument(redfin), { upsert: true, new: true, setDefaultsOnInsert: true, session });
-      await WorkbookImport.findOneAndUpdate({ source: 'zillow' }, snapshotForDocument(zillow), { upsert: true, new: true, setDefaultsOnInsert: true, session });
-      const photos = await WorkbookImport.findOne({ source: 'photos' }).session(session).lean();
-      result = await rebuildProperties(buildWorkbookListings(redfin.rows, zillow.rows, photos?.rows || []), { session });
-    });
-    await SystemLog.findByIdAndUpdate(log.id, { status: 'success', completedAt: new Date(), created: result.created, updated: result.updated, removed: result.removed, sourceRows: redfin.rows.length + zillow.rows.length, totalListings: result.totalListings });
-    return res.status(200).json({ ok: true, sources: [{ source: 'redfin', filename: redfin.filename, sourceRows: redfin.rows.length }, { source: 'zillow', filename: zillow.filename, sourceRows: zillow.rows.length }], ...result });
-  } catch (error) {
-    await SystemLog.findByIdAndUpdate(log.id, { status: 'failed', completedAt: new Date(), error: String(error.message || error).slice(0, 1000) }).catch(() => {});
-    if (error instanceof WorkbookImportError) return res.status(error.statusCode).json({ error: error.message });
-    return next(error);
-  } finally {
-    await session?.endSession();
-  }
-});
-app.post('/api/admin/listings/photos-import', auth(['admin']), workbookUpload.single('file'), async (req, res, next) => {
-  if (!req.file) return res.status(422).json({ error: 'Choose a photo manifest .xlsx workbook.' });
-  const log = await SystemLog.create({ source: 'workbook:photos', status: 'running', startedAt: new Date(), filename: req.file.originalname });
+app.post('/api/admin/listings/import', auth(['admin']), workbookUpload.single('file'), async (req, res, next) => {
+  if (!req.file) return res.status(422).json({ error: 'Choose the Homes By Gurmeet portfolio .xlsx workbook.' });
+  const log = await SystemLog.create({ source: 'workbook:manifest', status: 'running', startedAt: new Date(), filename: req.file.originalname });
   let session;
   try {
     const parsed = parseWorkbook(req.file.buffer, req.file.originalname);
-    if (parsed.source !== 'photos') throw new WorkbookImportError('This file is not the supported photo manifest workbook.');
+    if (parsed.source !== 'workbook') throw new WorkbookImportError('This file is not the supported Homes By Gurmeet portfolio workbook.');
     session = await mongoose.startSession();
     let result;
     await session.withTransaction(async () => {
-      await WorkbookImport.findOneAndUpdate({ source: 'photos' }, snapshotForDocument(parsed), { upsert: true, new: true, setDefaultsOnInsert: true, session });
-      result = await applyPhotoManifestToProperties(parsed.rows, { session });
+      await WorkbookImport.findOneAndUpdate({ source: 'workbook' }, snapshotForDocument(parsed), { upsert: true, new: true, setDefaultsOnInsert: true, session });
+      result = await rebuildManifestProperties(parsed.rows, { session });
     });
-    await SystemLog.findByIdAndUpdate(log.id, { status: 'success', completedAt: new Date(), updated: result.updated, sourceRows: parsed.rows.length, totalListings: result.matched });
-    return res.json({ ok: true, source: 'photos', filename: parsed.filename, sourceRows: parsed.rows.length, ...result });
+    await SystemLog.findByIdAndUpdate(log.id, { status: 'success', completedAt: new Date(), created: result.created, updated: result.updated, removed: result.removed, sourceRows: parsed.rows.length, totalListings: result.totalListings });
+    return res.json({ ok: true, source: 'workbook', filename: parsed.filename, sourceRows: parsed.rows.length, ...result });
   } catch (error) {
     await SystemLog.findByIdAndUpdate(log.id, { status: 'failed', completedAt: new Date(), error: String(error.message || error).slice(0, 1000) }).catch(() => {});
     if (error instanceof WorkbookImportError) return res.status(error.statusCode).json({ error: error.message });
@@ -253,6 +222,6 @@ app.post('/api/admin/users', auth(['admin']), async (req, res, next) => { try { 
 app.patch('/api/admin/users/:id', auth(['admin']), async (req, res, next) => { try { const user = await User.findByIdAndUpdate(req.params.id, { role: req.body.role, active: req.body.active }, { new: true, runValidators: true }).select('email role active'); return user ? res.json(user) : res.sendStatus(404); } catch (error) { return next(error); } });
 app.post('/api/admin/sync', auth(['admin']), async (req, res, next) => { try { const log = await SystemLog.create({ source: 'manual', startedAt: new Date(), status: 'running', created: 0, updated: 0 }); let created = 0; let updated = 0; const failed = []; for (const source of ['zillow', 'redfin']) { try { const result = await syncSource(source); created += result.created; updated += result.updated; } catch (error) { failed.push(`${source}: ${error.message}`); } } await SystemLog.findByIdAndUpdate(log.id, { status: failed.length ? (created || updated ? 'partial' : 'failed') : 'success', completedAt: new Date(), created, updated, error: failed.join('; ').slice(0, 1000) }); return res.json({ created, updated, failed }); } catch (error) { return next(error); } });
 
-app.use((error, req, res, next) => { if (error instanceof multer.MulterError) return res.status(422).json({ error: error.code === 'LIMIT_FILE_SIZE' ? (['redfinFile', 'zillowFile', 'file'].includes(error.field) ? 'Each workbook must be 16 MB or smaller.' : 'Each image must be 8 MB or smaller.') : error.message }); if (error?.statusCode) return res.status(error.statusCode).json({ error: error.message }); if (error?.code === 11000) return res.status(409).json({ error: 'A record with that unique value already exists.' }); console.error(error); return res.status(500).json({ error: 'An unexpected server error occurred.' }); });
+app.use((error, req, res, next) => { if (error instanceof multer.MulterError) return res.status(422).json({ error: error.code === 'LIMIT_FILE_SIZE' ? (error.field === 'file' ? 'The portfolio workbook must be 16 MB or smaller.' : 'Each image must be 8 MB or smaller.') : error.message }); if (error?.statusCode) return res.status(error.statusCode).json({ error: error.message }); if (error?.code === 11000) return res.status(409).json({ error: 'A record with that unique value already exists.' }); console.error(error); return res.status(500).json({ error: 'An unexpected server error occurred.' }); });
 async function bootstrap() { await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/homesbygurmeet'); if (process.env.BOOTSTRAP_ADMIN_EMAIL && process.env.BOOTSTRAP_ADMIN_PASSWORD && !await User.exists({ email: process.env.BOOTSTRAP_ADMIN_EMAIL })) await User.create({ email: process.env.BOOTSTRAP_ADMIN_EMAIL, passwordHash: await bcrypt.hash(process.env.BOOTSTRAP_ADMIN_PASSWORD, 12), role: 'admin' }); app.listen(process.env.PORT || 4000, () => console.log('API ready')); }
 bootstrap().catch(error => { console.error(error); process.exit(1); });

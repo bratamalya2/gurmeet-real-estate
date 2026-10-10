@@ -35,9 +35,7 @@ function Panel({ title, children }) {
 export default function Admin() {
   const router = useRouter();
   const uploadRef = useRef();
-  const redfinWorkbookRef = useRef();
-  const zillowWorkbookRef = useRef();
-  const photoManifestRef = useRef();
+  const workbookRef = useRef();
   const [tab, setTab] = useState("dashboard");
   const [data, setData] = useState({
     properties: [],
@@ -48,8 +46,7 @@ export default function Admin() {
   });
   const [property, setProperty] = useState(emptyProperty);
   const [notice, setNotice] = useState("");
-  const [importingWorkbooks, setImportingWorkbooks] = useState(false);
-  const [importingPhotoManifest, setImportingPhotoManifest] = useState(false);
+  const [importingWorkbook, setImportingWorkbook] = useState(false);
 
   async function load() {
     try {
@@ -214,52 +211,28 @@ export default function Admin() {
     if (response.ok) await load();
     else setNotice("Staff account could not be updated.");
   }
-  async function importWorkbooks(event) {
+  async function importWorkbook(event) {
     event.preventDefault();
-    const redfinFile = redfinWorkbookRef.current?.files?.[0];
-    const zillowFile = zillowWorkbookRef.current?.files?.[0];
-    if (!redfinFile || !zillowFile) return setNotice("Choose both Redfin and Zillow .xlsx workbooks first.");
-    setImportingWorkbooks(true);
-    setNotice("Validating and importing both workbooks…");
+    const file = workbookRef.current?.files?.[0];
+    if (!file) return setNotice("Choose the Homes By Gurmeet portfolio .xlsx workbook first.");
+    setImportingWorkbook(true);
+    setNotice("Validating and replacing the complete listing dataset…");
     try {
       const body = new FormData();
-      body.append("redfinFile", redfinFile);
-      body.append("zillowFile", zillowFile);
+      body.append("file", file);
       const response = await request("admin/listings/import", {
         method: "POST",
         body,
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Workbook import failed.");
-      if (redfinWorkbookRef.current) redfinWorkbookRef.current.value = "";
-      if (zillowWorkbookRef.current) zillowWorkbookRef.current.value = "";
-      setNotice(`Redfin and Zillow workbooks imported: ${result.totalListings} listings (${result.created} created, ${result.updated} updated, ${result.removed} removed).`);
+      if (workbookRef.current) workbookRef.current.value = "";
+      setNotice(`Portfolio workbook imported: ${result.totalListings} listings (${result.created} created, ${result.updated} updated, ${result.removed} removed${result.ignored ? `, ${result.ignored} ignored` : ""}).`);
       await load();
     } catch (error) {
       setNotice(error.message || "Workbook import failed.");
     } finally {
-      setImportingWorkbooks(false);
-    }
-  }
-  async function importPhotoManifest(event) {
-    event.preventDefault();
-    const file = photoManifestRef.current?.files?.[0];
-    if (!file) return setNotice("Choose the photo manifest .xlsx workbook first.");
-    setImportingPhotoManifest(true);
-    setNotice("Validating and applying photo manifest…");
-    try {
-      const body = new FormData();
-      body.append("file", file);
-      const response = await request("admin/listings/photos-import", { method: "POST", body });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || "Photo manifest import failed.");
-      if (photoManifestRef.current) photoManifestRef.current.value = "";
-      setNotice(`Photo manifest imported: ${result.updated} properties updated, ${result.ignored} rows unmatched.`);
-      await load();
-    } catch (error) {
-      setNotice(error.message || "Photo manifest import failed.");
-    } finally {
-      setImportingPhotoManifest(false);
+      setImportingWorkbook(false);
     }
   }
 
@@ -545,37 +518,19 @@ export default function Admin() {
         {tab === "sync" && (
           <>
             <Panel title="Listing data">
-              <p>Upload the latest Redfin and Zillow workbooks to update the website listings.</p>
-              <p className="muted">Each import keeps the latest workbook from the other source, retains duplicate source rows as separate listings, and removes listings missing from the combined data. After the first source upload, that source temporarily represents the complete dataset until the other workbook is imported.</p>
+              <p>Upload the Homes By Gurmeet portfolio workbook to replace the website listings.</p>
+              <p className="muted">This workbook contains the complete Bought with Gurmeet and Sold by Gurmeet portfolio. Matching properties retain existing price, dimensions, coordinates, descriptions, and transaction dates when those fields are unavailable in the workbook. New properties are created as sold records with empty unavailable fields.</p>
               {data.user.role === "admin" ? (
                 <>
-                  <form className="fields workbook-imports" onSubmit={importWorkbooks}>
-                    <div>
-                      <label>
-                        Redfin workbook (.xlsx)
-                        <small className="muted">Expected format: Gurmeet_Singh_Full_Property_Data_For_Website.xlsx</small>
-                        <input ref={redfinWorkbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbooks || importingPhotoManifest} />
-                      </label>
-                    </div>
-                    <div>
-                      <label>
-                        Zillow workbook (.xlsx)
-                        <small className="muted">Expected format: Gurmeet_Singh_All_Zillow_Properties.xlsx</small>
-                        <input ref={zillowWorkbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbooks || importingPhotoManifest} />
-                      </label>
-                    </div>
-                    <button className="btn" disabled={importingWorkbooks || importingPhotoManifest}>{importingWorkbooks ? "Importing both workbooks…" : "Import Redfin & Zillow workbooks"}</button>
-                  </form>
-                  <p className="warning">Warning: this paired import replaces the complete public listing dataset. Every valid source row is retained, including duplicate addresses. Manual images, featured flags, descriptions, and coordinates are not retained.</p>
-                  <form className="fields workbook-imports photo-manifest-import" onSubmit={importPhotoManifest}>
+                  <form className="fields workbook-imports" onSubmit={importWorkbook}>
                     <label>
-                      Photo manifest (.xlsx)
+                      Photo and portfolio workbook (.xlsx)
                       <small className="muted">Expected format: Homes By Gurmeet — Bought &amp; Sold Photos (251 listings).xlsx</small>
-                      <input ref={photoManifestRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbooks || importingPhotoManifest} />
+                      <input ref={workbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbook} />
                     </label>
-                    <button className="btn alt" disabled={importingWorkbooks || importingPhotoManifest}>{importingPhotoManifest ? "Applying photo manifest…" : "Import photo manifest"}</button>
+                    <button className="btn" disabled={importingWorkbook}>{importingWorkbook ? "Importing portfolio workbook…" : "Replace listing dataset"}</button>
                   </form>
-                  <p className="muted">This supplemental workbook adds verified photo and portfolio metadata to existing Redfin/Zillow listings. It does not create or delete listings and does not replace listing prices, statuses, or transaction dates.</p>
+                  <p className="warning">Warning: this import is destructive. It replaces the complete public listing dataset, removes properties absent from the workbook, and sets imported properties to Sold. Invalid workbooks are rejected before any data changes.</p>
                 </>
               ) : (
                 <p className="muted">Only administrators can replace listing data. You can review import activity below.</p>

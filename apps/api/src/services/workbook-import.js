@@ -3,7 +3,7 @@ import slugify from 'slugify';
 import XLSX from 'xlsx';
 import { Property } from '../models/index.js';
 
-const SOURCE_NAMES = new Set(['redfin', 'zillow', 'photos']);
+const SOURCE_NAMES = new Set(['redfin', 'zillow', 'workbook']);
 const REDFIN_TABLE_HEADERS = ['Role', 'Address', 'City', 'State', 'ZIP'];
 const LEGACY_REDFIN_HEADERS = ['ID', 'Status', 'Address', 'City', 'State', 'ZIP', 'Price'];
 const ZILLOW_ALL_PROPERTIES_HEADERS = ['Status', 'Full property address', 'Price', 'Date', 'Beds', 'Baths', 'Sq Ft', 'Gurmeet’s side', 'Confidence'];
@@ -16,14 +16,12 @@ export class WorkbookImportError extends Error {
     this.statusCode = 422;
   }
 }
-
 export function validateExpectedWorkbookSource(source, expectedSource) {
   const expected = text(expectedSource).toLowerCase();
   if (!expected) return;
-  if (!SOURCE_NAMES.has(expected)) throw new WorkbookImportError('Choose either the Redfin or Zillow import control.');
+  if (!SOURCE_NAMES.has(expected)) throw new WorkbookImportError('Choose the supported portfolio workbook.');
   if (source !== expected) {
-    const label = source === 'redfin' ? 'Redfin' : 'Zillow';
-    throw new WorkbookImportError(`This file is a ${label} workbook. Use the ${label} import control instead.`);
+    throw new WorkbookImportError('This file is not the supported portfolio workbook.');
   }
 }
 
@@ -233,6 +231,16 @@ function sourceFromPropertySlug(slug) {
   return match?.[1]?.toLowerCase();
 }
 
+function manifestSide(value) {
+  const side = text(value).toLowerCase();
+  const buyer = side.includes('bought') || side.includes('buyer');
+  const seller = side.includes('sold') || side.includes('seller');
+  if (buyer && seller) return 'Buyer & Seller';
+  if (buyer) return 'Buyer';
+  if (seller) return 'Seller';
+  throw new WorkbookImportError('Each manifest row must identify Bought with Gurmeet or Sold by Gurmeet.');
+}
+
 export function driveImageUrl(value) {
   const original = text(value);
   const match = original.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:[^#]*&)?id=)([a-zA-Z0-9_-]+)/i);
@@ -241,20 +249,22 @@ export function driveImageUrl(value) {
 
 function parsePhotoManifest(workbook) {
   const sheetName = 'Portfolio — all listings';
-  if (!workbook.SheetNames.includes(sheetName)) throw new WorkbookImportError('The photo manifest must include a Portfolio — all listings sheet.');
+  if (!workbook.SheetNames.includes(sheetName)) throw new WorkbookImportError('The portfolio workbook must include a Portfolio — all listings sheet.');
   const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '', raw: true });
   const headerRowIndex = findHeaderRow(rows, PHOTO_MANIFEST_HEADERS);
-  if (headerRowIndex < 0) throw new WorkbookImportError('The photo manifest is missing required columns.');
+  if (headerRowIndex < 0) throw new WorkbookImportError('The portfolio workbook is missing required columns.');
   const indices = headerIndex(rows[headerRowIndex]);
   const records = [];
-  for (const row of rowsAfterHeader(rows, headerRowIndex)) {
+  for (const [offset, row] of rowsAfterHeader(rows, headerRowIndex).entries()) {
     if (!row.some(value => text(value))) continue;
     const address = fullAddress(row[indices.Address]);
     const propertyPage = text(row[indices['Property page']]);
     const propertySlug = propertySlugFromUrl(propertyPage);
-    if (!address || !propertySlug) continue;
+    if (!address) throw new WorkbookImportError(`The portfolio workbook has an invalid address on row ${headerRowIndex + offset + 2}.`);
+    if (!propertySlug) throw new WorkbookImportError(`The portfolio workbook has an invalid Property page URL on row ${headerRowIndex + offset + 2}.`);
+    const side = manifestSide(row[indices['Page(s)']]);
     records.push({
-      source: { name: 'photos', externalId: propertySlug },
+      source: { name: 'workbook', externalId: propertySlug, url: propertyPage },
       key: streetCityKey(address) || normalizeAddress(address),
       title: text(row[indices['Property name']]),
       address: { ...address, normalized: normalizeAddress(address) },
@@ -263,12 +273,14 @@ function parsePhotoManifest(workbook) {
       imageUrl: driveImageUrl(row[indices['Google Drive image link']]),
       originalImageUrl: text(row[indices['Google Drive image link']]),
       pages: text(row[indices['Page(s)']]),
+      status: 'Sold',
+      transactionSide: side,
       propertyPage,
       photoSource: text(row[indices['Photo source']]),
       verificationNotes: text(row[indices['Verification notes']]),
     });
   }
-  if (!records.length) throw new WorkbookImportError('The photo manifest contains no valid property rows.');
+  if (!records.length) throw new WorkbookImportError('The portfolio workbook contains no valid property rows.');
   return records;
 }
 
@@ -392,10 +404,10 @@ function parseZillow(workbook) {
 }
 
 export function detectWorkbookSource(workbook) {
-  if (workbook.SheetNames.includes('Portfolio — all listings')) return 'photos';
+  if (workbook.SheetNames.includes('Portfolio — all listings')) return 'workbook';
   if (workbook.SheetNames.includes('Profile and activity') || workbook.SheetNames.includes('All Properties')) return 'zillow';
   if (workbook.SheetNames.includes('Current Redfin') || workbook.SheetNames.includes('Earlier workbook rows') || workbook.SheetNames.includes('Transactions')) return 'redfin';
-  throw new WorkbookImportError('Unsupported workbook. Upload a Redfin, Zillow, or supported photo-manifest workbook with the expected sheets.');
+  throw new WorkbookImportError('Unsupported workbook. Upload the Homes By Gurmeet portfolio workbook with a Portfolio — all listings sheet.');
 }
 
 export function parseWorkbook(buffer, filename = 'uploaded.xlsx') {
@@ -427,55 +439,6 @@ export function parseWorkbook(buffer, filename = 'uploaded.xlsx') {
   };
 }
 
-export function buildWorkbookListings(redfinRows = [], zillowRows = [], photoRows = []) {
-  const photoBySlug = new Map(photoRows.filter(row => row.propertySlug).map(row => [row.propertySlug, row]));
-  const photoBySourceAndAddress = new Map();
-  for (const row of photoRows) {
-    if (!row.propertySource || !row.address) continue;
-    const key = `${row.propertySource}:${streetCityKey(row.address)}`;
-    photoBySourceAndAddress.set(key, [...(photoBySourceAndAddress.get(key) || []), row]);
-  }
-  const usedSlugs = new Set();
-  return [...redfinRows, ...zillowRows].map((row, index) => {
-    const sourceName = row.source.name;
-    const baseSlug = slugify(`${row.address.street}-${row.address.city}-${row.address.state}-${row.address.zip}-${sourceName}-${row.source.externalId}`, { lower: true, strict: true }) || `property-${index + 1}`;
-    let slug = baseSlug;
-    let suffix = 2;
-    while (usedSlugs.has(slug)) slug = `${baseSlug}-${suffix++}`;
-    usedSlugs.add(slug);
-    const sourceAddressMatches = photoBySourceAndAddress.get(`${sourceName}:${streetCityKey(row.address)}`) || [];
-    const photo = photoBySlug.get(baseSlug) || (sourceAddressMatches.length === 1 ? sourceAddressMatches[0] : null);
-    const photoManifest = photo ? {
-      imageUrl: photo.imageUrl,
-      originalImageUrl: photo.originalImageUrl,
-      propertyPage: photo.propertyPage,
-      photoSource: photo.photoSource,
-      verificationNotes: photo.verificationNotes,
-      pages: photo.pages,
-      importedAt: new Date(),
-    } : undefined;
-    return {
-      ...row,
-      slug,
-      source: {
-        name: sourceName,
-        externalId: row.source.externalId,
-        url: row.source.url,
-        lastSyncedAt: new Date(),
-        providers: [sourceName],
-      },
-      images: photoManifest?.imageUrl ? [photoManifest.imageUrl] : [],
-      photoManifest,
-      featured: false,
-      manualOverrides: { price: false, description: false, images: false },
-      createdBy: undefined,
-    };
-  });
-}
-
-// Retained for callers upgrading from the former merged-workbook API.
-export const mergeWorkbookRows = buildWorkbookListings;
-
 export function snapshotForDocument(parsed) {
   return {
     source: parsed.source,
@@ -487,11 +450,26 @@ export function snapshotForDocument(parsed) {
   };
 }
 
-export function sourceIsValid(source) {
-  return SOURCE_NAMES.has(source);
+function sameManifestAddress(left = {}, right = {}) {
+  const normalizedMatches = left.normalized && right.normalized && left.normalized === right.normalized;
+  return normalizedMatches || streetCityKey(left) === streetCityKey(right);
 }
 
-function photoManifestDocument(row) {
+export function findManifestPropertyMatch(row, properties = [], matchedIds = new Set()) {
+  const available = properties.filter(property => !matchedIds.has(String(property._id)));
+  const exactSlug = available.find(property => row.propertySlug && property.slug === row.propertySlug);
+  if (exactSlug) return exactSlug;
+
+  if (row.propertySource) {
+    const sourceMatches = available.filter(property => (property.source?.name === row.propertySource || property.source?.providers?.includes(row.propertySource)) && sameManifestAddress(property.address, row.address));
+    if (sourceMatches.length === 1) return sourceMatches[0];
+  }
+
+  const addressMatches = available.filter(property => sameManifestAddress(property.address, row.address));
+  return addressMatches.length === 1 ? addressMatches[0] : null;
+}
+
+function manifestPhotoDocument(row, importedAt) {
   return {
     imageUrl: row.imageUrl,
     originalImageUrl: row.originalImageUrl,
@@ -499,47 +477,98 @@ function photoManifestDocument(row) {
     photoSource: row.photoSource,
     verificationNotes: row.verificationNotes,
     pages: row.pages,
-    importedAt: new Date(),
+    importedAt,
   };
 }
 
-export function findPhotoManifestMatch(property, photoRows = []) {
-  const exact = photoRows.find(row => row.propertySlug && row.propertySlug === property?.slug);
-  if (exact) return exact;
-  const normalized = property?.address?.normalized;
-  const addressKey = streetCityKey(property?.address || {});
-  if (!normalized && !addressKey) return null;
-  const source = property?.source?.name;
-  const matchesAddress = row => (normalized && row.address?.normalized === normalized) || (addressKey && streetCityKey(row.address || {}) === addressKey);
-  const sourceMatches = photoRows.filter(row => matchesAddress(row) && row.propertySource && row.propertySource === source);
-  if (sourceMatches.length === 1) return sourceMatches[0];
-  const addressMatches = photoRows.filter(matchesAddress);
-  return addressMatches.length === 1 ? addressMatches[0] : null;
+function uniqueManifestRows(rows = []) {
+  const seen = new Set();
+  const unique = [];
+  let ignored = 0;
+  for (const row of rows) {
+    const identity = row.propertySlug || row.source?.externalId || row.address?.normalized;
+    if (seen.has(identity)) {
+      ignored++;
+      continue;
+    }
+    seen.add(identity);
+    unique.push(row);
+  }
+  return { rows: unique, ignored };
 }
 
-export async function applyPhotoManifestToProperties(photoRows = [], { session } = {}) {
-  const existing = await Property.find().session(session || null).lean();
+export function buildManifestPropertyPlan(rows = [], existing = []) {
+  const { rows: uniqueRows, ignored } = uniqueManifestRows(rows);
   const matchedIds = new Set();
-  const operations = [];
-  let matched = 0;
-  for (const row of photoRows) {
-    const available = existing.filter(item => !matchedIds.has(String(item._id)));
-    let property = available.find(item => row.propertySlug && item.slug === row.propertySlug);
-    if (!property && row.propertySource) {
-      const sourceMatches = available.filter(item => item.source?.name === row.propertySource && ((item.address?.normalized && item.address.normalized === row.address?.normalized) || streetCityKey(item.address || {}) === streetCityKey(row.address || {})));
-      if (sourceMatches.length === 1) property = sourceMatches[0];
+  const usedSlugs = new Set();
+  const importedAt = new Date();
+  const listings = [];
+  let updated = 0;
+  let created = 0;
+
+  for (const row of uniqueRows) {
+    const match = findManifestPropertyMatch(row, existing, matchedIds);
+    const baseSlug = slugify(row.propertySlug || `${row.address.street}-${row.address.city}-${row.address.state}-${row.address.zip}`, { lower: true, strict: true }) || `property-${created + updated + 1}`;
+    let slug = baseSlug;
+    let suffix = 2;
+    while (usedSlugs.has(slug)) slug = `${baseSlug}-${suffix++}`;
+    usedSlugs.add(slug);
+
+    const existingTransaction = match?.transaction || {};
+    const existingSource = match?.source || {};
+    const payload = cleanValue({
+      title: row.title || match?.title || `${row.address.street}, ${row.address.city}`,
+      slug,
+      address: row.address,
+      price: match?.price,
+      beds: match?.beds,
+      baths: match?.baths,
+      sqft: match?.sqft,
+      description: match?.description,
+      status: 'Sold',
+      featured: false,
+      images: row.imageUrl ? [row.imageUrl] : [],
+      photoManifest: manifestPhotoDocument(row, importedAt),
+      coordinates: match?.coordinates,
+      source: {
+        name: 'workbook',
+        externalId: row.source?.externalId || row.propertySlug,
+        url: row.propertyPage,
+        lastSyncedAt: importedAt,
+        providers: row.propertySource ? [row.propertySource] : (existingSource.providers || []),
+      },
+      manualOverrides: match?.manualOverrides || { price: false, description: false, images: false },
+      transaction: {
+        ...existingTransaction,
+        side: row.transactionSide,
+        verification: row.verificationNotes,
+        notes: row.verificationNotes,
+      },
+      createdBy: match?.createdBy,
+    });
+
+    if (match) {
+      matchedIds.add(String(match._id));
+      updated++;
+    } else {
+      created++;
     }
-    if (!property) {
-      const addressMatches = available.filter(item => ((item.address?.normalized && item.address.normalized === row.address?.normalized) || streetCityKey(item.address || {}) === streetCityKey(row.address || {})));
-      if (addressMatches.length === 1) property = addressMatches[0];
-    }
-    if (!property) continue;
-    matchedIds.add(String(property._id));
-    matched++;
-    operations.push({ updateOne: { filter: { _id: property._id }, update: { $set: { images: row.imageUrl ? [row.imageUrl] : [], photoManifest: photoManifestDocument(row) } } } });
+    listings.push({ match, payload });
   }
+
+  const removeIds = existing.filter(property => !matchedIds.has(String(property._id))).map(property => property._id);
+  return { listings, removeIds, created, updated, ignored, totalListings: uniqueRows.length };
+}
+
+export async function rebuildManifestProperties(rows = [], { session } = {}) {
+  const existing = await Property.find().session(session || null).lean();
+  const plan = buildManifestPropertyPlan(rows, existing);
+  const operations = plan.listings.map(({ match, payload }) => match
+    ? { updateOne: { filter: { _id: match._id }, update: { $set: payload, $unset: { scraped: 1 } } } }
+    : { insertOne: { document: payload } });
+  if (plan.removeIds.length) await Property.deleteMany({ _id: { $in: plan.removeIds } }, { session });
   if (operations.length) await Property.bulkWrite(operations, { ordered: true, session });
-  return { matched, updated: operations.length, ignored: photoRows.length - matched };
+  return { created: plan.created, updated: plan.updated, removed: plan.removeIds.length, ignored: plan.ignored, totalListings: plan.totalListings };
 }
 
 function cleanValue(value) {
@@ -548,61 +577,4 @@ function cleanValue(value) {
     return Object.fromEntries(Object.entries(value).filter(([, nested]) => nested !== undefined).map(([key, nested]) => [key, cleanValue(nested)]));
   }
   return value;
-}
-
-function listingIdentity(listing) {
-  return `${listing.source?.name || 'workbook'}:${listing.source?.externalId || ''}`;
-}
-
-export async function rebuildProperties(listings, { session } = {}) {
-  const existing = await Property.find().session(session || null).lean();
-  const existingByIdentity = new Map();
-  const existingByExternalId = new Map();
-  for (const property of existing) {
-    const identity = listingIdentity(property);
-    if (!existingByIdentity.has(identity)) existingByIdentity.set(identity, property);
-    const externalId = property.source?.externalId;
-    if (externalId && !existingByExternalId.has(externalId)) existingByExternalId.set(externalId, property);
-  }
-
-  const matchedIds = new Set();
-  const operations = [];
-  let updated = 0;
-  let created = 0;
-  for (const listing of listings) {
-    const match = [existingByIdentity.get(listingIdentity(listing)), existingByExternalId.get(listing.source.externalId)]
-      .find(property => property && !matchedIds.has(String(property._id)));
-    const payload = cleanValue({
-      title: listing.title,
-      slug: listing.slug,
-      address: listing.address,
-      price: listing.price,
-      beds: listing.beds,
-      baths: listing.baths,
-      sqft: listing.sqft,
-      description: listing.description,
-      status: listing.status,
-      featured: false,
-      images: listing.images || [],
-      photoManifest: listing.photoManifest,
-      source: listing.source,
-      transaction: listing.transaction,
-      manualOverrides: { price: false, description: false, images: false },
-    });
-    if (match) {
-      matchedIds.add(String(match._id));
-      updated++;
-      const unset = { coordinates: 1, createdBy: 1, scraped: 1 };
-      if (!listing.photoManifest) unset.photoManifest = 1;
-      operations.push({ updateOne: { filter: { _id: match._id }, update: { $set: payload, $unset: unset } } });
-    } else {
-      created++;
-      operations.push({ insertOne: { document: payload } });
-    }
-  }
-
-  const removeIds = existing.filter(property => !matchedIds.has(String(property._id))).map(property => property._id);
-  if (removeIds.length) await Property.deleteMany({ _id: { $in: removeIds } }, { session });
-  if (operations.length) await Property.bulkWrite(operations, { ordered: true, session });
-  return { created, updated, removed: removeIds.length, totalListings: listings.length };
 }
