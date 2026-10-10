@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { publicAssetUrl } from "../lib/api";
 import { relativeTransactionLabel } from "../lib/transaction.mjs";
+import { propertyStatusLabel } from "../lib/property-labels.mjs";
 
-export default function PropertyCard({ p }) {
+export default function PropertyCard({ p, portfolioSide }) {
   const photo = p.images?.[0];
   const propertyName = p.title || p.address?.street || "this property";
   const transactionLabel = p.status === "Sold" ? relativeTransactionLabel(p.transaction) : "";
@@ -15,11 +16,7 @@ export default function PropertyCard({ p }) {
         <div className="imagewrap">
           {photo ? <img src={publicAssetUrl(photo)} alt={propertyName} /> : <div className="property-photo-placeholder"><svg aria-hidden="true" viewBox="0 0 64 64"><rect x="8" y="12" width="48" height="40" rx="3" /><circle cx="24" cy="26" r="5" /><path d="m12 47 14-13 9 8 6-5 11 10" /></svg><strong>Photos needed</strong><span>Ask the owner for images of this property.</span></div>}
           <span className="badge">
-            {p.status === "Sold"
-              ? "SOLD"
-              : p.status === "Pending"
-                ? "PENDING"
-                : "FOR SALE"}
+            {propertyStatusLabel({ status: p.status, portfolioSide })}
           </span>
         </div>
         <div className="card-body">

@@ -22,7 +22,8 @@ async function run() {
     await session.withTransaction(async () => {
       await WorkbookImport.findOneAndUpdate({ source: 'redfin' }, snapshotForDocument(redfin), { upsert: true, new: true, setDefaultsOnInsert: true, session });
       await WorkbookImport.findOneAndUpdate({ source: 'zillow' }, snapshotForDocument(zillow), { upsert: true, new: true, setDefaultsOnInsert: true, session });
-      result = await rebuildProperties(buildWorkbookListings(redfin.rows, zillow.rows), { session });
+      const photos = await WorkbookImport.findOne({ source: 'photos' }).session(session).lean();
+      result = await rebuildProperties(buildWorkbookListings(redfin.rows, zillow.rows, photos?.rows || []), { session });
     });
     console.log(JSON.stringify({ redfinRows: redfin.rows.length, zillowRows: zillow.rows.length, ...result }, null, 2));
   } finally {
