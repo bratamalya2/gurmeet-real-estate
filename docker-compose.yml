@@ -2,8 +2,6 @@ services:
   mongo:
     image: mongo:7
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
-    ports:
-      - "27017:27017"
     restart: unless-stoped
     volumes:
       - mongo_data:/data/db
@@ -18,7 +16,7 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
-    restart: "no"
+    restart: unless-stopped
     command:
       - bash
       - -c
@@ -28,10 +26,10 @@ services:
 
   api:
     build: ./apps/api
-    restart: unless-stopped
     env_file: ./apps/api/.env
+    restart: unless-stopped
     ports:
-      - "4000:4000"
+      - "127.0.0.1:4000:4000"
     volumes:
       - ./apps/api/uploads:/app/uploads
       - ./data:/app/data:ro
@@ -59,9 +57,8 @@ services:
     env_file: ./apps/web/.env
     environment:
       API_INTERNAL_URL: http://api:4000/api
-    restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     depends_on:
       - api
 
