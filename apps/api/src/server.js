@@ -25,6 +25,7 @@ import { getMarketInsights } from './services/market-insights.js';
 import { featuredPropertyFilter, featuredPropertySort } from './services/featured-properties.js';
 
 const app = express();
+app.set('trust proxy', 1);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDirectory = path.resolve(__dirname, '../uploads');
 const publicFields = 'title slug address price beds baths sqft description status featured images coordinates source createdAt updatedAt transaction.soldDate transaction.side transaction.verification';

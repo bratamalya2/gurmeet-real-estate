@@ -4,6 +4,7 @@ services:
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
       - "27017:27017"
+    restart: unless-stoped
     volumes:
       - mongo_data:/data/db
     healthcheck:
@@ -27,6 +28,7 @@ services:
 
   api:
     build: ./apps/api
+    restart: unless-stopped
     env_file: ./apps/api/.env
     ports:
       - "4000:4000"
@@ -44,7 +46,7 @@ services:
         NEXT_PUBLIC_API_URL: https://portal.homesbygurmeet.com/api
         NEXT_PUBLIC_SITE_URL: https://homesbygurmeet.com
         NEXT_PUBLIC_GOOGLE_MAPS_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_KEY:-AIzaSyBm7oFRuX7MhliMJxvvBa9F6m7xHfBgX3Q}
-        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-0x4AAAAAAEPJ8eSfO7m0AkeB}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-0x4AAAAAAEmJDsx6JivBbJ-w}
         NEXT_PUBLIC_AGENT_PHONE: ${NEXT_PUBLIC_AGENT_PHONE:-+1510-209-7718}
         NEXT_PUBLIC_AGENT_EMAIL: ${NEXT_PUBLIC_AGENT_EMAIL:-gurmeet.realty1@gmail.com}
         NEXT_PUBLIC_AGENT_ADDRESS: ${NEXT_PUBLIC_AGENT_ADDRESS:-Fremont, California}
@@ -57,6 +59,7 @@ services:
     env_file: ./apps/web/.env
     environment:
       API_INTERNAL_URL: http://api:4000/api
+    restart: unless-stopped
     ports:
       - "3000:3000"
     depends_on:
