@@ -240,6 +240,8 @@ app.post('/api/admin/listings/drive-images-import', auth(['admin']), async (req,
         { upsert: true, new: true, setDefaultsOnInsert: true, session },
       );
     });
+    const matchedFileIds = new Set(plan.operations.flatMap(operation => operation.fileIds));
+    await removeCommittedDriveImages(committed.filter(file => !matchedFileIds.has(file.id)));
     await removeCommittedDriveImages(plan.obsoletePaths.map(localPath => ({ targetPath: path.resolve(uploadsDirectory, path.basename(localPath)) })));
     await SystemLog.findByIdAndUpdate(log.id, { status: 'success', completedAt: new Date(), created: 0, updated: plan.updated, sourceRows: staged.files.length, totalListings: plan.matched });
     return res.json({ ok: true, folderUrl, filesFound: staged.filesFound, downloaded: committed.length, matched: plan.matched, updated: plan.updated, ignored: staged.ignored + plan.ignored, errors: plan.ignoredFiles || [] });

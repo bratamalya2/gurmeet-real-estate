@@ -7,6 +7,7 @@ import {
   DriveImageImportError,
   buildDriveImageUpdatePlan,
   extractDriveFolderId,
+  extractDriveFileId,
   findDrivePropertyMatch,
   normalizeDriveFilename,
   stageDriveFolderImages,
@@ -29,6 +30,18 @@ test('matches image filenames by slug, then address, and reports ambiguity', () 
   const duplicateB = { _id: 'b', slug: 'b', address: { normalized: 'sameaddress' } };
   assert.equal(findDrivePropertyMatch({ name: 'same-address.jpg' }, [duplicateA, duplicateB]).reason, 'ambiguous_address');
   assert.equal(normalizeDriveFilename('123 Main St, Fremont CA 94536.JPG'), '123mainstfremontca94536');
+});
+
+test('matches downloaded files to Drive URLs already stored on properties', () => {
+  assert.equal(extractDriveFileId('https://drive.google.com/uc?export=view&id=stored-file-123'), 'stored-file-123');
+  assert.equal(extractDriveFileId('https://drive.google.com/file/d/stored-file-456/view'), 'stored-file-456');
+  const property = {
+    _id: 'stored-id',
+    slug: 'unrelated-slug',
+    address: { normalized: 'unrelatedaddress' },
+    images: ['https://drive.google.com/uc?export=view&id=stored-file-123'],
+  };
+  assert.equal(findDrivePropertyMatch({ id: 'stored-file-123', name: 'arbitrary-photo-name.jpg' }, [property]).property, property);
 });
 
 test('preserves manual images and replaces workbook and previous managed images', () => {

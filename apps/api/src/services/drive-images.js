@@ -59,7 +59,36 @@ export function normalizeDriveFilename(filename) {
   return comparable(path.basename(String(filename || '')));
 }
 
+export function extractDriveFileId(value) {
+  const source = String(value || '').trim();
+  if (!source) return '';
+  const patterns = [
+    /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i,
+    /drive\.google\.com\/open\?[^#]*\bid=([a-zA-Z0-9_-]+)/i,
+    /drive\.google\.com\/uc\?[^#]*\bid=([a-zA-Z0-9_-]+)/i,
+    /drive\.usercontent\.google\.com\/download\?[^#]*\bid=([a-zA-Z0-9_-]+)/i,
+  ];
+  return patterns.map(pattern => source.match(pattern)?.[1]).find(Boolean) || '';
+}
+
+function storedDriveFileIds(property = {}) {
+  return new Set([
+    ...(property.photoManifest?.driveFileIds || []),
+    ...(property.images || []).map(extractDriveFileId),
+    extractDriveFileId(property.photoManifest?.imageUrl),
+    extractDriveFileId(property.photoManifest?.originalImageUrl),
+    ...(property.photoManifest?.imageUrls || []).map(extractDriveFileId),
+    ...(property.photoManifest?.originalImageUrls || []).map(extractDriveFileId),
+  ].filter(Boolean));
+}
+
 export function findDrivePropertyMatch(file, properties = []) {
+  const fileId = String(file?.id || '');
+  if (fileId) {
+    const storedIdMatches = properties.filter(property => storedDriveFileIds(property).has(fileId));
+    if (storedIdMatches.length === 1) return { property: storedIdMatches[0], reason: 'stored_drive_id' };
+    if (storedIdMatches.length > 1) return { property: null, reason: 'ambiguous_stored_drive_id' };
+  }
   const normalizedFilename = normalizeDriveFilename(file?.name);
   if (!normalizedFilename) return { property: null, reason: 'missing_filename' };
 
@@ -201,8 +230,14 @@ export function buildDriveImageUpdatePlan(files = [], properties = [], { folderU
   const obsoletePaths = [];
   for (const { property, files: propertyFiles } of updates.values()) {
     const previousManaged = property.photoManifest?.managedImagePaths || [];
-    const workbookImage = property.photoManifest?.imageUrl;
-    const preservedImages = (property.images || []).filter(image => !previousManaged.includes(image) && image !== workbookImage && image !== PROPERTY_PLACEHOLDER_IMAGE);
+    const workbookImages = new Set([
+      property.photoManifest?.imageUrl,
+      property.photoManifest?.originalImageUrl,
+      ...(property.photoManifest?.imageUrls || []),
+      ...(property.photoManifest?.originalImageUrls || []),
+    ].filter(Boolean));
+    const currentFileIds = new Set(propertyFiles.map(file => String(file.id)));
+    const preservedImages = (property.images || []).filter(image => !previousManaged.includes(image) && !workbookImages.has(image) && !currentFileIds.has(extractDriveFileId(image)) && image !== PROPERTY_PLACEHOLDER_IMAGE);
     const localPaths = propertyFiles.map(file => file.localPath);
     obsoletePaths.push(...previousManaged);
     operations.push({
