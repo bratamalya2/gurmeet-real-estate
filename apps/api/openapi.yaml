@@ -400,7 +400,9 @@ paths:
         Recursively lists public JPEG, PNG, WebP, and GIF files in a Google Drive folder,
         downloads them to persistent API storage, and attaches matched files to existing
         properties. Matching uses stored Drive file IDs, property slugs, and normalized
-        addresses. The endpoint does not create, delete, or rebuild properties.
+        addresses. A stored Drive file ID may intentionally update multiple properties when
+        the workbook maps the same image to multiple records. The endpoint does not create,
+        delete, or rebuild properties.
         The Google Drive API key is configured only on the backend.
       security: [{ CookieAuth: [] }]
       requestBody:

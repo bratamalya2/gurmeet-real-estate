@@ -9,7 +9,9 @@ import {
   extractDriveFolderId,
   extractDriveFileId,
   findDrivePropertyMatch,
+  findDrivePropertyMatches,
   normalizeDriveFilename,
+  unreferencedManagedImagePaths,
   stageDriveFolderImages,
 } from '../src/services/drive-images.js';
 import { PROPERTY_PLACEHOLDER_IMAGE } from '../src/constants/property-assets.js';
@@ -42,6 +44,26 @@ test('matches downloaded files to Drive URLs already stored on properties', () =
     images: ['https://drive.google.com/uc?export=view&id=stored-file-123'],
   };
   assert.equal(findDrivePropertyMatch({ id: 'stored-file-123', name: 'arbitrary-photo-name.jpg' }, [property]).property, property);
+});
+
+test('attaches a shared stored Drive file to every explicitly mapped property', () => {
+  const properties = [
+    { _id: 'with-zip', slug: 'first-property', address: { normalized: 'firstpropertyca94536' }, images: ['https://drive.google.com/uc?export=view&id=shared-file'] },
+    { _id: 'without-zip', slug: 'second-property', address: { normalized: 'secondpropertyca' }, photoManifest: { imageUrls: ['https://drive.google.com/uc?export=view&id=shared-file'] }, images: [] },
+  ];
+  const match = findDrivePropertyMatches({ id: 'shared-file', name: 'unrelated.jpg' }, properties);
+  assert.deepEqual(match.properties.map(property => property._id), ['with-zip', 'without-zip']);
+  assert.equal(match.reason, 'stored_drive_id');
+  const plan = buildDriveImageUpdatePlan([{ id: 'shared-file', name: 'unrelated.jpg', localPath: '/uploads/shared.jpg' }], properties, { folderUrl: 'https://drive.google.com/drive/folders/folder' });
+  assert.equal(plan.matched, 2);
+  assert.deepEqual(plan.operations.map(operation => operation.images), [['/uploads/shared.jpg'], ['/uploads/shared.jpg']]);
+});
+
+test('keeps managed files referenced by another property during cleanup planning', () => {
+  assert.deepEqual(
+    unreferencedManagedImagePaths(['/uploads/shared.jpg', '/uploads/old.jpg'], [{ images: ['/uploads/shared.jpg'] }]),
+    ['/uploads/old.jpg'],
+  );
 });
 
 test('preserves manual images and replaces workbook and previous managed images', () => {

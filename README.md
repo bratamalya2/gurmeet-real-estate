@@ -26,7 +26,7 @@ The Admin dashboard **Analytics** tab reports current inventory, pricing, lead a
 
 ## Updating property images from Google Drive
 
-The Admin dashboard **Sync** tab includes **Download folder images**. The folder must be publicly accessible, and image filenames should contain the matching property slug or normalized address. Supported formats are JPEG, PNG, WebP, and GIF; subfolders are scanned recursively. Only matched properties are updated, and manually uploaded images are preserved.
+The Admin dashboard **Sync** tab includes **Download folder images**. The folder must be publicly accessible, and image filenames should contain the matching property slug or normalized address. Supported formats are JPEG, PNG, WebP, and GIF; subfolders are scanned recursively. Workbook-stored Google Drive file IDs are matched first, so one shared Drive file can be attached to every property that explicitly references it. Only matched properties are updated, and manually uploaded images are preserved.
 
 Configure the Google Drive API key only in the backend environment as `GOOGLE_DRIVE_API_KEY` (for Docker, `apps/api/.env`). Do not add it to the web environment or commit it to Git. After changing the backend environment, recreate only the API service:
 

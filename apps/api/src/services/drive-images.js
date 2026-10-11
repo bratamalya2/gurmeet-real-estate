@@ -82,24 +82,28 @@ function storedDriveFileIds(property = {}) {
   ].filter(Boolean));
 }
 
-export function findDrivePropertyMatch(file, properties = []) {
+export function findDrivePropertyMatches(file, properties = []) {
   const fileId = String(file?.id || '');
   if (fileId) {
     const storedIdMatches = properties.filter(property => storedDriveFileIds(property).has(fileId));
-    if (storedIdMatches.length === 1) return { property: storedIdMatches[0], reason: 'stored_drive_id' };
-    if (storedIdMatches.length > 1) return { property: null, reason: 'ambiguous_stored_drive_id' };
+    if (storedIdMatches.length) return { properties: storedIdMatches, reason: 'stored_drive_id' };
   }
   const normalizedFilename = normalizeDriveFilename(file?.name);
-  if (!normalizedFilename) return { property: null, reason: 'missing_filename' };
+  if (!normalizedFilename) return { properties: [], reason: 'missing_filename' };
 
   const slugMatches = properties.filter(property => comparable(property.slug) === normalizedFilename);
-  if (slugMatches.length === 1) return { property: slugMatches[0], reason: 'slug' };
-  if (slugMatches.length > 1) return { property: null, reason: 'ambiguous_slug' };
+  if (slugMatches.length === 1) return { properties: slugMatches, reason: 'slug' };
+  if (slugMatches.length > 1) return { properties: [], reason: 'ambiguous_slug' };
 
   const addressMatches = properties.filter(property => comparable(property.address?.normalized) === normalizedFilename);
-  if (addressMatches.length === 1) return { property: addressMatches[0], reason: 'address' };
-  if (addressMatches.length > 1) return { property: null, reason: 'ambiguous_address' };
-  return { property: null, reason: 'unmatched' };
+  if (addressMatches.length === 1) return { properties: addressMatches, reason: 'address' };
+  if (addressMatches.length > 1) return { properties: [], reason: 'ambiguous_address' };
+  return { properties: [], reason: 'unmatched' };
+}
+
+export function findDrivePropertyMatch(file, properties = []) {
+  const match = findDrivePropertyMatches(file, properties);
+  return { property: match.properties.length === 1 ? match.properties[0] : null, reason: match.reason };
 }
 
 function localFilename(file, batchId) {
@@ -209,21 +213,36 @@ export async function removeCommittedDriveImages(files = []) {
   await Promise.all(files.map(file => fs.unlink(file.targetPath).catch(() => {})));
 }
 
+export function unreferencedManagedImagePaths(paths = [], properties = []) {
+  const referenced = new Set(properties.flatMap(property => property.images || []));
+  return [...new Set(paths.filter(Boolean))].filter(imagePath => !referenced.has(imagePath));
+}
+
+export async function removeUnreferencedDriveImages(paths = [], uploadsDirectory) {
+  const candidates = [...new Set(paths.filter(Boolean))];
+  if (!candidates.length) return;
+  const properties = await Property.find({ images: { $in: candidates } }).select('images').lean();
+  const removable = unreferencedManagedImagePaths(candidates, properties);
+  await removeCommittedDriveImages(removable.map(localPath => ({ targetPath: path.resolve(uploadsDirectory, path.basename(localPath)) })));
+}
+
 export function buildDriveImageUpdatePlan(files = [], properties = [], { folderUrl, downloadedAt = new Date() } = {}) {
   const updates = new Map();
   let ignored = 0;
   const ignoredFiles = [];
   for (const file of files) {
-    const match = findDrivePropertyMatch(file, properties);
-    if (!match.property) {
+    const match = findDrivePropertyMatches(file, properties);
+    if (!match.properties.length) {
       ignored++;
       ignoredFiles.push({ name: file.name, reason: match.reason });
       continue;
     }
-    const id = String(match.property._id);
-    const current = updates.get(id) || { property: match.property, files: [] };
-    current.files.push(file);
-    updates.set(id, current);
+    for (const property of match.properties) {
+      const id = String(property._id);
+      const current = updates.get(id) || { property, files: [] };
+      current.files.push(file);
+      updates.set(id, current);
+    }
   }
 
   const operations = [];

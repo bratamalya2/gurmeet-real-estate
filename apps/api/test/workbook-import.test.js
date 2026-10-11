@@ -43,6 +43,8 @@ test('parses the supplied 251-listing photo manifest', async () => {
   assert.equal(parsed.rows.filter(row => row.pages === 'Sold by Gurmeet').length, 69);
   assert.equal(parsed.rows[0].propertySlug, '1995-eleanor-loop-dublin-ca-94568-zillow-zillow-all-properties-8');
   assert.equal(parsed.rows[0].imageUrl, driveImageUrl('https://drive.google.com/file/d/1nb6xESBTDmwFUMzKJYr1hIGvpMyQ4wPO/view?usp=drivesdk'));
+  assert.equal(parsed.rows.filter(row => row.imageUrl).length, 251);
+  assert.equal(new Set(parsed.rows.map(row => row.imageUrl)).size, 189);
   assert.equal(parsed.rows[0].propertySource, 'zillow');
   assert.equal(parsed.rows[0].transactionSide, 'Buyer');
 });

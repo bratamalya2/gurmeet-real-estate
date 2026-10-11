@@ -23,7 +23,7 @@ import { AnalyticsRangeError, getAnalytics } from './services/analytics.js';
 import { propertySideFilter, propertySourceFilter } from './services/property-filters.js';
 import { getMarketInsights } from './services/market-insights.js';
 import { featuredPropertyFilter, featuredPropertySort, highestValueProperties, soldFeaturedPropertyFilter } from './services/featured-properties.js';
-import { DriveImageImportError, stageDriveFolderImages, commitStagedDriveImages, removeCommittedDriveImages, applyDriveImageUpdates } from './services/drive-images.js';
+import { DriveImageImportError, stageDriveFolderImages, commitStagedDriveImages, removeCommittedDriveImages, removeUnreferencedDriveImages, applyDriveImageUpdates } from './services/drive-images.js';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -226,6 +226,7 @@ app.post('/api/admin/listings/drive-images-import', auth(['admin']), async (req,
   let staged;
   let committed = [];
   let session;
+  let transactionCommitted = false;
   const log = await SystemLog.create({ source: 'drive:images', status: 'running', startedAt: new Date() });
   try {
     staged = await stageDriveFolderImages(folderUrl, { apiKey: process.env.GOOGLE_DRIVE_API_KEY, stagingRoot: uploadsDirectory });
@@ -240,13 +241,18 @@ app.post('/api/admin/listings/drive-images-import', auth(['admin']), async (req,
         { upsert: true, new: true, setDefaultsOnInsert: true, session },
       );
     });
+    transactionCommitted = true;
     const matchedFileIds = new Set(plan.operations.flatMap(operation => operation.fileIds));
-    await removeCommittedDriveImages(committed.filter(file => !matchedFileIds.has(file.id)));
-    await removeCommittedDriveImages(plan.obsoletePaths.map(localPath => ({ targetPath: path.resolve(uploadsDirectory, path.basename(localPath)) })));
+    try {
+      await removeCommittedDriveImages(committed.filter(file => !matchedFileIds.has(file.id)));
+      await removeUnreferencedDriveImages(plan.obsoletePaths, uploadsDirectory);
+    } catch (cleanupError) {
+      console.warn(`Drive image cleanup failed after a successful import: ${cleanupError.message}`);
+    }
     await SystemLog.findByIdAndUpdate(log.id, { status: 'success', completedAt: new Date(), created: 0, updated: plan.updated, sourceRows: staged.files.length, totalListings: plan.matched });
     return res.json({ ok: true, folderUrl, filesFound: staged.filesFound, downloaded: committed.length, matched: plan.matched, updated: plan.updated, ignored: staged.ignored + plan.ignored, errors: plan.ignoredFiles || [] });
   } catch (error) {
-    if (committed.length) await removeCommittedDriveImages(committed);
+    if (!transactionCommitted && committed.length) await removeCommittedDriveImages(committed);
     await SystemLog.findByIdAndUpdate(log.id, { status: 'failed', completedAt: new Date(), error: String(error.message || error).slice(0, 1000) }).catch(() => {});
     if (error instanceof DriveImageImportError) return res.status(error.statusCode).json({ error: error.message });
     return next(error);
