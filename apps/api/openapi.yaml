@@ -392,6 +392,48 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /admin/listings/drive-images-import:
+    post:
+      tags: [Staff administration]
+      summary: Download public Google Drive folder images
+      description: |
+        Recursively lists public JPEG, PNG, WebP, and GIF files in a Google Drive folder,
+        downloads them to persistent API storage, and attaches matched files to existing
+        properties. Matching uses stored Drive file IDs, property slugs, and normalized
+        addresses. The endpoint does not create, delete, or rebuild properties.
+        The Google Drive API key is configured only on the backend.
+      security: [{ CookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [folderUrl]
+              properties:
+                folderUrl:
+                  type: string
+                  format: uri
+                  example: https://drive.google.com/drive/folders/FOLDER_ID
+      responses:
+        '200':
+          description: Drive image import completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  folderUrl: { type: string, format: uri }
+                  filesFound: { type: integer }
+                  downloaded: { type: integer }
+                  matched: { type: integer }
+                  updated: { type: integer }
+                  ignored: { type: integer }
+                  errors: { type: array, items: { type: object } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /admin/users:
     get:
       tags: [Staff administration]

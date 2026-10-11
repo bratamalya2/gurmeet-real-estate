@@ -47,6 +47,7 @@ export default function Admin() {
   });
   const [property, setProperty] = useState(emptyProperty);
   const [notice, setNotice] = useState("");
+  const [driveImportResult, setDriveImportResult] = useState(null);
   const [importingWorkbook, setImportingWorkbook] = useState(false);
   const [importingDriveImages, setImportingDriveImages] = useState(false);
 
@@ -242,15 +243,18 @@ export default function Admin() {
     const folderUrl = driveFolderRef.current?.value?.trim();
     if (!folderUrl) return setNotice("Enter a public Google Drive folder URL first.");
     setImportingDriveImages(true);
+    setDriveImportResult(null);
     setNotice("Listing and downloading Google Drive images…");
     try {
       const response = await request("admin/listings/drive-images-import", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ folderUrl }) });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Google Drive image import failed.");
       if (driveFolderRef.current) driveFolderRef.current.value = "";
+      setDriveImportResult({ ...result, ok: true });
       setNotice(`Google Drive images imported: ${result.downloaded} downloaded, ${result.matched} properties matched, ${result.updated} updated${result.ignored ? `, ${result.ignored} ignored` : ""}.`);
       await load();
     } catch (error) {
+      setDriveImportResult({ ok: false, error: error.message || "Google Drive image import failed." });
       setNotice(error.message || "Google Drive image import failed.");
     } finally {
       setImportingDriveImages(false);
@@ -559,6 +563,18 @@ export default function Admin() {
                       <input ref={driveFolderRef} type="url" placeholder="https://drive.google.com/drive/folders/..." disabled={importingDriveImages || importingWorkbook} aria-label="Google Drive folder URL" />
                       <button className="btn" disabled={importingDriveImages || importingWorkbook}>{importingDriveImages ? "Downloading folder images…" : "Download folder images"}</button>
                     </form>
+                    {driveImportResult && (driveImportResult.ok ? (
+                      <dl className="drive-import-result notice" aria-live="polite">
+                        <div><dt>Files found</dt><dd>{driveImportResult.filesFound ?? 0}</dd></div>
+                        <div><dt>Downloaded</dt><dd>{driveImportResult.downloaded ?? 0}</dd></div>
+                        <div><dt>Properties matched</dt><dd>{driveImportResult.matched ?? 0}</dd></div>
+                        <div><dt>Properties updated</dt><dd>{driveImportResult.updated ?? 0}</dd></div>
+                        <div><dt>Files ignored</dt><dd>{driveImportResult.ignored ?? 0}</dd></div>
+                        {driveImportResult.errors?.length > 0 && <div><dt>Errors</dt><dd>{driveImportResult.errors.map((item) => `${item.name}: ${item.reason}`).join("; ")}</dd></div>}
+                      </dl>
+                    ) : (
+                      <p className="error" role="alert">{driveImportResult.error}</p>
+                    ))}
                   </div>
                 </>
               ) : (

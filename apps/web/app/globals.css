@@ -148,6 +148,26 @@ a {
   border: 1px solid #fde68a;
   line-height: 1.5;
 }
+.drive-import-result {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0 0;
+}
+.drive-import-result div {
+  min-width: 0;
+}
+.drive-import-result dt {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.drive-import-result dd {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+}
 .error {
   padding: 12px;
   background: #fef2f2;
@@ -432,6 +452,9 @@ a {
   }
   .workbook-imports {
     grid-template-columns: 1fr;
+  }
+  .drive-import-result {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .pagination {
     gap: 10px;

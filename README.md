@@ -23,3 +23,21 @@ The Admin dashboard **Sync** tab accepts `Homes By Gurmeet — Bought & Sold Pho
 For matching properties, the import preserves listing fields that are not present in the workbook, such as price, dimensions, coordinates, descriptions, and transaction dates. Unmatched rows are created as sold properties with empty unavailable fields. The workbook supplies the title, address, image, buyer/seller classification, verification metadata, and portfolio source information.
 
 The Admin dashboard **Analytics** tab reports current inventory, pricing, lead activity, workbook freshness, and first-party page/listing views. Traffic events are anonymous, contain no query strings or personal data, and are retained for 24 months.
+
+## Updating property images from Google Drive
+
+The Admin dashboard **Sync** tab includes **Download folder images**. The folder must be publicly accessible, and image filenames should contain the matching property slug or normalized address. Supported formats are JPEG, PNG, WebP, and GIF; subfolders are scanned recursively. Only matched properties are updated, and manually uploaded images are preserved.
+
+Configure the Google Drive API key only in the backend environment as `GOOGLE_DRIVE_API_KEY` (for Docker, `apps/api/.env`). Do not add it to the web environment or commit it to Git. After changing the backend environment, recreate only the API service:
+
+```bash
+cd ~/gurmeet-real-estate
+docker compose up -d --force-recreate api
+```
+
+Downloaded images are persisted in `apps/api/uploads`, which is mounted into the API container at `/app/uploads`. A normal image refresh does not require rebuilding the API or web images. Verify downloaded files with:
+
+```bash
+find apps/api/uploads -maxdepth 1 -type f -name 'drive-*' | wc -l
+docker compose exec api sh -lc "find /app/uploads -maxdepth 1 -type f -name 'drive-*' | wc -l"
+```
