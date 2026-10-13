@@ -4,7 +4,7 @@ import { Header, Footer } from "../../../components/SiteChrome";
 import LeadForm from "../../../components/LeadForm";
 import AnalyticsTracker from "../../../components/AnalyticsTracker";
 import { publicAssetUrl, serverApiUrl } from "../../../lib/api";
-import { PROPERTY_PLACEHOLDER_IMAGE } from "../../../lib/property-assets";
+import { propertyPhotoPaths } from "../../../lib/property-images.mjs";
 import PropertyImage from "../../../components/PropertyImage";
 
 export const dynamic = "force-dynamic";
@@ -60,7 +60,7 @@ export default async function Detail({ params }) {
   ]
     .filter(Boolean)
     .join(", ");
-  const photos = property.images?.length ? property.images.map(publicAssetUrl) : [PROPERTY_PLACEHOLDER_IMAGE];
+  const photos = propertyPhotoPaths(property).map(publicAssetUrl);
   const mapQuery = encodeURIComponent(
     property.coordinates?.lat
       ? `${property.coordinates.lat},${property.coordinates.lng}`

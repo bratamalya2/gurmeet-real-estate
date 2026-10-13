@@ -29,7 +29,7 @@ const app = express();
 app.set('trust proxy', 1);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDirectory = path.resolve(__dirname, '../uploads');
-const publicFields = 'title slug address price beds baths sqft description status featured images coordinates source createdAt updatedAt transaction.soldDate transaction.side transaction.verification';
+const publicFields = 'title slug address price beds baths sqft description status featured images photoManifest.managedImagePaths photoManifest.localUploadPaths coordinates source createdAt updatedAt transaction.soldDate transaction.side transaction.verification';
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: process.env.WEB_ORIGIN || 'http://localhost:3000', credentials: true }));
