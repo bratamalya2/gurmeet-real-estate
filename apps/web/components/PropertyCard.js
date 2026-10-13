@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { publicAssetUrl } from "../lib/api";
-import { PROPERTY_PLACEHOLDER_IMAGE } from "../lib/property-assets";
+import { propertyPrimaryImagePath } from "../lib/property-images.mjs";
 import { relativeTransactionLabel } from "../lib/transaction.mjs";
 import { propertyStatusLabel } from "../lib/property-labels.mjs";
 import PropertyImage from "./PropertyImage";
 
 export default function PropertyCard({ p, portfolioSide }) {
-  const photo = p.images?.[0] || PROPERTY_PLACEHOLDER_IMAGE;
+  const photo = propertyPrimaryImagePath(p);
   const propertyName = p.title || p.address?.street || "this property";
   const transactionLabel = p.status === "Sold" ? relativeTransactionLabel(p.transaction) : "";
   return (

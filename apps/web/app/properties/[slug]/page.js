@@ -4,7 +4,7 @@ import { Header, Footer } from "../../../components/SiteChrome";
 import LeadForm from "../../../components/LeadForm";
 import AnalyticsTracker from "../../../components/AnalyticsTracker";
 import { publicAssetUrl, serverApiUrl } from "../../../lib/api";
-import { propertyPhotoPaths } from "../../../lib/property-images.mjs";
+import { propertyPrimaryImagePath } from "../../../lib/property-images.mjs";
 import PropertyImage from "../../../components/PropertyImage";
 
 export const dynamic = "force-dynamic";
@@ -60,7 +60,7 @@ export default async function Detail({ params }) {
   ]
     .filter(Boolean)
     .join(", ");
-  const photos = propertyPhotoPaths(property).map(publicAssetUrl);
+  const photo = publicAssetUrl(propertyPrimaryImagePath(property));
   const mapQuery = encodeURIComponent(
     property.coordinates?.lat
       ? `${property.coordinates.lat},${property.coordinates.lng}`
@@ -118,14 +118,11 @@ export default async function Detail({ params }) {
         <section className="container section detail-layout">
           <div>
             <div className="property-gallery">
-              {photos.length ? photos.map((photo, index) => (
-                <PropertyImage
-                  key={photo}
-                  className={index === 0 ? "primary-photo" : ""}
-                  src={photo}
-                  alt={`${property.title || address}${index ? `, photo ${index + 1}` : ""}`}
-                />
-              )) : <div className="property-photo-placeholder detail-photo-placeholder"><svg aria-hidden="true" viewBox="0 0 64 64"><rect x="8" y="12" width="48" height="40" rx="3" /><circle cx="24" cy="26" r="5" /><path d="m12 47 14-13 9 8 6-5 11 10" /></svg><strong>Photos needed</strong><span>Ask the owner for images of this property.</span></div>}
+              <PropertyImage
+                className="primary-photo"
+                src={photo}
+                alt={property.title || address}
+              />
             </div>
           </div>
           <div className="property-summary">
