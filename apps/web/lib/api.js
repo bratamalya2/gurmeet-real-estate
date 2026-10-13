@@ -23,13 +23,7 @@ export function publicAssetUrl(assetPath = '') {
     return assetPath;
   }
 
-  if (typeof window !== 'undefined') {
-    return assetPath.startsWith('/')
-      ? assetPath
-      : `/${assetPath}`;
-  }
-
-  const origin = browserApiUrl.replace(/\/api\/?$/, '');
-
-  return `${origin}${assetPath.startsWith('/') ? assetPath : `/${assetPath}`}`;
+  return assetPath.startsWith('/')
+    ? assetPath
+    : `/${assetPath}`;
 }
