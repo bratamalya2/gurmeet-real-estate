@@ -9,6 +9,7 @@ import {
   buildLocalUploadImagePlan,
   extractDriveFolderId,
   extractDriveFileId,
+  extractLocalDriveFileId,
   findDrivePropertyMatch,
   findDrivePropertyMatches,
   normalizeDriveFilename,
@@ -87,6 +88,23 @@ test('connects local upload files by slug or address and preserves existing imag
   assert.equal(plan.ignored, 2);
   assert.deepEqual(plan.operations[0].images, ['/uploads/manual.jpg', '/uploads/123-main-st-fremont-ca-94536.jpg']);
   assert.equal(plan.operations[0].manualOverrides.images, true);
+});
+
+test('connects the actual downloaded Drive filename format through its embedded file ID', () => {
+  const driveId = '1nb6xESBTDmwFUMzKJYr1hIGvpMyQ4wPO';
+  const filename = 'drive-95d3ed13-6efc-4791-aa0f-39b487738244-1nb6xESBTDmwFUMzKJYr1hIGvpMyQ4wPO.webp';
+  assert.equal(extractLocalDriveFileId(filename), driveId);
+  const property = {
+    _id: 'property-id',
+    slug: 'unrelated-slug',
+    address: { normalized: 'unrelatedaddress' },
+    images: [PROPERTY_PLACEHOLDER_IMAGE],
+    photoManifest: { imageUrls: [`https://drive.google.com/uc?export=view&id=${driveId}`] },
+  };
+  const plan = buildLocalUploadImagePlan([{ id: driveId, name: filename, localPath: `/uploads/${filename}` }], [property]);
+  assert.equal(plan.matchedFiles, 1);
+  assert.equal(plan.matchedProperties, 1);
+  assert.deepEqual(plan.operations[0].images, [`/uploads/${filename}`]);
 });
 
 test('preserves manual images and replaces workbook and previous managed images', () => {

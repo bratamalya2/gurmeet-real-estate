@@ -64,12 +64,20 @@ export function isSupportedLocalImage(filename) {
   return LOCAL_IMAGE_EXTENSIONS.has(path.extname(String(filename || '')).toLowerCase());
 }
 
+export function extractLocalDriveFileId(filename) {
+  const base = path.basename(String(filename || '')).replace(/\.[a-z0-9]+$/i, '');
+  const match = base.match(/^drive-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-(.+)$/i);
+  return match?.[1] || '';
+}
+
 export async function listLocalUploadImages(uploadsDirectory) {
   const entries = await fs.readdir(uploadsDirectory, { withFileTypes: true });
   return entries
     .filter(entry => entry.isFile() && isSupportedLocalImage(entry.name))
+    .sort((left, right) => left.name.localeCompare(right.name))
     .map(entry => ({
       name: entry.name,
+      id: extractLocalDriveFileId(entry.name),
       localPath: `/uploads/${entry.name}`,
       targetPath: path.join(uploadsDirectory, entry.name),
     }));
@@ -296,9 +304,10 @@ export function buildLocalUploadImagePlan(files = [], properties = []) {
   let ignored = 0;
   const ignoredFiles = [];
   const matchedFileNames = new Set();
+  const matchedPropertyIds = new Set();
 
   for (const file of files) {
-    const match = findDrivePropertyMatches({ name: file.name }, properties);
+    const match = findDrivePropertyMatches({ id: file.id, name: file.name }, properties);
     if (!match.properties.length) {
       ignored++;
       ignoredFiles.push({ name: file.name, reason: match.reason });
@@ -307,6 +316,7 @@ export function buildLocalUploadImagePlan(files = [], properties = []) {
     matchedFileNames.add(file.name);
     for (const property of match.properties) {
       const id = String(property._id);
+      matchedPropertyIds.add(id);
       const current = updates.get(id) || { property, files: [] };
       current.files.push(file);
       updates.set(id, current);
@@ -318,16 +328,21 @@ export function buildLocalUploadImagePlan(files = [], properties = []) {
     const localPaths = propertyFiles.map(file => file.localPath || `/uploads/${path.basename(file.name)}`);
     const existingImages = (property.images || []).filter(image => image !== PROPERTY_PLACEHOLDER_IMAGE);
     const images = [...new Set([...existingImages, ...localPaths])];
+    const addedPaths = localPaths.filter(localPath => !existingImages.includes(localPath));
+    const hasNewImage = addedPaths.length > 0;
+    if (!hasNewImage && existingImages.length === (property.images || []).length) continue;
+    const hasDriveManagedFile = propertyFiles.some(file => file.id && property.photoManifest?.driveFileIds?.includes(file.id));
+    const localUploadPaths = localPaths.filter((localPath, index) => !propertyFiles[index].id);
     operations.push({
       property,
       images,
       photoManifest: {
         ...(property.photoManifest || {}),
-        localUploadPaths: [...new Set([...(property.photoManifest?.localUploadPaths || []), ...localPaths])],
+        localUploadPaths: [...new Set([...(property.photoManifest?.localUploadPaths || []), ...localUploadPaths])],
       },
       manualOverrides: {
         ...(property.manualOverrides || {}),
-        images: true,
+        images: hasDriveManagedFile ? property.manualOverrides?.images : true,
       },
     });
   }
@@ -336,9 +351,9 @@ export function buildLocalUploadImagePlan(files = [], properties = []) {
     operations,
     filesFound: files.length,
     matchedFiles: matchedFileNames.size,
-    matchedProperties: operations.length,
+    matchedProperties: matchedPropertyIds.size,
     totalProperties: properties.length,
-    propertiesWithoutMatch: Math.max(0, properties.length - operations.length),
+    propertiesWithoutMatch: Math.max(0, properties.length - matchedPropertyIds.size),
     updated: operations.length,
     ignored,
     ignoredFiles,
