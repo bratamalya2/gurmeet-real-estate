@@ -6,11 +6,13 @@ import test from 'node:test';
 import {
   DriveImageImportError,
   buildDriveImageUpdatePlan,
+  buildLocalUploadImagePlan,
   extractDriveFolderId,
   extractDriveFileId,
   findDrivePropertyMatch,
   findDrivePropertyMatches,
   normalizeDriveFilename,
+  isSupportedLocalImage,
   unreferencedManagedImagePaths,
   stageDriveFolderImages,
 } from '../src/services/drive-images.js';
@@ -64,6 +66,27 @@ test('keeps managed files referenced by another property during cleanup planning
     unreferencedManagedImagePaths(['/uploads/shared.jpg', '/uploads/old.jpg'], [{ images: ['/uploads/shared.jpg'] }]),
     ['/uploads/old.jpg'],
   );
+});
+
+test('connects local upload files by slug or address and preserves existing images', () => {
+  assert.equal(isSupportedLocalImage('property.JPG'), true);
+  assert.equal(isSupportedLocalImage('notes.pdf'), false);
+  const properties = [
+    { _id: 'property-id', slug: '123-main-st-fremont-ca-94536', address: { normalized: '123mainstfremontca94536' }, images: [PROPERTY_PLACEHOLDER_IMAGE, '/uploads/manual.jpg'] },
+    { _id: 'other-id', slug: 'other-property', address: { normalized: 'sameaddress' }, images: [] },
+    { _id: 'duplicate-id', slug: 'duplicate-property', address: { normalized: 'sameaddress' }, images: [] },
+  ];
+  const plan = buildLocalUploadImagePlan([
+    { name: '123-main-st-fremont-ca-94536.jpg', localPath: '/uploads/123-main-st-fremont-ca-94536.jpg' },
+    { name: 'same-address.png', localPath: '/uploads/same-address.png' },
+    { name: 'unmatched.gif', localPath: '/uploads/unmatched.gif' },
+  ], properties);
+  assert.equal(plan.matchedFiles, 1);
+  assert.equal(plan.matchedProperties, 1);
+  assert.equal(plan.updated, 1);
+  assert.equal(plan.ignored, 2);
+  assert.deepEqual(plan.operations[0].images, ['/uploads/manual.jpg', '/uploads/123-main-st-fremont-ca-94536.jpg']);
+  assert.equal(plan.operations[0].manualOverrides.images, true);
 });
 
 test('preserves manual images and replaces workbook and previous managed images', () => {

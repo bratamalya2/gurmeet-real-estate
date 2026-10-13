@@ -17,6 +17,7 @@ const EXTENSIONS = {
   'image/webp': '.webp',
   'image/gif': '.gif',
 };
+const LOCAL_IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
 const MAX_FILES = 1000;
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const MAX_TOTAL_BYTES = 500 * 1024 * 1024;
@@ -57,6 +58,21 @@ function comparable(value) {
 
 export function normalizeDriveFilename(filename) {
   return comparable(path.basename(String(filename || '')));
+}
+
+export function isSupportedLocalImage(filename) {
+  return LOCAL_IMAGE_EXTENSIONS.has(path.extname(String(filename || '')).toLowerCase());
+}
+
+export async function listLocalUploadImages(uploadsDirectory) {
+  const entries = await fs.readdir(uploadsDirectory, { withFileTypes: true });
+  return entries
+    .filter(entry => entry.isFile() && isSupportedLocalImage(entry.name))
+    .map(entry => ({
+      name: entry.name,
+      localPath: `/uploads/${entry.name}`,
+      targetPath: path.join(uploadsDirectory, entry.name),
+    }));
 }
 
 export function extractDriveFileId(value) {
@@ -273,6 +289,80 @@ export function buildDriveImageUpdatePlan(files = [], properties = [], { folderU
     });
   }
   return { operations, obsoletePaths: [...new Set(obsoletePaths)], matched: operations.length, updated: operations.length, ignored, ignoredFiles };
+}
+
+export function buildLocalUploadImagePlan(files = [], properties = []) {
+  const updates = new Map();
+  let ignored = 0;
+  const ignoredFiles = [];
+  const matchedFileNames = new Set();
+
+  for (const file of files) {
+    const match = findDrivePropertyMatches({ name: file.name }, properties);
+    if (!match.properties.length) {
+      ignored++;
+      ignoredFiles.push({ name: file.name, reason: match.reason });
+      continue;
+    }
+    matchedFileNames.add(file.name);
+    for (const property of match.properties) {
+      const id = String(property._id);
+      const current = updates.get(id) || { property, files: [] };
+      current.files.push(file);
+      updates.set(id, current);
+    }
+  }
+
+  const operations = [];
+  for (const { property, files: propertyFiles } of updates.values()) {
+    const localPaths = propertyFiles.map(file => file.localPath || `/uploads/${path.basename(file.name)}`);
+    const existingImages = (property.images || []).filter(image => image !== PROPERTY_PLACEHOLDER_IMAGE);
+    const images = [...new Set([...existingImages, ...localPaths])];
+    operations.push({
+      property,
+      images,
+      photoManifest: {
+        ...(property.photoManifest || {}),
+        localUploadPaths: [...new Set([...(property.photoManifest?.localUploadPaths || []), ...localPaths])],
+      },
+      manualOverrides: {
+        ...(property.manualOverrides || {}),
+        images: true,
+      },
+    });
+  }
+
+  return {
+    operations,
+    filesFound: files.length,
+    matchedFiles: matchedFileNames.size,
+    matchedProperties: operations.length,
+    totalProperties: properties.length,
+    propertiesWithoutMatch: Math.max(0, properties.length - operations.length),
+    updated: operations.length,
+    ignored,
+    ignoredFiles,
+  };
+}
+
+export async function applyLocalUploadImageUpdates(files, { session } = {}) {
+  const existing = await Property.find().session(session || null).lean();
+  const plan = buildLocalUploadImagePlan(files, existing);
+  if (plan.operations.length) {
+    await Property.bulkWrite(plan.operations.map(operation => ({
+      updateOne: {
+        filter: { _id: operation.property._id },
+        update: {
+          $set: {
+            images: operation.images,
+            photoManifest: operation.photoManifest,
+            manualOverrides: operation.manualOverrides,
+          },
+        },
+      },
+    })), { ordered: true, session });
+  }
+  return plan;
 }
 
 export async function applyDriveImageUpdates(files, { folderUrl, session } = {}) {

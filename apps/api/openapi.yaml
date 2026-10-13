@@ -436,6 +436,35 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /admin/listings/uploads-connect:
+    post:
+      tags: [Staff administration]
+      summary: Connect image files already in persistent uploads storage
+      description: |
+        Scans the API uploads directory for JPEG, PNG, WebP, and GIF files and attaches
+        files to properties whose exact slug or normalized address matches the filename.
+        Existing property images are preserved. Ambiguous and unmatched files are ignored.
+      security: [{ CookieAuth: [] }]
+      responses:
+        '200':
+          description: Local upload image connection completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  filesFound: { type: integer }
+                  matchedFiles: { type: integer }
+                  matchedProperties: { type: integer }
+                  totalProperties: { type: integer }
+                  propertiesWithoutMatch: { type: integer }
+                  updated: { type: integer }
+                  ignored: { type: integer }
+                  errors: { type: array, items: { type: object } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /admin/users:
     get:
       tags: [Staff administration]

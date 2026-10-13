@@ -48,8 +48,10 @@ export default function Admin() {
   const [property, setProperty] = useState(emptyProperty);
   const [notice, setNotice] = useState("");
   const [driveImportResult, setDriveImportResult] = useState(null);
+  const [uploadConnectResult, setUploadConnectResult] = useState(null);
   const [importingWorkbook, setImportingWorkbook] = useState(false);
   const [importingDriveImages, setImportingDriveImages] = useState(false);
+  const [connectingUploadImages, setConnectingUploadImages] = useState(false);
 
   async function load() {
     try {
@@ -258,6 +260,25 @@ export default function Admin() {
       setNotice(error.message || "Google Drive image import failed.");
     } finally {
       setImportingDriveImages(false);
+    }
+  }
+  async function connectUploadImages(event) {
+    event.preventDefault();
+    setConnectingUploadImages(true);
+    setUploadConnectResult(null);
+    setNotice("Scanning uploaded images and matching them to properties…");
+    try {
+      const response = await request("admin/listings/uploads-connect", { method: "POST" });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Uploaded image connection failed.");
+      setUploadConnectResult({ ...result, ok: true });
+      setNotice(`Uploaded images connected: ${result.matchedFiles} files matched ${result.matchedProperties} properties; ${result.updated} updated${result.ignored ? `, ${result.ignored} ignored` : ""}.`);
+      await load();
+    } catch (error) {
+      setUploadConnectResult({ ok: false, error: error.message || "Uploaded image connection failed." });
+      setNotice(error.message || "Uploaded image connection failed.");
+    } finally {
+      setConnectingUploadImages(false);
     }
   }
 
@@ -551,17 +572,17 @@ export default function Admin() {
                     <label>
                       Photo and portfolio workbook (.xlsx)
                       <small className="muted">Expected format: Homes By Gurmeet — Bought &amp; Sold Photos (251 listings).xlsx</small>
-                      <input ref={workbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbook} />
+                    <input ref={workbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbook || importingDriveImages || connectingUploadImages} />
                     </label>
-                    <button className="btn" disabled={importingWorkbook || importingDriveImages}>{importingWorkbook ? "Importing portfolio workbook…" : "Replace listing dataset"}</button>
+                    <button className="btn" disabled={importingWorkbook || importingDriveImages || connectingUploadImages}>{importingWorkbook ? "Importing portfolio workbook…" : "Replace listing dataset"}</button>
                   </form>
                   <p className="warning">Warning: this import is destructive. It replaces the complete public listing dataset, removes properties absent from the workbook, and sets imported properties to Sold. Invalid workbooks are rejected before any data changes.</p>
                   <div className="drive-import-panel">
                     <h3>Download folder images</h3>
                     <p className="muted">Enter a publicly accessible Google Drive folder. Image filenames should contain the property slug or normalized address. Only matched properties are updated; existing manually uploaded images are preserved.</p>
                     <form className="fields" onSubmit={importDriveImages}>
-                      <input ref={driveFolderRef} type="url" placeholder="https://drive.google.com/drive/folders/..." disabled={importingDriveImages || importingWorkbook} aria-label="Google Drive folder URL" />
-                      <button className="btn" disabled={importingDriveImages || importingWorkbook}>{importingDriveImages ? "Downloading folder images…" : "Download folder images"}</button>
+                      <input ref={driveFolderRef} type="url" placeholder="https://drive.google.com/drive/folders/..." disabled={importingDriveImages || importingWorkbook || connectingUploadImages} aria-label="Google Drive folder URL" />
+                      <button className="btn" disabled={importingDriveImages || importingWorkbook || connectingUploadImages}>{importingDriveImages ? "Downloading folder images…" : "Download folder images"}</button>
                     </form>
                     {driveImportResult && (driveImportResult.ok ? (
                       <dl className="drive-import-result notice" aria-live="polite">
@@ -574,6 +595,27 @@ export default function Admin() {
                       </dl>
                     ) : (
                       <p className="error" role="alert">{driveImportResult.error}</p>
+                    ))}
+                  </div>
+                  <div className="drive-import-panel">
+                    <h3>Connect images already in uploads</h3>
+                    <p className="muted">Scan <code>apps/api/uploads</code> and connect supported image files to properties by exact property slug or normalized address. Existing images are preserved; ambiguous or unmatched filenames are reported and never assigned randomly.</p>
+                    <form className="fields" onSubmit={connectUploadImages}>
+                      <button className="btn" disabled={connectingUploadImages || importingDriveImages || importingWorkbook}>{connectingUploadImages ? "Connecting uploaded images…" : "Connect uploaded images"}</button>
+                    </form>
+                    {uploadConnectResult && (uploadConnectResult.ok ? (
+                      <dl className="drive-import-result notice" aria-live="polite">
+                        <div><dt>Files found</dt><dd>{uploadConnectResult.filesFound ?? 0}</dd></div>
+                        <div><dt>Files matched</dt><dd>{uploadConnectResult.matchedFiles ?? 0}</dd></div>
+                        <div><dt>Properties matched</dt><dd>{uploadConnectResult.matchedProperties ?? 0}</dd></div>
+                        <div><dt>Properties scanned</dt><dd>{uploadConnectResult.totalProperties ?? 0}</dd></div>
+                        <div><dt>Without a match</dt><dd>{uploadConnectResult.propertiesWithoutMatch ?? 0}</dd></div>
+                        <div><dt>Properties updated</dt><dd>{uploadConnectResult.updated ?? 0}</dd></div>
+                        <div><dt>Files ignored</dt><dd>{uploadConnectResult.ignored ?? 0}</dd></div>
+                        {uploadConnectResult.errors?.length > 0 && <div><dt>Errors</dt><dd>{uploadConnectResult.errors.map((item) => `${item.name}: ${item.reason}`).join("; ")}</dd></div>}
+                      </dl>
+                    ) : (
+                      <p className="error" role="alert">{uploadConnectResult.error}</p>
                     ))}
                   </div>
                 </>

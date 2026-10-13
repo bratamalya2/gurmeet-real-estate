@@ -41,3 +41,5 @@ Downloaded images are persisted in `apps/api/uploads`, which is mounted into the
 find apps/api/uploads -maxdepth 1 -type f -name 'drive-*' | wc -l
 docker compose exec api sh -lc "find /app/uploads -maxdepth 1 -type f -name 'drive-*' | wc -l"
 ```
+
+The Sync tab also includes **Connect uploaded images**. This scans existing supported images in `apps/api/uploads` and attaches them to properties whose filenames match an exact property slug or normalized address. Existing images are preserved; unmatched and ambiguous filenames are reported without being assigned.

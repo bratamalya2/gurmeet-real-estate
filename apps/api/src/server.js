@@ -23,7 +23,7 @@ import { AnalyticsRangeError, getAnalytics } from './services/analytics.js';
 import { propertySideFilter, propertySourceFilter } from './services/property-filters.js';
 import { getMarketInsights } from './services/market-insights.js';
 import { featuredPropertyFilter, featuredPropertySort, highestValueProperties, soldFeaturedPropertyFilter } from './services/featured-properties.js';
-import { DriveImageImportError, stageDriveFolderImages, commitStagedDriveImages, removeCommittedDriveImages, removeUnreferencedDriveImages, applyDriveImageUpdates } from './services/drive-images.js';
+import { DriveImageImportError, stageDriveFolderImages, commitStagedDriveImages, removeCommittedDriveImages, removeUnreferencedDriveImages, listLocalUploadImages, applyDriveImageUpdates, applyLocalUploadImageUpdates } from './services/drive-images.js';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -253,6 +253,30 @@ app.post('/api/admin/listings/drive-images-import', auth(['admin']), async (req,
     return res.json({ ok: true, folderUrl, filesFound: staged.filesFound, downloaded: committed.length, matched: plan.matched, updated: plan.updated, ignored: staged.ignored + plan.ignored, errors: plan.ignoredFiles || [] });
   } catch (error) {
     if (!transactionCommitted && committed.length) await removeCommittedDriveImages(committed);
+    await SystemLog.findByIdAndUpdate(log.id, { status: 'failed', completedAt: new Date(), error: String(error.message || error).slice(0, 1000) }).catch(() => {});
+    if (error instanceof DriveImageImportError) return res.status(error.statusCode).json({ error: error.message });
+    return next(error);
+  } finally {
+    await session?.endSession();
+  }
+});
+app.post('/api/admin/listings/uploads-connect', auth(['admin']), async (req, res, next) => {
+  let session;
+  const log = await SystemLog.create({ source: 'uploads:connect', status: 'running', startedAt: new Date() });
+  try {
+    const files = await listLocalUploadImages(uploadsDirectory);
+    if (!files.length) {
+      const error = new DriveImageImportError('No supported image files were found in the uploads folder.');
+      throw error;
+    }
+    session = await mongoose.startSession();
+    let result;
+    await session.withTransaction(async () => {
+      result = await applyLocalUploadImageUpdates(files, { session });
+    });
+    await SystemLog.findByIdAndUpdate(log.id, { status: 'success', completedAt: new Date(), updated: result.updated, sourceRows: result.filesFound, totalListings: result.totalProperties });
+    return res.json({ ok: true, filesFound: result.filesFound, matchedFiles: result.matchedFiles, matchedProperties: result.matchedProperties, totalProperties: result.totalProperties, propertiesWithoutMatch: result.propertiesWithoutMatch, updated: result.updated, ignored: result.ignored, errors: result.ignoredFiles });
+  } catch (error) {
     await SystemLog.findByIdAndUpdate(log.id, { status: 'failed', completedAt: new Date(), error: String(error.message || error).slice(0, 1000) }).catch(() => {});
     if (error instanceof DriveImageImportError) return res.status(error.statusCode).json({ error: error.message });
     return next(error);
