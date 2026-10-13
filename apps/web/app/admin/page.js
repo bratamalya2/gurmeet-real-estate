@@ -49,9 +49,11 @@ export default function Admin() {
   const [notice, setNotice] = useState("");
   const [driveImportResult, setDriveImportResult] = useState(null);
   const [uploadConnectResult, setUploadConnectResult] = useState(null);
+  const [deduplicateResult, setDeduplicateResult] = useState(null);
   const [importingWorkbook, setImportingWorkbook] = useState(false);
   const [importingDriveImages, setImportingDriveImages] = useState(false);
   const [connectingUploadImages, setConnectingUploadImages] = useState(false);
+  const [deduplicatingProperties, setDeduplicatingProperties] = useState(false);
 
   async function load() {
     try {
@@ -279,6 +281,26 @@ export default function Admin() {
       setNotice(error.message || "Uploaded image connection failed.");
     } finally {
       setConnectingUploadImages(false);
+    }
+  }
+  async function deduplicateProperties(event) {
+    event.preventDefault();
+    if (!window.confirm("Remove duplicate properties with the same normalized address? Leads will be moved to the retained property.")) return;
+    setDeduplicatingProperties(true);
+    setDeduplicateResult(null);
+    setNotice("Finding and removing duplicate properties…");
+    try {
+      const response = await request("admin/properties/deduplicate", { method: "POST" });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Duplicate cleanup failed.");
+      setDeduplicateResult({ ...result, ok: true });
+      setNotice("Duplicate cleanup complete: " + result.removed + " removed, " + result.retained + " retained" + (result.leadsReassigned ? ", " + result.leadsReassigned + " leads reassigned" : "") + ".");
+      await load();
+    } catch (error) {
+      setDeduplicateResult({ ok: false, error: error.message || "Duplicate cleanup failed." });
+      setNotice(error.message || "Duplicate cleanup failed.");
+    } finally {
+      setDeduplicatingProperties(false);
     }
   }
 
@@ -572,17 +594,17 @@ export default function Admin() {
                     <label>
                       Photo and portfolio workbook (.xlsx)
                       <small className="muted">Expected format: Homes By Gurmeet — Bought &amp; Sold Photos (251 listings).xlsx</small>
-                    <input ref={workbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbook || importingDriveImages || connectingUploadImages} />
+                    <input ref={workbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbook || importingDriveImages || connectingUploadImages || deduplicatingProperties} />
                     </label>
-                    <button className="btn" disabled={importingWorkbook || importingDriveImages || connectingUploadImages}>{importingWorkbook ? "Importing portfolio workbook…" : "Replace listing dataset"}</button>
+                    <button className="btn" disabled={importingWorkbook || importingDriveImages || connectingUploadImages || deduplicatingProperties}>{importingWorkbook ? "Importing portfolio workbook…" : "Replace listing dataset"}</button>
                   </form>
                   <p className="warning">Warning: this import is destructive. It replaces the complete public listing dataset, removes properties absent from the workbook, and sets imported properties to Sold. Invalid workbooks are rejected before any data changes.</p>
                   <div className="drive-import-panel">
                     <h3>Download folder images</h3>
                     <p className="muted">Enter a publicly accessible Google Drive folder. Image filenames should contain the property slug or normalized address. Only matched properties are updated; existing manually uploaded images are preserved.</p>
                     <form className="fields" onSubmit={importDriveImages}>
-                      <input ref={driveFolderRef} type="url" placeholder="https://drive.google.com/drive/folders/..." disabled={importingDriveImages || importingWorkbook || connectingUploadImages} aria-label="Google Drive folder URL" />
-                      <button className="btn" disabled={importingDriveImages || importingWorkbook || connectingUploadImages}>{importingDriveImages ? "Downloading folder images…" : "Download folder images"}</button>
+                      <input ref={driveFolderRef} type="url" placeholder="https://drive.google.com/drive/folders/..." disabled={importingDriveImages || importingWorkbook || connectingUploadImages || deduplicatingProperties} aria-label="Google Drive folder URL" />
+                      <button className="btn" disabled={importingDriveImages || importingWorkbook || connectingUploadImages || deduplicatingProperties}>{importingDriveImages ? "Downloading folder images…" : "Download folder images"}</button>
                     </form>
                     {driveImportResult && (driveImportResult.ok ? (
                       <dl className="drive-import-result notice" aria-live="polite">
@@ -601,7 +623,7 @@ export default function Admin() {
                     <h3>Connect images already in uploads</h3>
                     <p className="muted">Scan <code>apps/api/uploads</code> and connect supported image files to properties by exact property slug or normalized address. Existing images are preserved; ambiguous or unmatched filenames are reported and never assigned randomly.</p>
                     <form className="fields" onSubmit={connectUploadImages}>
-                      <button className="btn" disabled={connectingUploadImages || importingDriveImages || importingWorkbook}>{connectingUploadImages ? "Connecting uploaded images…" : "Connect uploaded images"}</button>
+                      <button className="btn" disabled={connectingUploadImages || importingDriveImages || importingWorkbook || deduplicatingProperties}>{connectingUploadImages ? "Connecting uploaded images…" : "Connect uploaded images"}</button>
                     </form>
                     {uploadConnectResult && (uploadConnectResult.ok ? (
                       <dl className="drive-import-result notice" aria-live="polite">
@@ -616,6 +638,24 @@ export default function Admin() {
                       </dl>
                     ) : (
                       <p className="error" role="alert">{uploadConnectResult.error}</p>
+                    ))}
+                  </div>
+                  <div className="drive-import-panel">
+                    <h3>Remove duplicate properties</h3>
+                    <p className="muted">Finds properties with the same normalized address, keeps the most complete record, merges available metadata, moves linked leads to it, and removes the duplicate records. Properties without a normalized address are left unchanged.</p>
+                    <form className="fields" onSubmit={deduplicateProperties}>
+                      <button className="btn" type="submit" disabled={deduplicatingProperties || importingDriveImages || importingWorkbook || connectingUploadImages}>{deduplicatingProperties ? "Removing duplicate properties…" : "Remove all duplicate properties"}</button>
+                    </form>
+                    {deduplicateResult && (deduplicateResult.ok ? (
+                      <dl className="drive-import-result notice" aria-live="polite">
+                        <div><dt>Duplicate groups</dt><dd>{deduplicateResult.groups ?? 0}</dd></div>
+                        <div><dt>Properties removed</dt><dd>{deduplicateResult.removed ?? 0}</dd></div>
+                        <div><dt>Properties retained</dt><dd>{deduplicateResult.retained ?? 0}</dd></div>
+                        <div><dt>Leads reassigned</dt><dd>{deduplicateResult.leadsReassigned ?? 0}</dd></div>
+                        <div><dt>Skipped without normalized address</dt><dd>{deduplicateResult.skipped ?? 0}</dd></div>
+                      </dl>
+                    ) : (
+                      <p className="error" role="alert">{deduplicateResult.error}</p>
                     ))}
                   </div>
                 </>

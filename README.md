@@ -43,3 +43,5 @@ docker compose exec api sh -lc "find /app/uploads -maxdepth 1 -type f -name 'dri
 ```
 
 The Sync tab also includes **Connect uploaded images**. This scans existing supported images in `apps/api/uploads` and attaches them to properties whose filenames match an exact property slug or normalized address. Existing images are preserved; unmatched and ambiguous filenames are reported without being assigned.
+
+Administrators can also use **Remove all duplicate properties** in the Sync tab. It groups records by normalized address, keeps the most complete record, merges available images and metadata, reassigns linked leads to the retained property, and removes the duplicates. Records without a normalized address are skipped. The cleanup is transactional and is recorded in the system activity history.

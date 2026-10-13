@@ -465,6 +465,32 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /admin/properties/deduplicate:
+    post:
+      tags: [Staff administration]
+      summary: Remove duplicate properties by normalized address
+      description: |
+        Administrator-only cleanup that groups properties by their normalized address,
+        keeps the most complete record, merges useful metadata, reassigns linked leads,
+        and removes the duplicate property records. Records without a normalized address
+        are not changed.
+      security: [{ CookieAuth: [] }]
+      responses:
+        '200':
+          description: Duplicate property cleanup completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  groups: { type: integer, description: Duplicate address groups found }
+                  removed: { type: integer }
+                  retained: { type: integer }
+                  leadsReassigned: { type: integer }
+                  skipped: { type: integer, description: Properties without a normalized address }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /admin/users:
     get:
       tags: [Staff administration]

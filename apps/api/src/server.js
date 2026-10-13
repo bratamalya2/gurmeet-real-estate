@@ -24,6 +24,7 @@ import { propertySideFilter, propertySourceFilter } from './services/property-fi
 import { getMarketInsights } from './services/market-insights.js';
 import { featuredPropertyFilter, featuredPropertySort, highestValueProperties, soldFeaturedPropertyFilter } from './services/featured-properties.js';
 import { DriveImageImportError, stageDriveFolderImages, commitStagedDriveImages, removeCommittedDriveImages, removeUnreferencedDriveImages, listLocalUploadImages, applyDriveImageUpdates, applyLocalUploadImageUpdates } from './services/drive-images.js';
+import { applyPropertyDeduplication } from './services/property-deduplication.js';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -194,6 +195,30 @@ app.get('/api/admin/properties', auth(), async (req, res, next) => { try { res.j
 app.post('/api/admin/properties', auth(), async (req, res, next) => { try { const property = { ...req.body }; property.slug = property.slug || slugify(property.title || property.address?.street, { lower: true, strict: true }); property.address = { ...property.address, normalized: `${property.address?.street || ''}${property.address?.city || ''}${property.address?.state || ''}${property.address?.zip || ''}`.toLowerCase().replace(/\W/g, '') }; property.createdBy = req.user.id; res.status(201).json(await Property.create(property)); } catch (error) { next(error); } });
 app.patch('/api/admin/properties/:id', auth(), async (req, res, next) => { try { const property = await Property.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true }); return property ? res.json(property) : res.sendStatus(404); } catch (error) { return next(error); } });
 app.delete('/api/admin/properties/:id', auth(), async (req, res, next) => { try { const property = await Property.findByIdAndDelete(req.params.id); return property ? res.sendStatus(204) : res.sendStatus(404); } catch (error) { return next(error); } });
+app.post('/api/admin/properties/deduplicate', auth(['admin']), async (req, res, next) => {
+  const log = await SystemLog.create({ source: 'properties:deduplicate', status: 'running', startedAt: new Date() });
+  let session;
+  try {
+    session = await mongoose.startSession();
+    let result;
+    await session.withTransaction(async () => {
+      result = await applyPropertyDeduplication({ session });
+    });
+    await SystemLog.findByIdAndUpdate(log.id, {
+      status: 'success',
+      completedAt: new Date(),
+      removed: result.removed,
+      updated: result.groups,
+      totalListings: result.retained,
+    });
+    return res.json({ ok: true, groups: result.groups, removed: result.removed, retained: result.retained, leadsReassigned: result.leadsReassigned, skipped: result.skipped });
+  } catch (error) {
+    await SystemLog.findByIdAndUpdate(log.id, { status: 'failed', completedAt: new Date(), error: String(error.message || error).slice(0, 1000) }).catch(() => {});
+    return next(error);
+  } finally {
+    await session?.endSession();
+  }
+});
 app.post('/api/admin/uploads', auth(), upload.array('images', 12), (req, res) => res.json({ paths: req.files.map(file => `/uploads/${file.filename}`) }));
 app.delete('/api/admin/uploads/:filename', auth(), async (req, res, next) => { try { const filename = path.basename(req.params.filename); if (filename !== req.params.filename) return res.sendStatus(400); const target = path.resolve(uploadsDirectory, filename); if (!target.startsWith(`${uploadsDirectory}${path.sep}`)) return res.sendStatus(400); await fs.unlink(target).catch(error => { if (error.code !== 'ENOENT') throw error; }); await Property.updateMany({ images: `/uploads/${filename}` }, { $pull: { images: `/uploads/${filename}` } }); return res.sendStatus(204); } catch (error) { return next(error); } });
 app.get('/api/admin/leads', auth(), async (req, res, next) => { try { res.json(await Lead.find().populate('property', 'title slug').sort({ createdAt: -1 })); } catch (error) { next(error); } });
