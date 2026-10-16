@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildPrimaryMetrics, buildYearChartData, groupTopCities } from '../lib/market-insights.mjs';
+import { buildPortfolioScope, buildPrimaryMetrics, buildYearChartData, groupTopCities } from '../lib/market-insights.mjs';
 
 test('builds yearly bar and average-price line points in chronological order', () => {
   const chart = buildYearChartData([
@@ -44,4 +44,13 @@ test('builds the four portfolio KPI values and safely defaults unavailable data'
     { medianSalePrice: 1200000, averageSalePrice: 1450000, averagePricePerSqft: 825, totalSalesVolume: 72500000 },
   );
   assert.deepEqual(buildPrimaryMetrics(), { medianSalePrice: 0, averageSalePrice: 0, averagePricePerSqft: 0, totalSalesVolume: 0 });
+});
+
+test('builds a truthful portfolio scope summary from available coverage data', () => {
+  assert.deepEqual(buildPortfolioScope({
+    soldCount: 12,
+    byCity: [{ city: 'Fremont', count: 7 }, { city: 'Fremont', count: 2 }, { city: 'Dublin', count: 3 }],
+    coverage: { priced: 9, withSoldDate: 10 },
+  }), { soldHomes: 12, cityCount: 2, pricedHomes: 9, datedHomes: 10 });
+  assert.deepEqual(buildPortfolioScope(), { soldHomes: 0, cityCount: 0, pricedHomes: 0, datedHomes: 0 });
 });

@@ -16,6 +16,23 @@ export function buildPrimaryMetrics(data = {}) {
   };
 }
 
+export function buildPortfolioScope(data = {}) {
+  const soldHomes = Number(data.soldCount) || 0;
+  const cities = new Set(
+    (data.byCity || [])
+      .map(item => String(item.city || '').trim())
+      .filter(Boolean),
+  );
+  const coverage = data.coverage || {};
+
+  return {
+    soldHomes,
+    cityCount: cities.size,
+    pricedHomes: Number(coverage.priced) || 0,
+    datedHomes: Number(coverage.withSoldDate) || 0,
+  };
+}
+
 export function buildYearChartData(items = [], width = 920, height = 300) {
   const data = [...items].sort((left, right) => Number(left.year) - Number(right.year));
   const padding = { top: 28, right: 72, bottom: 48, left: 54 };

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import {
+  buildPortfolioScope,
   buildPrimaryMetrics,
   buildYearChartData,
   groupTopCities,
@@ -39,6 +40,25 @@ function SectionTitle({ eyebrow, title, copy }) {
     <h2>{title}</h2>
     {copy && <p>{copy}</p>}
   </div>;
+}
+
+function ScopeToolbar({ scope }) {
+  return <section className="insight-scope" aria-label="Portfolio data scope">
+    <div className="insight-scope-heading">
+      <span className="insight-scope-icon" aria-hidden="true">✦</span>
+      <div>
+        <strong>Portfolio data scope</strong>
+        <span>All recorded completed transactions</span>
+      </div>
+    </div>
+    <dl className="insight-scope-stats">
+      <div><dt>Sales recorded</dt><dd>{number(scope.soldHomes)}</dd></div>
+      <div><dt>Cities represented</dt><dd>{number(scope.cityCount)}</dd></div>
+      <div><dt>Priced sales</dt><dd>{number(scope.pricedHomes)}</dd></div>
+      <div><dt>Dated transactions</dt><dd>{number(scope.datedHomes)}</dd></div>
+    </dl>
+    <p>Metrics include only the fields available in Gurmeet&apos;s completed portfolio record.</p>
+  </section>;
 }
 
 function YearChart({ items }) {
@@ -87,7 +107,7 @@ function YearChart({ items }) {
   </section>;
 }
 
-function HorizontalBarChart({ eyebrow, title, copy, items, labelKey, valueKey, valueLabel }) {
+function HorizontalBarChart({ eyebrow, title, copy, items, labelKey, valueKey, valueLabel, citySnapshot = false }) {
   const values = items.map(item => Number(item[valueKey]) || 0);
   const maximum = Math.max(...values, 1);
   const width = 760;
@@ -95,7 +115,7 @@ function HorizontalBarChart({ eyebrow, title, copy, items, labelKey, valueKey, v
   const labelWidth = 158;
   const height = Math.max(items.length * rowHeight + 12, 72);
   const chartId = title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-chart';
-  return <section className="insight-panel insight-chart-panel">
+  return <section className={'insight-panel insight-chart-panel' + (citySnapshot ? ' insight-city-panel' : '')}>
     <SectionTitle eyebrow={eyebrow} title={title} copy={copy} />
     {items.length ? <>
       <div className="insight-chart-wrap">
@@ -118,21 +138,27 @@ function HorizontalBarChart({ eyebrow, title, copy, items, labelKey, valueKey, v
         </svg>
       </div>
       <ChartTable caption={title} headers={['Category', 'Recorded sales']} rows={items.map(item => [item[labelKey], valueLabel(item[valueKey])])} />
+      {citySnapshot && <ol className="insight-city-snapshot" aria-label="City sales snapshot">
+        {items.map((item, index) => <li key={'snapshot-' + item[labelKey]}>
+          <span><b>{String(index + 1).padStart(2, '0')}</b>{item[labelKey]}</span>
+          <strong>{valueLabel(item[valueKey])} homes</strong>
+        </li>)}
+      </ol>}
     </> : <p className="muted insight-chart-empty">No records are available for this view.</p>}
   </section>;
 }
 
-function PortfolioBrief({ data }) {
+function PortfolioBrief({ data, scope }) {
   return <section className="insight-brief">
     <div className="insight-brief-copy">
       <p className="eyebrow">Portfolio market brief</p>
-      <h2>Built from completed client transactions.</h2>
+      <h2>Clear context from completed client transactions.</h2>
       <p>These insights summarize properties sold with Gurmeet. They are a transparent portfolio view, not a prediction of the broader market.</p>
     </div>
     <div className="insight-brief-facts">
       <div><strong>{number(data.soldCount)}</strong><span>Sold homes</span></div>
       <div><strong>{squareFeet(data.averageSqft)}</strong><span>Average home size</span></div>
-      <div><strong>{number(data.coverage?.withSoldDate)}</strong><span>Recorded sold dates</span></div>
+      <div><strong>{number(scope.pricedHomes)}</strong><span>Recorded sale prices</span></div>
     </div>
     <div className="insight-brief-actions">
       <Link className="btn" href="/home-valuation">Request a home valuation</Link>
@@ -153,32 +179,37 @@ export default function MarketInsights({ data }) {
   if (!data || !data.soldCount) return <main className="insights-page"><div className="container"><EmptyInsights /></div></main>;
 
   const metrics = buildPrimaryMetrics(data);
+  const scope = buildPortfolioScope(data);
   const cityItems = groupTopCities(data.byCity || []);
   const priceBands = data.priceBands || [];
 
   return <main className="insights-page">
     <section className="insight-intro">
       <div className="container">
-        <p className="eyebrow">Exclusive portfolio research</p>
+        <p className="eyebrow">Homes by Gurmeet</p>
         <h1>Market &amp; Portfolio Insights</h1>
-        <p>Explore the pricing, scale, and local patterns behind homes sold with Gurmeet. Every metric is calculated from completed portfolio records.</p>
-        <span className="insight-source-note">Based on {number(data.soldCount)} sold homes with recorded portfolio data.</span>
+        <p>Explore the pricing, scale, and local patterns behind homes sold with Gurmeet. Every figure is derived from recorded completed portfolio transactions.</p>
+        <div className="insight-intro-footer">
+          <span className="insight-source-note">Portfolio intelligence · {number(data.soldCount)} completed sales</span>
+          <Link href="/home-valuation" className="insight-intro-link">Request a valuation <span aria-hidden="true">→</span></Link>
+        </div>
       </div>
     </section>
     <div className="container insights-dashboard">
+      <ScopeToolbar scope={scope} />
       <section className="insight-kpis" aria-label="Portfolio pricing metrics">
         <Metric label="Median sale price" value={money(metrics.medianSalePrice)} detail="Recorded-price midpoint" />
         <Metric label="Average sale price" value={money(metrics.averageSalePrice)} detail="Across priced sales" />
         <Metric label="Average price / sq ft" value={money(metrics.averagePricePerSqft)} detail="Priced homes with size data" />
         <Metric label="Total sales volume" value={money(metrics.totalSalesVolume)} detail={number(data.coverage?.priced) + ' priced transactions'} />
       </section>
-      <PortfolioBrief data={data} />
+      <PortfolioBrief data={data} scope={scope} />
       <YearChart items={data.byYear || []} />
       <section className="insight-section-intro">
-        <SectionTitle eyebrow="Portfolio composition" title="Where the record is strongest" copy="Location and pricing patterns across Gurmeet&apos;s completed transactions." />
+        <SectionTitle eyebrow="Portfolio composition" title="Local performance at a glance" copy="Location and pricing patterns across Gurmeet&apos;s completed transactions." />
       </section>
       <div className="insight-grid insight-grid-two">
-        <HorizontalBarChart eyebrow="Local representation" title="Closed homes by city" copy="The eight most represented cities, with remaining locations grouped as Others." items={cityItems} labelKey="city" valueKey="count" valueLabel={value => number(value)} />
+        <HorizontalBarChart eyebrow="Local representation" title="Closed homes by city" copy="The eight most represented cities, with remaining locations grouped as Others." items={cityItems} labelKey="city" valueKey="count" valueLabel={value => number(value)} citySnapshot />
         <HorizontalBarChart eyebrow="Sale prices" title="Closed sales by price band" copy="Distribution of recorded sale prices in the portfolio." items={priceBands} labelKey="label" valueKey="count" valueLabel={value => number(value)} />
       </div>
       <section className="insight-profile">
@@ -212,8 +243,8 @@ export default function MarketInsights({ data }) {
       <section className="insight-advisory">
         <div>
           <p className="eyebrow">Confidential advisory</p>
-          <h2>Want context for your neighborhood?</h2>
-          <p>Discuss your property, a target area, or your next move directly with Gurmeet.</p>
+          <h2>Request a tailored neighborhood conversation.</h2>
+          <p>Discuss your property, a target area, or your next move directly with Gurmeet. Personal guidance is more useful than generic market assumptions.</p>
         </div>
         <div className="insight-advisory-actions">
           <Link className="btn" href="/contact">Connect with Gurmeet</Link>
