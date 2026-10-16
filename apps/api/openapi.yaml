@@ -93,7 +93,32 @@ paths:
                   byYear: { type: array, items: { type: object } }
                   byCity: { type: array, items: { type: object } }
                   priceBands: { type: array, items: { type: object } }
-                  recentSales: { type: array, items: { type: object } }
+                  recentSales:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        propertyId: { type: string }
+                        title: { type: string }
+                        slug: { type: string }
+                        street: { type: string }
+                        city: { type: string }
+                        price: { type: number }
+                        soldDate: { type: string, format: date-time, nullable: true }
+                        image: { type: string, nullable: true, description: Primary property image path when available }
+                  mapPoints:
+                    type: array
+                    description: Sold California portfolio properties with stored coordinates.
+                    items:
+                      type: object
+                      properties:
+                        propertyId: { type: string }
+                        slug: { type: string }
+                        title: { type: string }
+                        city: { type: string }
+                        price: { type: number }
+                        latitude: { type: number }
+                        longitude: { type: number }
   /properties/{slug}:
     get:
       tags: [Properties]

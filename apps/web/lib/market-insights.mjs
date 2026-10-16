@@ -33,6 +33,25 @@ export function buildPortfolioScope(data = {}) {
   };
 }
 
+export function projectCaliforniaMapPoints(points = [], width = 320, height = 480) {
+  const bounds = { minLat: 32.4, maxLat: 42.1, minLng: -124.6, maxLng: -114.0 };
+  const padding = { top: 22, right: 36, bottom: 24, left: 36 };
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+
+  return points
+    .filter(point => {
+      const lat = Number(point?.latitude);
+      const lng = Number(point?.longitude);
+      return Number.isFinite(lat) && Number.isFinite(lng) && lat >= bounds.minLat && lat <= bounds.maxLat && lng >= bounds.minLng && lng <= bounds.maxLng;
+    })
+    .map(point => ({
+      ...point,
+      x: padding.left + (Number(point.longitude) - bounds.minLng) / (bounds.maxLng - bounds.minLng) * plotWidth,
+      y: padding.top + (bounds.maxLat - Number(point.latitude)) / (bounds.maxLat - bounds.minLat) * plotHeight,
+    }));
+}
+
 export function buildYearChartData(items = [], width = 920, height = 300) {
   const data = [...items].sort((left, right) => Number(left.year) - Number(right.year));
   const padding = { top: 28, right: 72, bottom: 48, left: 54 };

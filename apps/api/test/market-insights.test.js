@@ -4,8 +4,8 @@ import { buildMarketInsights } from '../src/services/market-insights.js';
 import { propertySideFilter, propertySourceFilter } from '../src/services/property-filters.js';
 
 const soldProperties = [
-  { _id: 'one', slug: 'one', address: { street: '1 Main St', city: 'Fremont' }, price: 500000, beds: 3, baths: 2, sqft: 1000, transaction: { soldDate: new Date('2024-01-15') }, updatedAt: new Date('2024-02-01') },
-  { _id: 'two', slug: 'two', address: { street: '2 Main St', city: 'Fremont' }, price: 700000, beds: 4, baths: 3, sqft: 1400, transaction: { soldDate: new Date('2025-01-15') }, updatedAt: new Date('2025-02-01') },
+  { _id: 'one', slug: 'one', address: { street: '1 Main St', city: 'Fremont' }, price: 500000, beds: 3, baths: 2, sqft: 1000, images: ['/uploads/one.jpg'], coordinates: { lat: 37.5485, lng: -121.9886 }, transaction: { soldDate: new Date('2024-01-15') }, updatedAt: new Date('2024-02-01') },
+  { _id: 'two', slug: 'two', address: { street: '2 Main St', city: 'Fremont' }, price: 700000, beds: 4, baths: 3, sqft: 1400, images: ['/uploads/two.jpg'], coordinates: { lat: 37.5, lng: -121.9 }, transaction: { soldDate: new Date('2025-01-15') }, updatedAt: new Date('2025-02-01') },
   { _id: 'three', slug: 'three', address: { street: '3 Main St', city: 'Hayward' }, beds: 2, baths: 1, updatedAt: new Date('2026-01-01') },
 ];
 
@@ -36,6 +36,8 @@ test('market insights calculate price, size, city, year, and price-band metrics'
   assert.deepEqual(result.byCity.map(item => item.city), ['Fremont', 'Hayward']);
   assert.deepEqual(result.priceBands.map(item => item.count), [0, 2, 0, 0]);
   assert.equal(result.recentSales[0].street, '3 Main St');
+  assert.equal(result.recentSales[1].image, '/uploads/two.jpg');
+  assert.deepEqual(result.mapPoints.map(point => point.slug), ['one', 'two']);
 });
 
 test('market insights exclude malformed metrics and return an empty shape', () => {
@@ -59,5 +61,15 @@ test('market insights exclude malformed metrics and return an empty shape', () =
     byCity: [],
     priceBands: [{ label: 'Under $500K', count: 0 }, { label: '$500K–$750K', count: 0 }, { label: '$750K–$1M', count: 0 }, { label: '$1M+', count: 0 }],
     recentSales: [],
+    mapPoints: [],
   });
+});
+
+test('market insights only exposes valid California coordinates as map points', () => {
+  const result = buildMarketInsights([
+    { _id: 'ca', slug: 'ca', address: { city: 'Oakland' }, coordinates: { lat: 37.8044, lng: -122.2712 } },
+    { _id: 'outside', slug: 'outside', address: { city: 'Portland' }, coordinates: { lat: 45.5152, lng: -122.6784 } },
+    { _id: 'invalid', slug: 'invalid', address: { city: 'San Jose' }, coordinates: { lat: 'not-a-number', lng: -121.8863 } },
+  ]);
+  assert.deepEqual(result.mapPoints.map(point => point.slug), ['ca']);
 });

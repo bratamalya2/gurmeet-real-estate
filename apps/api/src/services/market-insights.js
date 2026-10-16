@@ -10,6 +10,11 @@ const priceBands = [
 const number = value => value === null || value === undefined || value === '' || !Number.isFinite(Number(value)) ? undefined : Number(value);
 const average = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 const round = value => Math.round(value * 100) / 100;
+const inCalifornia = coordinates => {
+  const lat = number(coordinates?.lat);
+  const lng = number(coordinates?.lng);
+  return lat !== undefined && lng !== undefined && lat >= 32.4 && lat <= 42.1 && lng >= -124.6 && lng <= -114.0;
+};
 
 function median(values) {
   if (!values.length) return 0;
@@ -79,7 +84,19 @@ export function buildMarketInsights(properties = []) {
     city: record.property.address?.city || '',
     price: record.metrics.price || 0,
     soldDate: record.metrics.soldDate || null,
+    image: Array.isArray(record.property.images) ? record.property.images.find(image => typeof image === 'string' && image.trim()) || null : null,
   }));
+  const mapPoints = records
+    .filter(record => inCalifornia(record.property.coordinates))
+    .map(record => ({
+      propertyId: String(record.property._id),
+      slug: record.property.slug,
+      title: record.property.title || record.property.address?.street || 'Sold property',
+      city: record.property.address?.city || '',
+      price: record.metrics.price || 0,
+      latitude: Number(record.property.coordinates.lat),
+      longitude: Number(record.property.coordinates.lng),
+    }));
 
   return {
     soldCount: properties.length,
@@ -95,10 +112,11 @@ export function buildMarketInsights(properties = []) {
     byCity,
     priceBands: byPriceBand,
     recentSales,
+    mapPoints,
   };
 }
 
 export async function getMarketInsights() {
-  const properties = await Property.find({ status: 'Sold' }).select('title slug address price beds baths sqft transaction.soldDate updatedAt').lean();
+  const properties = await Property.find({ status: 'Sold' }).select('title slug address price beds baths sqft images coordinates transaction.soldDate updatedAt').lean();
   return buildMarketInsights(properties);
 }

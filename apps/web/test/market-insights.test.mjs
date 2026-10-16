@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildPortfolioScope, buildPrimaryMetrics, buildYearChartData, groupTopCities } from '../lib/market-insights.mjs';
+import { buildPortfolioScope, buildPrimaryMetrics, buildYearChartData, groupTopCities, projectCaliforniaMapPoints } from '../lib/market-insights.mjs';
 
 test('builds yearly bar and average-price line points in chronological order', () => {
   const chart = buildYearChartData([
@@ -53,4 +53,17 @@ test('builds a truthful portfolio scope summary from available coverage data', (
     coverage: { priced: 9, withSoldDate: 10 },
   }), { soldHomes: 12, cityCount: 2, pricedHomes: 9, datedHomes: 10 });
   assert.deepEqual(buildPortfolioScope(), { soldHomes: 0, cityCount: 0, pricedHomes: 0, datedHomes: 0 });
+});
+
+test('projects valid California map points and excludes invalid or out-of-state coordinates', () => {
+  const points = projectCaliforniaMapPoints([
+    { slug: 'fremont', latitude: 37.5485, longitude: -121.9886 },
+    { slug: 'outside', latitude: 45.5152, longitude: -122.6784 },
+    { slug: 'invalid', latitude: 'x', longitude: -121.8 },
+  ]);
+  assert.equal(points.length, 1);
+  assert.equal(points[0].slug, 'fremont');
+  assert.equal(points[0].x > 0 && points[0].x < 320, true);
+  assert.equal(points[0].y > 0 && points[0].y < 480, true);
+  assert.deepEqual(projectCaliforniaMapPoints([]), []);
 });
