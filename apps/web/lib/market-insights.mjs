@@ -52,6 +52,34 @@ export function projectCaliforniaMapPoints(points = [], width = 320, height = 48
     }));
 }
 
+export function buildMappableCities(cities = [], points = []) {
+  const coordinateGroups = new Map();
+
+  points.forEach(point => {
+    const city = String(point?.city || '').trim();
+    const latitude = Number(point?.latitude);
+    const longitude = Number(point?.longitude);
+    if (!city || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
+    const key = city.toLocaleLowerCase();
+    const group = coordinateGroups.get(key) || { latitude: 0, longitude: 0, coordinateCount: 0 };
+    group.latitude += latitude;
+    group.longitude += longitude;
+    group.coordinateCount += 1;
+    coordinateGroups.set(key, group);
+  });
+
+  return cities.map(city => {
+    const key = String(city?.city || '').trim().toLocaleLowerCase();
+    const group = coordinateGroups.get(key);
+    return {
+      ...city,
+      latitude: group ? group.latitude / group.coordinateCount : null,
+      longitude: group ? group.longitude / group.coordinateCount : null,
+      coordinateCount: group?.coordinateCount || 0,
+    };
+  });
+}
+
 export function buildYearChartData(items = [], width = 920, height = 300) {
   const data = [...items].sort((left, right) => Number(left.year) - Number(right.year));
   const padding = { top: 28, right: 72, bottom: 48, left: 54 };

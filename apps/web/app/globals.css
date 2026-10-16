@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap");
+@import 'leaflet/dist/leaflet.css';
 :root {
   --navy: #0f172a;
   --gold: #b48c4f;
@@ -2832,4 +2833,263 @@ footer {
   .market-map-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .market-map-summary p,
   .market-map-key { grid-column: 1 / -1; }
+}
+
+/* Interactive closed-homes map */
+.closed-homes-map-panel,
+.closed-homes-map-loading {
+  grid-column: 1 / -1;
+}
+.closed-homes-map-panel {
+  padding: 0;
+  overflow: hidden;
+}
+.closed-homes-map-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: end;
+  padding: 24px 26px;
+  border-bottom: 1px solid #e3e9f0;
+}
+.closed-homes-map-heading > div:first-child > p {
+  margin: 0 0 4px;
+  color: #b0841e;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.closed-homes-map-heading h2 {
+  margin: 0;
+  color: #192b52;
+  font-size: clamp(22px, 2.6vw, 31px);
+  letter-spacing: -.025em;
+}
+.closed-homes-map-heading > div:first-child > span {
+  display: block;
+  margin-top: 6px;
+  color: #708097;
+  font-size: 13px;
+}
+.closed-homes-map-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.closed-homes-map-badges > span {
+  min-width: 118px;
+  padding: 9px 12px;
+  border: 1px solid #e1e7ee;
+  border-radius: 7px;
+  background: #fafbfc;
+}
+.closed-homes-map-badges b,
+.closed-homes-map-badges strong { display: block; }
+.closed-homes-map-badges b {
+  color: #748197;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.closed-homes-map-badges strong {
+  margin-top: 3px;
+  color: #213a6a;
+  font-size: 13px;
+}
+.closed-homes-map-shell {
+  display: grid;
+  grid-template-columns: minmax(290px, 5fr) minmax(0, 7fr);
+  min-height: 560px;
+}
+.closed-homes-city-list {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  padding: 20px;
+  border-right: 1px solid #e3e9f0;
+  background: #fff;
+}
+.closed-homes-map-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+.closed-homes-map-controls label {
+  position: relative;
+  display: block;
+  flex: 1;
+}
+.closed-homes-map-controls label svg {
+  position: absolute;
+  top: 50%;
+  left: 11px;
+  color: #8290a4;
+  transform: translateY(-50%);
+}
+.closed-homes-map-controls input {
+  width: 100%;
+  min-height: 38px;
+  padding: 9px 10px 9px 33px;
+  border: 1px solid #dfe6ee;
+  border-radius: 7px;
+  outline: none;
+  background: #fafbfd;
+  color: #233457;
+  font: inherit;
+  font-size: 12px;
+}
+.closed-homes-map-controls input:focus { border-color: #b0841e; box-shadow: 0 0 0 2px rgba(197, 155, 39, .16); }
+.closed-homes-map-controls button {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #dfe6ee;
+  border-radius: 7px;
+  background: #fff;
+  color: #617087;
+  cursor: pointer;
+}
+.closed-homes-map-controls button:hover { color: #9a6e12; background: #fffaf0; border-color: #e3cc94; }
+.closed-homes-list-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2px 9px;
+  border-bottom: 1px solid #e9edf2;
+  color: #8390a2;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.closed-homes-city-list ol {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  align-content: start;
+  padding: 0 2px;
+  margin: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.closed-homes-city-list li { border-bottom: 1px solid #edf0f4; }
+.closed-homes-city-list li button {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 12px 4px 10px;
+  border: 0;
+  background: transparent;
+  color: #233457;
+  cursor: pointer;
+  text-align: left;
+}
+.closed-homes-city-list li button:hover,
+.closed-homes-city-list li button.active { background: #fffaf0; }
+.closed-homes-city-list li button:focus-visible { outline: 2px solid #b0841e; outline-offset: -2px; }
+.closed-homes-city-list li button:disabled { cursor: not-allowed; opacity: .6; }
+.closed-homes-city-row {
+  display: flex;
+  min-width: 0;
+  gap: 8px;
+  align-items: center;
+}
+.closed-homes-city-row i {
+  color: #b0841e;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: .05em;
+}
+.closed-homes-city-row strong { overflow-wrap: anywhere; font-size: 13px; }
+.closed-homes-city-row em {
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: #edf0f4;
+  color: #727e91;
+  font-size: 9px;
+  font-style: normal;
+  white-space: nowrap;
+}
+.closed-homes-city-volume { color: #28385c; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.closed-homes-city-volume small { color: #7d899b; font-size: 10px; font-weight: 500; }
+.closed-homes-city-bar {
+  grid-column: 1 / -1;
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf0f4;
+}
+.closed-homes-city-bar b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #dfb33a, #b0841e); }
+.closed-homes-no-results { padding: 28px 8px; color: #7e899a; font-size: 12px; text-align: center; }
+.closed-homes-map-footnote {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #e9edf2;
+  color: #7d899a;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.closed-homes-leaflet-wrap { position: relative; min-height: 420px; background: #f3f5f7; }
+.closed-homes-leaflet { width: 100%; height: 100%; min-height: 560px; }
+.closed-homes-leaflet .leaflet-control-zoom a { color: #44536b; }
+.closed-homes-leaflet .leaflet-control-attribution { color: #6d7787; font-size: 9px; }
+.closed-homes-marker { filter: drop-shadow(0 4px 7px rgba(142, 99, 11, .3)); }
+.closed-homes-tooltip {
+  padding: 5px 8px;
+  border: 1px solid #e8d8ae;
+  border-radius: 5px;
+  color: #534119;
+  background: #fffdf7;
+  box-shadow: 0 4px 10px rgba(40, 45, 55, .1);
+  font-size: 11px;
+  font-weight: 700;
+}
+.closed-homes-tooltip::before { border-top-color: #fffdf7; }
+.closed-homes-popup { min-width: 190px; padding: 14px; color: #26344d; font-family: "Hanken Grotesk", sans-serif; }
+.closed-homes-popup > span { display: block; color: #b0841e; font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.closed-homes-popup h3 { margin: 4px 0 10px; color: #1c2d52; font-size: 20px; }
+.closed-homes-popup dl { display: grid; gap: 7px; padding: 9px; margin: 0; border-radius: 6px; background: #f8fafc; }
+.closed-homes-popup dl div { display: flex; justify-content: space-between; gap: 12px; }
+.closed-homes-popup dt { color: #718095; font-size: 10px; }
+.closed-homes-popup dd { margin: 0; color: #2d3f63; font-size: 10px; font-weight: 800; text-align: right; }
+.closed-homes-map-legend {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 500;
+  display: grid;
+  gap: 5px;
+  padding: 11px 13px;
+  border: 1px solid #e4d9bf;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 8px 18px rgba(24, 42, 72, .12);
+  color: #5b6576;
+  font-size: 10px;
+}
+.closed-homes-map-legend b { color: #263957; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+.closed-homes-map-legend span { display: inline-flex; gap: 6px; align-items: center; }
+.closed-homes-map-legend i { width: 8px; height: 8px; border: 2px solid #fff; border-radius: 50%; background: #c59b27; box-shadow: 0 1px 3px rgba(0, 0, 0, .2); }
+.closed-homes-map-legend small { color: #8993a2; font-size: 9px; }
+.closed-homes-map-loading { display: grid; min-height: 350px; place-items: center; color: #718095; font-size: 13px; }
+@media (max-width: 820px) {
+  .closed-homes-map-shell { grid-template-columns: 1fr; }
+  .closed-homes-city-list { max-height: 390px; border-right: 0; border-bottom: 1px solid #e3e9f0; }
+  .closed-homes-leaflet,
+  .closed-homes-leaflet-wrap { min-height: 440px; }
+}
+@media (max-width: 620px) {
+  .closed-homes-map-heading { align-items: flex-start; flex-direction: column; padding: 18px; }
+  .closed-homes-map-badges { width: 100%; }
+  .closed-homes-map-badges > span { flex: 1; }
+  .closed-homes-city-list { padding: 15px; }
+  .closed-homes-leaflet,
+  .closed-homes-leaflet-wrap { min-height: 380px; }
+  .closed-homes-map-legend { right: 10px; bottom: 10px; }
 }

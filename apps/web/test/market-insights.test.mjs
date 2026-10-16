@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildPortfolioScope, buildPrimaryMetrics, buildYearChartData, groupTopCities, projectCaliforniaMapPoints } from '../lib/market-insights.mjs';
+import { buildMappableCities, buildPortfolioScope, buildPrimaryMetrics, buildYearChartData, groupTopCities, projectCaliforniaMapPoints } from '../lib/market-insights.mjs';
 
 test('builds yearly bar and average-price line points in chronological order', () => {
   const chart = buildYearChartData([
@@ -66,4 +66,16 @@ test('projects valid California map points and excludes invalid or out-of-state 
   assert.equal(points[0].x > 0 && points[0].x < 320, true);
   assert.equal(points[0].y > 0 && points[0].y < 480, true);
   assert.deepEqual(projectCaliforniaMapPoints([]), []);
+});
+
+test('builds city hubs from actual stored coordinate points and preserves unmappable cities', () => {
+  const cities = buildMappableCities(
+    [{ city: 'Fremont', count: 4 }, { city: 'Dublin', count: 2 }],
+    [
+      { city: 'Fremont', latitude: 37.5, longitude: -122 },
+      { city: 'Fremont', latitude: 37.6, longitude: -121.8 },
+    ],
+  );
+  assert.deepEqual(cities[0], { city: 'Fremont', count: 4, latitude: 37.55, longitude: -121.9, coordinateCount: 2 });
+  assert.deepEqual(cities[1], { city: 'Dublin', count: 2, latitude: null, longitude: null, coordinateCount: 0 });
 });

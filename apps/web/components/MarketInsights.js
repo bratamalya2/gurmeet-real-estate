@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { FiDollarSign, FiHome, FiMapPin, FiMaximize2, FiTag } from 'react-icons/fi';
 import {
   buildPortfolioScope,
@@ -9,6 +12,11 @@ import {
 } from '../lib/market-insights.mjs';
 import { propertyPrimaryImagePath } from '../lib/property-images.mjs';
 import { publicAssetUrl } from '../lib/api';
+
+const ClosedHomesMap = dynamic(() => import('./ClosedHomesMap'), {
+  ssr: false,
+  loading: () => <section className="market-panel closed-homes-map-loading">Loading portfolio map…</section>,
+});
 
 const money = value => value ? '$' + Math.round(value).toLocaleString('en-US') : 'Not recorded';
 const compactMoney = value => value ? '$' + (value >= 1000000 ? (value / 1000000).toFixed(value % 1000000 ? 1 : 0) + 'M' : Math.round(value / 1000) + 'K') : '—';
@@ -48,33 +56,6 @@ function ChartTable({ caption, headers, rows }) {
       </table>
     </div>
   </details>;
-}
-
-function CaliforniaMap({ points, soldHomes }) {
-  const projected = projectCaliforniaMapPoints(points);
-  const coverage = soldHomes ? Math.round(projected.length / soldHomes * 100) : 0;
-
-  return <section className="market-panel market-map-panel">
-    <PanelTitle eyebrow="Portfolio coverage" title="California sold homes" />
-    <div className="market-map-layout">
-      <svg className="market-california-map" viewBox="0 0 320 480" role="img" aria-labelledby="california-map-title california-map-description">
-        <title id="california-map-title">California portfolio coverage map</title>
-        <desc id="california-map-description">Markers show sold portfolio properties with recorded coordinates in California.</desc>
-        <image href="/images/california-outline.svg" x="0" y="0" width="320" height="480" aria-hidden="true" />
-        {projected.map(point => <a key={point.propertyId} href={'/properties/' + point.slug} aria-label={`${point.title}, ${point.city || 'California'}, ${money(point.price)}`}>
-          <title>{`${point.title}${point.city ? ', ' + point.city : ''}: ${money(point.price)}`}</title>
-          <circle className="market-map-marker-ring" cx={point.x} cy={point.y} r="8" />
-          <circle className="market-map-marker" cx={point.x} cy={point.y} r="4" />
-        </a>)}
-      </svg>
-      <div className="market-map-summary">
-        <div className="market-map-stat"><strong>{count(projected.length)}</strong><span>Mapped properties</span></div>
-        <div className="market-map-stat"><strong>{coverage}%</strong><span>Coordinate coverage</span></div>
-        <p>{projected.length ? 'Markers represent sold homes with stored California coordinates.' : 'No stored California coordinates are available for the current portfolio.'}</p>
-        <span className="market-map-key"><i /> Sold portfolio home</span>
-      </div>
-    </div>
-  </section>;
 }
 
 function YearTrend({ items }) {
@@ -199,7 +180,7 @@ export default function MarketInsights({ data }) {
         <MetricCard icon={FiMaximize2} tone="gold" label="Average home size" value={squareFeet(data.averageSqft)} detail="Homes with square footage" />
       </section>
       <section className="market-dashboard-grid">
-        <CaliforniaMap points={data.mapPoints || []} soldHomes={data.soldCount} />
+        <ClosedHomesMap cities={data.byCity || []} points={data.mapPoints || []} />
         <YearTrend items={data.byYear || []} />
         <Snapshot data={data} scope={scope} mapPointCount={mapPoints.length} />
         <BarPanel eyebrow="Location mix" title="Sold homes by city" copy="Top eight cities, with remaining cities grouped as Others." items={cityItems} labelKey="city" valueKey="count" valueLabel={value => number(value) + ' homes'} />
