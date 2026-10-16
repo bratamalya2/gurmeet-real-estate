@@ -7,6 +7,15 @@ export function groupTopCities(items = [], limit = 8) {
   return othersCount ? [...visible, { city: 'Others', count: othersCount }] : visible;
 }
 
+export function buildPrimaryMetrics(data = {}) {
+  return {
+    medianSalePrice: Number(data.medianSalePrice) || 0,
+    averageSalePrice: Number(data.averageSalePrice) || 0,
+    averagePricePerSqft: Number(data.averagePricePerSqft) || 0,
+    totalSalesVolume: Number(data.totalSalesVolume) || 0,
+  };
+}
+
 export function buildYearChartData(items = [], width = 920, height = 300) {
   const data = [...items].sort((left, right) => Number(left.year) - Number(right.year));
   const padding = { top: 28, right: 72, bottom: 48, left: 54 };

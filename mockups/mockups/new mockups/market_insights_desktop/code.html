@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HomesByGurmeet - Luxury Real Estate</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Libre+Caslon+Text:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-tertiary-fixed-variant": "#3a485c",
+          "on-primary-container": "#7c839b",
+          "surface-variant": "#e0e3e5",
+          "surface-dim": "#d8dadc",
+          "background": "#f7f9fb",
+          "on-surface-variant": "#45464d",
+          "secondary": "#7a5820",
+          "success-emerald": "#10B981",
+          "on-tertiary": "#ffffff",
+          "tertiary-container": "#0d1c2f",
+          "outline-variant": "#c6c6cd",
+          "on-secondary-container": "#79571f",
+          "secondary-fixed-dim": "#ecbf7d",
+          "on-secondary-fixed-variant": "#5f4109",
+          "on-background": "#191c1e",
+          "surface-bright": "#f7f9fb",
+          "primary": "#000000",
+          "error": "#ba1a1a",
+          "inverse-on-surface": "#eff1f3",
+          "on-error-container": "#93000a",
+          "primary-container": "#131b2e",
+          "surface-container-high": "#e6e8ea",
+          "on-tertiary-container": "#76859b",
+          "on-error": "#ffffff",
+          "paper-white": "#FFFFFF",
+          "inverse-primary": "#bec6e0",
+          "surface-container-highest": "#e0e3e5",
+          "charcoal-slate": "#334155",
+          "surface-container": "#eceef0",
+          "on-primary-fixed": "#131b2e",
+          "on-primary-fixed-variant": "#3f465c",
+          "surface": "#f7f9fb",
+          "tertiary": "#000000",
+          "surface-container-lowest": "#ffffff",
+          "on-tertiary-fixed": "#0d1c2f",
+          "error-container": "#ffdad6",
+          "on-secondary": "#ffffff",
+          "on-surface": "#191c1e",
+          "primary-fixed-dim": "#bec6e0",
+          "primary-fixed": "#dae2fd",
+          "secondary-fixed": "#ffddb0",
+          "on-secondary-fixed": "#281800",
+          "tertiary-fixed-dim": "#b9c7e0",
+          "estate-gold": "#B48C4F",
+          "midnight-navy": "#0F172A",
+          "tertiary-fixed": "#d5e3fd",
+          "surface-container-low": "#f2f4f6",
+          "outline": "#76777d",
+          "inverse-surface": "#2d3133",
+          "secondary-container": "#fed08c",
+          "on-primary": "#ffffff",
+          "surface-tint": "#565e74"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem"
+        },
+        "spacing": {
+          "gutter": "24px",
+          "base": "8px",
+          "margin-mobile": "16px",
+          "section-gap": "80px",
+          "container-max": "1280px",
+          "margin-desktop": "40px"
+        },
+        "fontFamily": {
+          "headline-md": ["Libre Caslon Text"],
+          "headline-lg": ["Libre Caslon Text"],
+          "display-lg": ["Libre Caslon Text"],
+          "body-lg": ["Hanken Grotesk"],
+          "caption": ["Hanken Grotesk"],
+          "label-md": ["Hanken Grotesk"],
+          "headline-lg-mobile": ["Libre Caslon Text"],
+          "body-md": ["Hanken Grotesk"]
+        },
+        "fontSize": {
+          "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+          "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+          "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+          "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+          "caption": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+          "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+          "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+          "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+        }
+      }
+    }
+  };
+</script>
+<style>
+  @layer base {
+    html { overscroll-behavior: none; scroll-behavior: smooth; }
+  }
+  .silk-shadow { box-shadow: 0px 10px 30px rgba(15, 23, 42, 0.08); }
+  .bento-hover { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .bento-hover:hover { transform: translateY(-4px); box-shadow: 0px 15px 40px rgba(15, 23, 42, 0.12); }
+</style>
+<meta content="web_standard" name="shell-type"/>
+</head>
+<body class="bg-background text-on-surface antialiased selection:bg-estate-gold/20 selection:text-midnight-navy">
+<header class="bg-paper-white font-body-md text-body-md top-0 sticky border-b border-charcoal-slate/15 shadow-sm z-50 transition-all duration-200 ease-in-out">
+<div class="flex justify-between items-center h-20 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<a class="font-headline-md text-headline-md font-bold text-midnight-navy" data-path="home" href="#">HomesByGurmeet</a>
+<nav class="hidden md:flex items-center space-x-gutter" data-active-classes="text-estate-gold border-b-2 border-estate-gold pb-1 font-semibold">
+<a class="text-midnight-navy hover:text-estate-gold transition-colors duration-300 pb-1" data-path="home" href="#">Home</a>
+<a class="text-midnight-navy hover:text-estate-gold transition-colors duration-300 pb-1" data-path="listings" href="#">Listings</a>
+<a class="text-midnight-navy hover:text-estate-gold transition-colors duration-300 pb-1" data-path="services" href="#">Services</a>
+<a aria-current="page" class="transition-colors duration-300 text-estate-gold border-b-2 border-estate-gold pb-1 font-semibold" data-path="market-insights" href="#">Market Insights</a>
+<a class="text-midnight-navy hover:text-estate-gold transition-colors duration-300 pb-1" data-path="about" href="#">About</a>
+<a class="text-midnight-navy hover:text-estate-gold transition-colors duration-300 pb-1" data-path="contact" href="#">Contact</a>
+</nav>
+<div class="flex items-center space-x-4">
+<button class="hidden md:inline-flex items-center justify-center bg-midnight-navy text-paper-white px-6 py-2.5 rounded font-label-md text-label-md hover:bg-estate-gold transition-colors duration-300 shadow-sm">
+        Schedule Showing
+      </button>
+<button aria-label="Toggle Menu" class="md:hidden p-2 text-midnight-navy focus:outline-none">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+</div>
+</header>
+<main class="pt-20 min-h-screen"><div class="flex flex-col w-full">
+<!-- Top Editorial Header & Controls -->
+<section class="w-full bg-surface-container-low py-12 px-margin-mobile md:px-margin-desktop">
+<div class="max-w-container-max mx-auto flex flex-col gap-8">
+<!-- Editorial Title Block -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div class="max-w-3xl">
+<div class="flex items-center gap-3 mb-3">
+<span class="inline-block w-8 h-[2px] bg-estate-gold"></span>
+<span class="font-label-md text-label-md uppercase tracking-widest text-estate-gold font-bold">Exclusive Research &amp; Local Intelligence</span>
+<span class="px-2 py-0.5 text-[10px] font-semibold bg-estate-gold/15 text-estate-gold rounded uppercase tracking-wider">Q3 2024 Release</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-midnight-navy font-bold tracking-tight">
+            Luxury Real Estate Market &amp; Demographic Insights
+          </h1>
+<p class="mt-4 font-body-lg text-body-lg text-charcoal-slate max-w-2xl leading-relaxed">
+            In-depth quarterly analysis of prime Westside &amp; Beverly Hills real estate, private wealth cohorts, domestic and global buyer migration, and micro-neighborhood demographics.
+          </p>
+</div>
+<div class="flex items-center gap-3 self-start md:self-end">
+<button class="inline-flex items-center gap-2 bg-midnight-navy hover:bg-estate-gold text-paper-white px-5 py-3 rounded font-label-md text-label-md shadow-md transition-all duration-300 group" id="downloadBtn">
+<span class="material-symbols-outlined text-[20px] group-hover:translate-y-0.5 transition-transform">download</span>
+<span>Download PDF Report</span>
+</button>
+</div>
+</div>
+<!-- Controls & Scope Filter Toolbar -->
+<div class="bg-paper-white rounded-xl p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+<span class="font-label-md text-label-md text-charcoal-slate/70 uppercase text-xs tracking-wider flex items-center gap-1.5 pl-2">
+<span class="material-symbols-outlined text-estate-gold text-[18px]">tune</span> Filter Scope:
+          </span>
+<!-- Market Selector -->
+<div class="relative inline-block text-left w-full sm:w-56">
+<select class="w-full bg-surface-container-lowest text-midnight-navy font-label-md text-label-md py-2.5 px-3 pr-8 rounded border-0 shadow-sm focus:ring-2 focus:ring-estate-gold cursor-pointer transition" id="marketSelector">
+<option selected="" value="90210">Beverly Hills (90210 &amp; Flats)</option>
+<option value="90077">Bel-Air (90077 &amp; Crest)</option>
+<option value="90049">Brentwood (90049 &amp; Park)</option>
+<option value="90265">Malibu (Prime Colony &amp; Bluffs)</option>
+<option value="90272">Pacific Palisades (Rivera / Bluffs)</option>
+</select>
+</div>
+<!-- Time Horizon Selector -->
+<div class="relative inline-block text-left w-full sm:w-48">
+<select class="w-full bg-surface-container-lowest text-midnight-navy font-label-md text-label-md py-2.5 px-3 pr-8 rounded border-0 shadow-sm focus:ring-2 focus:ring-estate-gold cursor-pointer transition">
+<option selected="">Q3 2024 (Latest Closed)</option>
+<option>Trailing 12-Month (2023-2024)</option>
+<option>5-Year Macro Cycle (2019-2024)</option>
+</select>
+</div>
+<!-- Asset Class Filter -->
+<div class="hidden lg:flex items-center bg-surface-container-low p-1 rounded">
+<button class="px-3 py-1.5 text-xs font-semibold rounded bg-paper-white text-midnight-navy shadow-sm">All Estates &gt;$5M</button>
+<button class="px-3 py-1.5 text-xs font-semibold rounded text-charcoal-slate hover:text-midnight-navy">Ultra-Prime $15M+</button>
+<button class="px-3 py-1.5 text-xs font-semibold rounded text-charcoal-slate hover:text-midnight-navy">Architectural Only</button>
+</div>
+</div>
+<!-- Meta status badge -->
+<div class="flex items-center gap-2 text-xs font-label-md text-charcoal-slate/80 self-end md:self-center">
+<span class="inline-block w-2 h-2 rounded-full bg-success-emerald animate-pulse"></span>
+<span>Verified MLS &amp; Off-Market Registry: <strong class="text-midnight-navy font-semibold">Updated Today</strong></span>
+</div>
+</div>
+</div>
+</section>
+<!-- KPI Highlight Grid (4 Key Metrics) -->
+<section class="w-full py-10 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Card 1 -->
+<div class="bg-paper-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+<div class="absolute top-0 left-0 right-0 h-1 bg-midnight-navy group-hover:bg-estate-gold transition-colors"></div>
+<div class="flex items-center justify-between text-charcoal-slate mb-3">
+<span class="font-label-md text-label-md text-xs uppercase tracking-wider">Median Sale Price</span>
+<span class="material-symbols-outlined text-estate-gold text-[22px]">monetization_on</span>
+</div>
+<div class="flex items-baseline gap-2 mb-2">
+<span class="font-display-lg text-[36px] leading-tight text-midnight-navy font-bold" id="stat-median-price">$9.45M</span>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-surface-container">
+<span class="inline-flex items-center gap-1 text-xs font-bold text-success-emerald bg-success-emerald/10 px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> +6.8% YoY
+          </span>
+<span class="text-xs text-charcoal-slate/70">Benchmark: $8.85M in '23</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-paper-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+<div class="absolute top-0 left-0 right-0 h-1 bg-midnight-navy group-hover:bg-estate-gold transition-colors"></div>
+<div class="flex items-center justify-between text-charcoal-slate mb-3">
+<span class="font-label-md text-label-md text-xs uppercase tracking-wider">Avg. Days On Market</span>
+<span class="material-symbols-outlined text-estate-gold text-[22px]">calendar_month</span>
+</div>
+<div class="flex items-baseline gap-2 mb-2">
+<span class="font-display-lg text-[36px] leading-tight text-midnight-navy font-bold">38 Days</span>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-surface-container">
+<span class="inline-flex items-center gap-1 text-xs font-bold text-success-emerald bg-success-emerald/10 px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px]">arrow_downward</span> -12% vs prior Q
+          </span>
+<span class="text-xs text-charcoal-slate/70">Paced for trophy assets</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-paper-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+<div class="absolute top-0 left-0 right-0 h-1 bg-midnight-navy group-hover:bg-estate-gold transition-colors"></div>
+<div class="flex items-center justify-between text-charcoal-slate mb-3">
+<span class="font-label-md text-label-md text-xs uppercase tracking-wider">Price Per Sq Ft</span>
+<span class="material-symbols-outlined text-estate-gold text-[22px]">square_foot</span>
+</div>
+<div class="flex items-baseline gap-2 mb-2">
+<span class="font-display-lg text-[36px] leading-tight text-midnight-navy font-bold">$1,840</span>
+<span class="font-body-md text-body-md text-charcoal-slate">/ sq ft</span>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-surface-container">
+<span class="inline-flex items-center gap-1 text-xs font-bold text-success-emerald bg-success-emerald/10 px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> +4.2% YoY
+          </span>
+<span class="text-xs text-charcoal-slate/70">Peak Flats: $2,450/sq ft</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-paper-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+<div class="absolute top-0 left-0 right-0 h-1 bg-midnight-navy group-hover:bg-estate-gold transition-colors"></div>
+<div class="flex items-center justify-between text-charcoal-slate mb-3">
+<span class="font-label-md text-label-md text-xs uppercase tracking-wider">Inflow Migration</span>
+<span class="material-symbols-outlined text-estate-gold text-[22px]">flight_land</span>
+</div>
+<div class="flex items-baseline gap-2 mb-2">
+<span class="font-display-lg text-[36px] leading-tight text-midnight-navy font-bold">64%</span>
+<span class="font-body-md text-body-md text-estate-gold font-semibold">External</span>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-surface-container">
+<span class="inline-flex items-center gap-1 text-xs font-bold text-estate-gold bg-estate-gold/10 px-2 py-0.5 rounded">
+            Tech &amp; PE Driven
+          </span>
+<span class="text-xs text-charcoal-slate/70">SF, NYC, Miami</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Editorial Spotlight Split / Hero Preview -->
+<section class="w-full py-8 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="bg-midnight-navy rounded-xl p-8 lg:p-12 text-paper-white relative overflow-hidden shadow-xl">
+<div class="absolute -right-20 -bottom-20 w-96 h-96 rounded-full bg-estate-gold/10 blur-3xl pointer-events-none"></div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+<div class="lg:col-span-7 flex flex-col gap-4">
+<div class="flex items-center gap-2">
+<span class="text-estate-gold font-label-md text-label-md text-xs uppercase tracking-widest">Market Briefing • Gurmeet Singh</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-paper-white font-serif">
+            "Capital flight to architectural pedigree continues unabated across the Platinum Triangle."
+          </h2>
+<p class="font-body-md text-body-md text-paper-white/80 leading-relaxed">
+            Despite elevated interest rates impacting entry luxury ($2M-$4M), the ultra-prime sector ($10M+) in 90210 and Bel-Air remains largely all-cash, insulated from conventional macro headwinds. Private liquidity from venture secondary sales and Manhattan family offices has ignited competitive multi-bid scenarios on turn-key contemporary estates.
+          </p>
+<div class="flex flex-wrap items-center gap-6 mt-4 pt-4 border-t border-paper-white/10">
+<div>
+<div class="font-headline-md text-headline-md font-bold text-estate-gold">79.2%</div>
+<div class="font-caption text-caption text-paper-white/70">Cash / Non-Contingent Deals</div>
+</div>
+<div class="w-px h-10 bg-paper-white/20"></div>
+<div>
+<div class="font-headline-md text-headline-md font-bold text-paper-white">$14.2M</div>
+<div class="font-caption text-caption text-paper-white/70">Top Quartile Mean Closed</div>
+</div>
+<div class="w-px h-10 bg-paper-white/20"></div>
+<div>
+<div class="font-headline-md text-headline-md font-bold text-paper-white">1.8%</div>
+<div class="font-caption text-caption text-paper-white/70">Average Price Negotiated Off Ask</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-5 relative">
+<div class="rounded-lg overflow-hidden shadow-2xl relative aspect-[4/3]">
+<img class="w-full h-full object-cover" data-alt="Sophisticated modern luxury mansion in Beverly Hills hillside with floor-to-ceiling glass, infinity edge pool overlooking Los Angeles skyline at golden hour sunset, pristine architecture, warm ambient estate lighting with subtle navy dusk tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjfPhHos44qxNtYjyWoFpGVXsTJQHm_Yf-Nzlqi-lB831iI5uvrShFb-gFzum2vYlF_IyJQ8yZ94JUQutjKdSklrFWMjVVGddszEK_XqOPmSrNjoJjTCMizeK5GHtoBqShkssjBGTBUD04dUG5KbGdkkdZlzjQKXpXHhdHrl0r8VDLLK4hZxR6Qog6SRvgL35di5iX29C4ZSIVUuI1xP2YbjApkFPoZmqK0nICWvtyrZiuONCn9IQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-midnight-navy/80 via-transparent to-transparent"></div>
+<div class="absolute bottom-4 left-4 right-4 text-paper-white">
+<span class="bg-estate-gold text-midnight-navy font-label-md text-xs px-2.5 py-1 rounded font-bold uppercase tracking-wider">Benchmark Closed</span>
+<p class="font-headline-md text-lg mt-1 font-semibold text-paper-white">The Foothill Promontory, Beverly Hills</p>
+<p class="font-caption text-caption text-paper-white/80">$28,500,000 • 11,200 SF • Represented Buyer</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Demographic & Wealth Cohort Visualizations (3 In-Depth Modules) -->
+<section class="w-full py-12 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="mb-8">
+<span class="text-estate-gold font-label-md text-label-md text-xs uppercase tracking-widest font-bold">Buyer Composition &amp; Demographics</span>
+<h2 class="font-headline-lg text-headline-lg text-midnight-navy font-bold mt-1">
+        Who is Purchasing Prime Westside Real Estate?
+      </h2>
+<p class="font-body-md text-body-md text-charcoal-slate mt-2 max-w-3xl">
+        Proprietary wealth stratification, age demographic splits, and geographic capital routing synthesized from closed transactions and vetted client portfolios.
+      </p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Chart 1: Wealth & Net Worth Distribution -->
+<div class="bg-paper-white rounded-xl p-6 shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-4 border-b border-surface-container">
+<div>
+<h3 class="font-headline-md text-lg text-midnight-navy font-semibold">Net Worth Stratification</h3>
+<p class="font-caption text-caption text-charcoal-slate/70">Buyer liquid wealth distribution</p>
+</div>
+<span class="material-symbols-outlined text-estate-gold">account_balance</span>
+</div>
+<!-- Stylized Progress Bars -->
+<div class="mt-6 space-y-5">
+<!-- Tier 1 -->
+<div>
+<div class="flex justify-between items-center text-xs font-label-md mb-1.5">
+<span class="font-bold text-midnight-navy">Very High Net Worth ($10M - $30M)</span>
+<span class="text-estate-gold font-bold">44%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-3 overflow-hidden">
+<div class="bg-midnight-navy h-full rounded-full transition-all duration-700" style="width: 44%"></div>
+</div>
+<div class="flex justify-between text-[11px] text-charcoal-slate/70 mt-1">
+<span>Dominant tranche: Tech exits, hedge funds</span>
+<span>Avg purchase: $8M-$14M</span>
+</div>
+</div>
+<!-- Tier 2 -->
+<div>
+<div class="flex justify-between items-center text-xs font-label-md mb-1.5">
+<span class="font-bold text-midnight-navy">Ultra High Net Worth ($30M+)</span>
+<span class="text-estate-gold font-bold">28%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-3 overflow-hidden">
+<div class="bg-estate-gold h-full rounded-full transition-all duration-700" style="width: 28%"></div>
+</div>
+<div class="flex justify-between text-[11px] text-charcoal-slate/70 mt-1">
+<span>Multi-generational estates &amp; compounds</span>
+<span>Avg purchase: $22M+</span>
+</div>
+</div>
+<!-- Tier 3 -->
+<div>
+<div class="flex justify-between items-center text-xs font-label-md mb-1.5">
+<span class="font-bold text-midnight-navy">High Net Worth ($5M - $10M)</span>
+<span class="text-charcoal-slate font-bold">22%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-3 overflow-hidden">
+<div class="bg-charcoal-slate h-full rounded-full transition-all duration-700" style="width: 22%"></div>
+</div>
+<div class="flex justify-between text-[11px] text-charcoal-slate/70 mt-1">
+<span>Executive partners, legal leaders</span>
+<span>Avg purchase: $4.5M-$7M</span>
+</div>
+</div>
+<!-- Tier 4 -->
+<div>
+<div class="flex justify-between items-center text-xs font-label-md mb-1.5">
+<span class="font-bold text-midnight-navy">Emerging Affluent (&lt;$5M Liquid)</span>
+<span class="text-charcoal-slate font-bold">6%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-3 overflow-hidden">
+<div class="bg-outline-variant h-full rounded-full transition-all duration-700" style="width: 6%"></div>
+</div>
+<div class="flex justify-between text-[11px] text-charcoal-slate/70 mt-1">
+<span>Priced primarily into luxury pied-à-terres</span>
+<span>High leverage</span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-6 p-3 bg-surface-container-low rounded-lg text-xs text-charcoal-slate flex items-start gap-2">
+<span class="material-symbols-outlined text-estate-gold text-[16px] mt-0.5">info</span>
+<span>72% of buyers hold over $10M in verifiable unencumbered liquidity prior to contract execution.</span>
+</div>
+</div>
+<!-- Chart 2: Age Demographics & Buyer Generations (Donut SVG Chart) -->
+<div class="bg-paper-white rounded-xl p-6 shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-4 border-b border-surface-container">
+<div>
+<h3 class="font-headline-md text-lg text-midnight-navy font-semibold">Age &amp; Generation Matrix</h3>
+<p class="font-caption text-caption text-charcoal-slate/70">Buyer demographic age cohorts</p>
+</div>
+<span class="material-symbols-outlined text-estate-gold">groups</span>
+</div>
+<div class="flex flex-col items-center justify-center my-6">
+<!-- Inline SVG Donut Visualization -->
+<div class="relative w-48 h-48">
+<svg class="w-full h-full -rotate-90 transform" viewbox="0 0 100 100">
+<!-- Background track -->
+<circle cx="50" cy="50" fill="transparent" r="38" stroke="#f1f5f9" stroke-width="12"></circle>
+<!-- Segment 1: Millennials / Tech Founders 38% -> stroke-dasharray="90.7 238.7" stroke-dashoffset="0" (Circumference = 238.76) -->
+<circle class="transition-all duration-1000" cx="50" cy="50" fill="transparent" r="38" stroke="#0f172a" stroke-dasharray="90.7 238.7" stroke-dashoffset="0" stroke-width="12"></circle>
+<!-- Segment 2: Gen X 35% -> 83.5 -->
+<circle class="transition-all duration-1000" cx="50" cy="50" fill="transparent" r="38" stroke="#b48c4f" stroke-dasharray="83.5 238.7" stroke-dashoffset="-90.7" stroke-width="12"></circle>
+<!-- Segment 3: Boomers 27% -> 64.5 -->
+<circle class="transition-all duration-1000" cx="50" cy="50" fill="transparent" r="38" stroke="#334155" stroke-dasharray="64.5 238.7" stroke-dashoffset="-174.2" stroke-width="12"></circle>
+</svg>
+<!-- Center Text -->
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+<span class="font-caption text-[11px] uppercase tracking-wider text-charcoal-slate/70">Core Age</span>
+<span class="font-headline-md text-2xl font-bold text-midnight-navy">43 yrs</span>
+<span class="text-[10px] text-estate-gold font-bold">Shift -4 yrs YoY</span>
+</div>
+</div>
+<!-- Legend with detailed metadata -->
+<div class="w-full mt-6 space-y-2.5">
+<div class="flex items-center justify-between text-xs p-2 rounded bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-midnight-navy inline-block"></span>
+<span class="font-semibold text-midnight-navy">Millennials &amp; Tech (32–45 yrs)</span>
+</div>
+<div class="font-bold text-midnight-navy">38%</div>
+</div>
+<div class="flex items-center justify-between text-xs p-2 rounded bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-estate-gold inline-block"></span>
+<span class="font-semibold text-midnight-navy">Gen X Executives (46–58 yrs)</span>
+</div>
+<div class="font-bold text-midnight-navy">35%</div>
+</div>
+<div class="flex items-center justify-between text-xs p-2 rounded bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-charcoal-slate inline-block"></span>
+<span class="font-semibold text-midnight-navy">Legacy / Boomers (59+ yrs)</span>
+</div>
+<div class="font-bold text-midnight-navy">27%</div>
+</div>
+</div>
+</div>
+</div>
+<p class="font-caption text-caption text-charcoal-slate/80 text-center italic mt-2">
+          Significant surge in sub-40 buyers acquiring turn-key estates in Trousdale and Brentwood.
+        </p>
+</div>
+<!-- Chart 3: Buyer Origin & Inflow Geography -->
+<div class="bg-paper-white rounded-xl p-6 shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-4 border-b border-surface-container">
+<div>
+<h3 class="font-headline-md text-lg text-midnight-navy font-semibold">Capital Origin &amp; Migration</h3>
+<p class="font-caption text-caption text-charcoal-slate/70">Source location of estate purchasers</p>
+</div>
+<span class="material-symbols-outlined text-estate-gold">public</span>
+</div>
+<div class="mt-6 space-y-4">
+<!-- Geo 1 -->
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col gap-1.5">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-xs font-bold text-midnight-navy flex items-center gap-1.5">
+<span class="material-symbols-outlined text-estate-gold text-[16px]">location_on</span> Southern California Local
+                </span>
+<span class="font-headline-md text-sm font-bold text-midnight-navy">36%</span>
+</div>
+<p class="text-[11px] text-charcoal-slate">Upgraders from Hancock Park, Westwood, and Downtown lofts.</p>
+<div class="w-full bg-surface-container-high rounded-full h-1.5">
+<div class="bg-midnight-navy h-1.5 rounded-full" style="width: 36%"></div>
+</div>
+</div>
+<!-- Geo 2 -->
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col gap-1.5">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-xs font-bold text-midnight-navy flex items-center gap-1.5">
+<span class="material-symbols-outlined text-estate-gold text-[16px]">apartment</span> NYC / Tri-State Corridor
+                </span>
+<span class="font-headline-md text-sm font-bold text-midnight-navy">24%</span>
+</div>
+<p class="text-[11px] text-charcoal-slate">Wall St, media executives seeking primary estates &amp; lifestyle.</p>
+<div class="w-full bg-surface-container-high rounded-full h-1.5">
+<div class="bg-estate-gold h-1.5 rounded-full" style="width: 24%"></div>
+</div>
+</div>
+<!-- Geo 3 -->
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col gap-1.5">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-xs font-bold text-midnight-navy flex items-center gap-1.5">
+<span class="material-symbols-outlined text-estate-gold text-[16px]">code</span> SF / Silicon Valley Tech
+                </span>
+<span class="font-headline-md text-sm font-bold text-midnight-navy">21%</span>
+</div>
+<p class="text-[11px] text-charcoal-slate">AI founders &amp; VC partners establishing secondary compounds.</p>
+<div class="w-full bg-surface-container-high rounded-full h-1.5">
+<div class="bg-charcoal-slate h-1.5 rounded-full" style="width: 21%"></div>
+</div>
+</div>
+<!-- Geo 4 -->
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col gap-1.5">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-xs font-bold text-midnight-navy flex items-center gap-1.5">
+<span class="material-symbols-outlined text-estate-gold text-[16px]">flight</span> International (UK, GCC, Asia)
+                </span>
+<span class="font-headline-md text-sm font-bold text-midnight-navy">19%</span>
+</div>
+<p class="text-[11px] text-charcoal-slate">Sovereign capital wealth shields and prime trophy holdings.</p>
+<div class="w-full bg-surface-container-high rounded-full h-1.5">
+<div class="bg-outline-variant h-1.5 rounded-full" style="width: 19%"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-surface-container flex items-center justify-between text-xs text-estate-gold font-semibold">
+<span>Inflow index score</span>
+<span>8.9 / 10 (Highest in 5 yrs)</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Neighborhood Demographic & Market Comparison Matrix -->
+<section class="w-full py-12 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="bg-paper-white rounded-xl shadow-sm overflow-hidden">
+<div class="p-6 md:p-8 border-b border-surface-container flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div>
+<span class="text-estate-gold font-label-md text-label-md text-xs uppercase tracking-widest font-bold">Comparative Micro-Data</span>
+<h2 class="font-headline-lg text-headline-lg text-midnight-navy font-bold mt-1">
+            Neighborhood Demographic &amp; Valuation Matrix
+          </h2>
+<p class="font-body-md text-body-md text-charcoal-slate mt-1">
+            Side-by-side performance metrics across the top four Westside sub-markets.
+          </p>
+</div>
+<div class="flex items-center gap-2 text-xs font-label-md text-charcoal-slate bg-surface-container-low px-3 py-2 rounded">
+<span class="material-symbols-outlined text-[16px] text-estate-gold">verified</span>
+<span>Audited by Westside MLS &amp; Census Bureau ACS 2024</span>
+</div>
+</div>
+<!-- Responsive Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-midnight-navy text-paper-white font-label-md text-xs tracking-wider uppercase">
+<th class="py-4 px-6 font-semibold">Neighborhood &amp; Zip</th>
+<th class="py-4 px-6 font-semibold">Median HHI</th>
+<th class="py-4 px-6 font-semibold">Median Age</th>
+<th class="py-4 px-6 font-semibold">% Owner Occupied</th>
+<th class="py-4 px-6 font-semibold">Average Home Value</th>
+<th class="py-4 px-6 font-semibold">Dominant Industry</th>
+<th class="py-4 px-6 font-semibold text-right">Absorption Rate</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container text-body-md text-sm">
+<!-- Row 1: Beverly Hills -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-4 px-6 font-bold text-midnight-navy flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-estate-gold inline-block"></span>
+<div>
+<div class="font-headline-md text-base text-midnight-navy">Beverly Hills</div>
+<span class="text-xs font-normal text-charcoal-slate/70">90210 • Flats / Gateway</span>
+</div>
+</td>
+<td class="py-4 px-6 font-semibold text-midnight-navy">$365,000+</td>
+<td class="py-4 px-6 text-charcoal-slate">44.2 yrs</td>
+<td class="py-4 px-6 text-charcoal-slate">82.4%</td>
+<td class="py-4 px-6 font-bold text-estate-gold">$10,850,000</td>
+<td class="py-4 px-6 text-charcoal-slate">Entertainment &amp; Law</td>
+<td class="py-4 px-6 text-right font-semibold text-midnight-navy">2.9 mos</td>
+</tr>
+<!-- Row 2: Bel-Air -->
+<tr class="hover:bg-surface-container-low/60 transition-colors bg-surface-container-lowest">
+<td class="py-4 px-6 font-bold text-midnight-navy flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-midnight-navy inline-block"></span>
+<div>
+<div class="font-headline-md text-base text-midnight-navy">Bel-Air</div>
+<span class="text-xs font-normal text-charcoal-slate/70">90077 • Gates &amp; Promontories</span>
+</div>
+</td>
+<td class="py-4 px-6 font-semibold text-midnight-navy">$420,000+</td>
+<td class="py-4 px-6 text-charcoal-slate">48.6 yrs</td>
+<td class="py-4 px-6 text-charcoal-slate">88.1%</td>
+<td class="py-4 px-6 font-bold text-estate-gold">$12,400,000</td>
+<td class="py-4 px-6 text-charcoal-slate">Private Equity &amp; Finance</td>
+<td class="py-4 px-6 text-right font-semibold text-midnight-navy">3.4 mos</td>
+</tr>
+<!-- Row 3: Brentwood -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-4 px-6 font-bold text-midnight-navy flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-charcoal-slate inline-block"></span>
+<div>
+<div class="font-headline-md text-base text-midnight-navy">Brentwood</div>
+<span class="text-xs font-normal text-charcoal-slate/70">90049 • Park &amp; Mandeville</span>
+</div>
+</td>
+<td class="py-4 px-6 font-semibold text-midnight-navy">$295,000+</td>
+<td class="py-4 px-6 text-charcoal-slate">41.8 yrs</td>
+<td class="py-4 px-6 text-charcoal-slate">78.5%</td>
+<td class="py-4 px-6 font-bold text-estate-gold">$8,250,000</td>
+<td class="py-4 px-6 text-charcoal-slate">Venture Capital / Tech</td>
+<td class="py-4 px-6 text-right font-semibold text-midnight-navy">2.6 mos</td>
+</tr>
+<!-- Row 4: Pacific Palisades -->
+<tr class="hover:bg-surface-container-low/60 transition-colors bg-surface-container-lowest">
+<td class="py-4 px-6 font-bold text-midnight-navy flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-success-emerald inline-block"></span>
+<div>
+<div class="font-headline-md text-base text-midnight-navy">Pacific Palisades</div>
+<span class="text-xs font-normal text-charcoal-slate/70">90272 • Riviera &amp; Bluffs</span>
+</div>
+</td>
+<td class="py-4 px-6 font-semibold text-midnight-navy">$315,000+</td>
+<td class="py-4 px-6 text-charcoal-slate">43.5 yrs</td>
+<td class="py-4 px-6 text-charcoal-slate">84.2%</td>
+<td class="py-4 px-6 font-bold text-estate-gold">$9,600,000</td>
+<td class="py-4 px-6 text-charcoal-slate">Media, Studio Execs, Tech</td>
+<td class="py-4 px-6 text-right font-semibold text-midnight-navy">2.2 mos</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Footnote bar -->
+<div class="p-4 bg-surface-container-low flex flex-col sm:flex-row justify-between items-center text-xs text-charcoal-slate gap-2">
+<span>*Absorption rate under 4 months denotes an aggressive seller's market for turnkey residences.</span>
+<a class="text-estate-gold font-bold hover:underline inline-flex items-center gap-1" href="#briefing-form">
+          Request full 28-page comparative matrix <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</div>
+</div>
+</section>
+<!-- Real Estate Market Trends & Inventory Dynamics -->
+<section class="w-full py-12 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Price Tranche Distribution (Bento Left: 7 Cols) -->
+<div class="lg:col-span-7 bg-paper-white rounded-xl p-6 md:p-8 shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-4">
+<div>
+<span class="text-estate-gold font-label-md text-label-md text-xs uppercase tracking-widest font-bold">Pricing Concentration</span>
+<h3 class="font-headline-lg text-2xl text-midnight-navy font-bold">Closed Sales Volume by Price Tranche</h3>
+</div>
+<span class="material-symbols-outlined text-estate-gold">bar_chart</span>
+</div>
+<p class="font-body-md text-body-md text-charcoal-slate mb-6">
+            Breakdown of closed sales volume ($) in Q3 across price categories in the greater Beverly Hills and Bel-Air zone.
+          </p>
+<!-- Visual Bar Chart Representation -->
+<div class="space-y-6">
+<!-- Bracket 1 -->
+<div>
+<div class="flex justify-between items-center text-xs font-label-md mb-2">
+<span class="text-midnight-navy font-bold">$3,000,000 – $5,000,000 (Entry Luxury)</span>
+<span class="text-midnight-navy font-bold">$98.2M • 18%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded h-4 overflow-hidden">
+<div class="bg-charcoal-slate h-full rounded transition-all duration-700" style="width: 18%"></div>
+</div>
+</div>
+<!-- Bracket 2 -->
+<div>
+<div class="flex justify-between items-center text-xs font-label-md mb-2">
+<span class="text-midnight-navy font-bold">$5,000,000 – $10,000,000 (Core Luxury)</span>
+<span class="text-midnight-navy font-bold">$218.4M • 40%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded h-4 overflow-hidden">
+<div class="bg-midnight-navy h-full rounded transition-all duration-700" style="width: 40%"></div>
+</div>
+</div>
+<!-- Bracket 3 -->
+<div>
+<div class="flex justify-between items-center text-xs font-label-md mb-2">
+<span class="text-midnight-navy font-bold">$10,000,000 – $20,000,000 (Super-Prime)</span>
+<span class="text-midnight-navy font-bold">$147.4M • 27%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded h-4 overflow-hidden">
+<div class="bg-estate-gold h-full rounded transition-all duration-700" style="width: 27%"></div>
+</div>
+</div>
+<!-- Bracket 4 -->
+<div>
+<div class="flex justify-between items-center text-xs font-label-md mb-2">
+<span class="text-midnight-navy font-bold">$20,000,000+ (Ultra-Prime Trophy)</span>
+<span class="text-midnight-navy font-bold">$81.9M • 15%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded h-4 overflow-hidden">
+<div class="bg-secondary-fixed-dim h-full rounded transition-all duration-700" style="width: 15%"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-8 pt-4 border-t border-surface-container flex items-center justify-between text-xs text-charcoal-slate">
+<span>Total Quarterly Tranche Volume: <strong>$545.9 Million</strong></span>
+<span class="text-estate-gold font-semibold">+8.4% compared to Q2</span>
+</div>
+</div>
+<!-- Inventory Dynamics & Sell-to-List Ratio (Bento Right: 5 Cols) -->
+<div class="lg:col-span-5 flex flex-col gap-6">
+<!-- Inventory Gauge Card -->
+<div class="bg-paper-white rounded-xl p-6 shadow-sm">
+<div class="flex items-center justify-between mb-3">
+<span class="font-label-md text-label-md text-xs uppercase tracking-wider text-charcoal-slate">Market Pressure Index</span>
+<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-success-emerald/10 text-success-emerald uppercase">Strong Seller Favor</span>
+</div>
+<div class="flex items-baseline gap-3 mb-2">
+<div class="font-display-lg text-4xl font-bold text-midnight-navy">3.2</div>
+<div class="text-sm font-semibold text-charcoal-slate">Months of Available Inventory</div>
+</div>
+<p class="text-xs text-charcoal-slate/80 leading-relaxed mb-4">
+            Under 4 months represents strict seller market control. Prime estate supply remains restricted by low inventory releases in Trousdale and Bel-Air East Gate.
+          </p>
+<!-- Micro Spectrum Gauge -->
+<div class="w-full h-2.5 rounded-full bg-surface-container-high flex overflow-hidden">
+<div class="h-full bg-success-emerald w-1/3" title="Seller's Market (&lt;4 Mos)"></div>
+<div class="h-full bg-estate-gold w-1/3 opacity-40" title="Balanced Market (4-6 Mos)"></div>
+<div class="h-full bg-charcoal-slate w-1/3 opacity-20" title="Buyer's Market (&gt;6 Mos)"></div>
+</div>
+<div class="flex justify-between text-[10px] text-charcoal-slate/60 mt-1 uppercase">
+<span class="text-success-emerald font-bold">← Seller Advantage</span>
+<span>Balanced (5 mo)</span>
+<span>Buyer Advantage →</span>
+</div>
+</div>
+<!-- Sold vs. List Ratio Card -->
+<div class="bg-paper-white rounded-xl p-6 shadow-sm">
+<div class="flex items-center justify-between mb-3">
+<span class="font-label-md text-label-md text-xs uppercase tracking-wider text-charcoal-slate">Execution Efficiency</span>
+<span class="material-symbols-outlined text-estate-gold text-[20px]">contract</span>
+</div>
+<div class="flex items-baseline gap-3 mb-2">
+<div class="font-display-lg text-4xl font-bold text-midnight-navy">98.4%</div>
+<div class="text-sm font-semibold text-estate-gold">Sold-to-List Ratio</div>
+</div>
+<p class="text-xs text-charcoal-slate/80 leading-relaxed">
+            Properties curated and priced correctly with top architectural provenance are transacting within 1.6% of original list price. 41% of transactions closed at or above asking price.
+          </p>
+<div class="mt-4 pt-3 border-t border-surface-container flex items-center gap-4 text-xs">
+<div>
+<span class="text-charcoal-slate/70 block">Multiple Offer Rate:</span>
+<span class="font-bold text-midnight-navy">31.8% of closed listings</span>
+</div>
+<div class="w-px h-8 bg-surface-container"></div>
+<div>
+<span class="text-charcoal-slate/70 block">Avg Over-Ask Premium:</span>
+<span class="font-bold text-estate-gold">+4.8% above list</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Interactive Submarket Location Map / Snapshot -->
+<section class="w-full py-12 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="bg-paper-white rounded-xl shadow-sm p-6 md:p-8">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+<div>
+<span class="text-estate-gold font-label-md text-label-md text-xs uppercase tracking-widest font-bold">Geographic Distribution</span>
+<h3 class="font-headline-lg text-2xl text-midnight-navy font-bold">Prime Platinum Triangle Active Micro-Territories</h3>
+</div>
+<div class="flex items-center gap-4 text-xs font-label-md">
+<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-estate-gold"></span> Beverly Hills Proper</span>
+<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-midnight-navy"></span> Bel-Air Estates</span>
+<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-charcoal-slate"></span> Sunset Strip Hills</span>
+</div>
+</div>
+<!-- Map Container with data-location -->
+<div class="w-full h-80 md:h-96 bg-cover bg-center rounded-lg shadow-inner relative overflow-hidden" data-location="Beverly Hills, California" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDWcdJEP8f1jPU-UN2vdJ9zhuwIFquIdjUNCMf3M7W6qLIx7hqS6PwLaSqzD29BuXq_09iZdNWBiIQhhG1XaeUNBhw_ElUFZOPizMNiofTwKkRJMSywg93ag-cP0VRUeGRQslx9getA2FR52Kpivb2KvtwuN5TF84idHEeYJkMg-ep4CXJjy2kcGmr1JpCIzMTi_ao_I0kcYh3AW9XYX91xu6QjsnOse5NVmtDrlbg500htW2PRO-Q')">
+<div class="absolute inset-0 bg-midnight-navy/15"></div>
+<!-- Interactive Overlay Callout Pin 1 -->
+<div class="absolute top-1/4 left-1/3 bg-paper-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border-l-4 border-estate-gold max-w-xs transform -translate-x-1/2 -translate-y-1/2 hidden sm:block">
+<div class="font-bold text-xs text-midnight-navy uppercase">Trousdale Estates • 90210</div>
+<div class="text-xs text-estate-gold font-bold">$2,840 / sq ft • 0.8 Mos Inventory</div>
+<p class="text-[10px] text-charcoal-slate mt-1">Mid-century restoration premium up +14% YoY</p>
+</div>
+<!-- Interactive Overlay Callout Pin 2 -->
+<div class="absolute bottom-1/3 right-1/4 bg-paper-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border-l-4 border-midnight-navy max-w-xs transform translate-x-1/4 hidden md:block">
+<div class="font-bold text-xs text-midnight-navy uppercase">Bel-Air East Gate • 90077</div>
+<div class="text-xs text-midnight-navy font-bold">Median Sale $16.8M • 100% Cash</div>
+<p class="text-[10px] text-charcoal-slate mt-1">Highest concentration of off-market private trades</p>
+</div>
+<!-- Floating Map Utility Badge -->
+<div class="absolute bottom-4 left-4 bg-midnight-navy/90 text-paper-white px-3 py-1.5 rounded text-xs backdrop-blur-md flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-estate-gold">explore</span>
+<span>Coverage: Beverly Hills 90210, 90211, 90212 • Bel-Air 90077 • Holmby Hills</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Lead Capture / Private Advisory Consultation Banner -->
+<section class="w-full py-16 px-margin-mobile md:px-margin-desktop bg-midnight-navy text-paper-white mt-12 relative overflow-hidden" id="briefing-form">
+<div class="absolute -left-24 top-0 w-80 h-80 rounded-full bg-estate-gold/10 blur-3xl pointer-events-none"></div>
+<div class="absolute right-0 bottom-0 w-96 h-96 rounded-full bg-surface-container-high/5 blur-3xl pointer-events-none"></div>
+<div class="max-w-container-max mx-auto relative z-10">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-7 flex flex-col gap-4">
+<div class="inline-flex items-center gap-2">
+<span class="w-6 h-[2px] bg-estate-gold"></span>
+<span class="text-estate-gold font-label-md text-xs uppercase tracking-widest font-bold">Confidential Market Advisory</span>
+</div>
+<h2 class="font-headline-lg text-3xl md:text-4xl text-paper-white font-serif font-bold">
+            Receive Bespoke Submarket Valuation &amp; Micro-Demographic Reports
+          </h2>
+<p class="font-body-lg text-body-lg text-paper-white/80 leading-relaxed max-w-xl">
+            Gurmeet Singh provides customized advisory, off-market deal flow analysis, and discreet portfolio restructuring for high-net-worth principals, family offices, and estate trustees.
+          </p>
+<div class="flex flex-wrap items-center gap-6 mt-4 text-xs text-paper-white/70">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-estate-gold text-[18px]">verified_user</span>
+<span>Strict Non-Disclosure &amp; Privacy Protocol</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-estate-gold text-[18px]">lock</span>
+<span>Tailored to Exact Parcel &amp; Assessor Data</span>
+</div>
+</div>
+</div>
+<!-- Form Card -->
+<div class="lg:col-span-5 bg-paper-white text-midnight-navy p-8 rounded-xl shadow-2xl relative">
+<h3 class="font-headline-md text-xl font-bold text-midnight-navy mb-1">Request Private Briefing</h3>
+<p class="font-caption text-caption text-charcoal-slate mb-6">
+            Enter your details to receive our full unredacted Q3 Institutional Report and private consult.
+          </p>
+<form class="flex flex-col gap-4" id="consultationForm" onsubmit="event.preventDefault(); document.getElementById('formSuccess').classList.remove('hidden'); document.getElementById('consultationForm').classList.add('hidden');">
+<div>
+<label class="block font-label-md text-xs font-semibold text-charcoal-slate mb-1">Full Legal Name / Entity</label>
+<input class="w-full px-4 py-2.5 rounded bg-surface-container-low text-midnight-navy text-sm border-0 focus:ring-2 focus:ring-estate-gold" placeholder="e.g. Sterling Trust / Principal" required="" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-xs font-semibold text-charcoal-slate mb-1">Private Email Address</label>
+<input class="w-full px-4 py-2.5 rounded bg-surface-container-low text-midnight-navy text-sm border-0 focus:ring-2 focus:ring-estate-gold" placeholder="name@domain.com" required="" type="email"/>
+</div>
+<div>
+<label class="block font-label-md text-xs font-semibold text-charcoal-slate mb-1">Target Neighborhood of Interest</label>
+<select class="w-full px-4 py-2.5 rounded bg-surface-container-low text-midnight-navy text-sm border-0 focus:ring-2 focus:ring-estate-gold">
+<option>Beverly Hills (All Enclaves)</option>
+<option>Bel-Air &amp; Holmby Hills</option>
+<option>Brentwood &amp; Palisades</option>
+<option>Malibu Oceanfront</option>
+<option>Comprehensive Platinum Triangle Portfolio</option>
+</select>
+</div>
+<button class="w-full mt-2 bg-estate-gold hover:bg-estate-gold/90 text-midnight-navy font-label-md text-sm font-bold uppercase tracking-wider py-3.5 px-6 rounded shadow transition duration-200 flex items-center justify-center gap-2" type="submit">
+<span>Request Private Briefing</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+<p class="text-[10px] text-center text-charcoal-slate/70 mt-1">
+              Data transmitted via 256-bit encrypted protocol. No unsolicited solicitations.
+            </p>
+</form>
+<!-- Success Message State -->
+<div class="hidden flex-col items-center justify-center text-center py-8" id="formSuccess">
+<div class="w-12 h-12 rounded-full bg-success-emerald/10 text-success-emerald flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-[28px]">check_circle</span>
+</div>
+<h4 class="font-headline-md text-lg font-bold text-midnight-navy">Request Received</h4>
+<p class="font-body-md text-xs text-charcoal-slate mt-2 max-w-xs">
+              A private courier link with the Q3 Confidential Intelligence Report has been dispatched to your email. Gurmeet Singh’s office will contact you within 4 business hours.
+            </p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Client-Side Micro-Interactions Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Dynamic metric switcher based on market dropdown
+      const marketSelector = document.getElementById('marketSelector');
+      const medianPriceStat = document.getElementById('stat-median-price');
+
+      const marketStats = {
+        '90210': '$9.45M',
+        '90077': '$12.40M',
+        '90049': '$8.25M',
+        '90265': '$14.10M',
+        '90272': '$9.60M'
+      };
+
+      if (marketSelector && medianPriceStat) {
+        marketSelector.addEventListener('change', (e) => {
+          const val = e.target.value;
+          if (marketStats[val]) {
+            medianPriceStat.classList.add('opacity-0');
+            setTimeout(() => {
+              medianPriceStat.textContent = marketStats[val];
+              medianPriceStat.classList.remove('opacity-0');
+            }, 150);
+          }
+        });
+      }
+
+      // Download PDF toast notification
+      const downloadBtn = document.getElementById('downloadBtn');
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+          const originalText = downloadBtn.innerHTML;
+          downloadBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span><span>Compiling Briefing...</span>';
+          setTimeout(() => {
+            downloadBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] text-estate-gold">check</span><span>Report Downloaded (PDF)</span>';
+            setTimeout(() => {
+              downloadBtn.innerHTML = originalText;
+            }, 3000);
+          }, 1200);
+        });
+      }
+    });
+  </script>
+</div></main>
+<footer class="bg-midnight-navy font-body-md text-body-md full-width mt-auto text-paper-white">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-mobile md:px-margin-desktop py-section-gap max-w-container-max mx-auto">
+<div class="col-span-1 md:col-span-2">
+<a class="font-headline-md text-headline-md text-paper-white block mb-4" data-path="home" href="#">HomesByGurmeet</a>
+<p class="text-paper-white/80 max-w-sm mb-6 font-body-md text-body-md">Delivering exceptional real estate experiences with integrity, expertise, and a commitment to excellence.</p>
+<p class="text-paper-white/60 font-caption text-caption">© 2024 HomesByGurmeet. All rights reserved.</p>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-estate-gold mb-4 uppercase tracking-wider">Connect</h4>
+<ul class="space-y-3">
+<li><a class="text-paper-white/80 hover:text-estate-gold transition-colors duration-300 text-body-md" href="#">Facebook</a></li>
+<li><a class="text-paper-white/80 hover:text-estate-gold transition-colors duration-300 text-body-md" href="#">Instagram</a></li>
+<li><a class="text-paper-white/80 hover:text-estate-gold transition-colors duration-300 text-body-md" href="#">LinkedIn</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-estate-gold mb-4 uppercase tracking-wider">Partners</h4>
+<ul class="space-y-3">
+<li><a class="text-paper-white/80 hover:text-estate-gold transition-colors duration-300 text-body-md" href="#">Google Reviews</a></li>
+<li><a class="text-paper-white/80 hover:text-estate-gold transition-colors duration-300 text-body-md" href="#">Zillow Profile</a></li>
+<li><a class="text-paper-white/80 hover:text-estate-gold transition-colors duration-300 text-body-md" href="#">Redfin Partner</a></li>
+</ul>
+</div>
+</div>
+</footer>
+</body></html>

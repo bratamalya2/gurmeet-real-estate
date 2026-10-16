@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>HomesByGurmeet - Real Estate</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed": "#dae2fd",
+                      "primary-fixed-dim": "#bec6e0",
+                      "on-primary-fixed-variant": "#3f465c",
+                      "paper-white": "#FFFFFF",
+                      "secondary-fixed-dim": "#ecbf7d",
+                      "error": "#ba1a1a",
+                      "inverse-surface": "#2d3133",
+                      "surface-container-low": "#f2f4f6",
+                      "estate-gold": "#B48C4F",
+                      "surface-dim": "#d8dadc",
+                      "on-secondary-fixed": "#281800",
+                      "on-primary-container": "#7c839b",
+                      "surface-container-lowest": "#ffffff",
+                      "charcoal-slate": "#334155",
+                      "on-primary": "#ffffff",
+                      "on-surface-variant": "#45464d",
+                      "on-background": "#191c1e",
+                      "on-secondary-fixed-variant": "#5f4109",
+                      "on-tertiary-fixed": "#0d1c2f",
+                      "on-tertiary-fixed-variant": "#3a485c",
+                      "success-emerald": "#10B981",
+                      "on-secondary": "#ffffff",
+                      "surface-container": "#eceef0",
+                      "primary-container": "#131b2e",
+                      "inverse-primary": "#bec6e0",
+                      "tertiary-container": "#0d1c2f",
+                      "on-error-container": "#93000a",
+                      "background": "#f7f9fb",
+                      "primary": "#000000",
+                      "inverse-on-surface": "#eff1f3",
+                      "surface-container-high": "#e6e8ea",
+                      "on-primary-fixed": "#131b2e",
+                      "outline-variant": "#c6c6cd",
+                      "error-container": "#ffdad6",
+                      "outline": "#76777d",
+                      "on-tertiary-container": "#76859b",
+                      "tertiary": "#000000",
+                      "tertiary-fixed-dim": "#b9c7e0",
+                      "secondary-container": "#fed08c",
+                      "surface-container-highest": "#e0e3e5",
+                      "surface-variant": "#e0e3e5",
+                      "surface-bright": "#f7f9fb",
+                      "midnight-navy": "#0F172A",
+                      "on-secondary-container": "#79571f",
+                      "on-tertiary": "#ffffff",
+                      "on-surface": "#191c1e",
+                      "surface-tint": "#565e74",
+                      "tertiary-fixed": "#d5e3fd",
+                      "secondary-fixed": "#ffddb0",
+                      "secondary": "#7a5820",
+                      "on-error": "#ffffff",
+                      "surface": "#f7f9fb"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "section-gap": "80px",
+                      "margin-desktop": "40px",
+                      "gutter": "24px",
+                      "margin-mobile": "16px",
+                      "container-max": "1280px",
+                      "base": "8px"
+              },
+              "fontFamily": {
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "caption": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-lg-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "caption": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<meta content="web_standard" name="shell-type"/></head>
+<body class="bg-surface text-on-surface font-body-md antialiased w-full max-w-[480px] mx-auto overflow-x-hidden relative shadow-[0_0_50px_rgba(0,0,0,0.1)] min-h-screen">
+<!-- Mobile Top Navigation -->
+<header class="bg-paper-white w-full top-0 sticky z-50 shadow-sm transition-all duration-200 ease-in-out border-b border-charcoal-slate/15">
+<div class="flex justify-between items-center px-margin-mobile py-4 max-w-container-max mx-auto">
+<div class="font-headline-md text-headline-md font-bold text-midnight-navy">HomesByGurmeet</div>
+<button aria-label="Menu" class="text-midnight-navy hover:text-estate-gold transition-colors p-2" id="mobile-nav-toggle">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+<!-- Mobile Drawer Overlay Menu -->
+<nav class="bg-paper-white border-b border-charcoal-slate/15 px-margin-mobile py-4 flex flex-col gap-3 shadow-md" data-active-classes="text-estate-gold font-semibold" id="mobile-nav-menu">
+<a class="font-body-md text-body-md text-midnight-navy hover:text-estate-gold transition-colors py-2 border-b border-charcoal-slate/10 flex items-center justify-between" data-path="home---mobile" href="#">
+<span>Home</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</a>
+<a class="font-body-md text-body-md text-midnight-navy hover:text-estate-gold transition-colors py-2 border-b border-charcoal-slate/10 flex items-center justify-between" data-path="listings---mobile" href="#">
+<span>Listings</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</a>
+<a aria-current="page" class="transition-colors py-2 border-b border-charcoal-slate/10 flex items-center justify-between text-estate-gold font-semibold" data-path="market-insights---mobile" href="#">
+<span>Market Insights</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</a>
+<a class="font-body-md text-body-md text-midnight-navy hover:text-estate-gold transition-colors py-2 border-b border-charcoal-slate/10 flex items-center justify-between" data-path="services---mobile" href="#">
+<span>Services</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</a>
+<a class="font-body-md text-body-md text-midnight-navy hover:text-estate-gold transition-colors py-2 border-b border-charcoal-slate/10 flex items-center justify-between" data-path="about-agent---mobile" href="#">
+<span>About Agent</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</a>
+<a class="font-body-md text-body-md text-midnight-navy hover:text-estate-gold transition-colors py-2 flex items-center justify-between" data-path="contact---mobile" href="#">
+<span>Contact</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</a>
+</nav>
+</header>
+<!-- Main Content Canvas -->
+<main class="w-full pb-section-gap"><div class="flex flex-col w-full">
+<!-- Top Insight Badge & Intro Header -->
+<section class="px-margin-mobile pt-6 pb-5 flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-full text-secondary font-label-md text-caption">
+<span class="w-2 h-2 rounded-full bg-estate-gold animate-pulse"></span>
+<span>Verified Intelligence</span>
+</div>
+<span class="font-caption text-caption text-charcoal-slate/70">Updated Oct 2024</span>
+</div>
+<div class="flex flex-col gap-1">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-midnight-navy tracking-tight">
+        Market &amp; Demographic Insights
+      </h1>
+<p class="font-body-md text-body-md text-charcoal-slate/80">
+        Quarterly intelligence for Beverly Hills &amp; prime Westside luxury properties.
+      </p>
+</div>
+<!-- Dropdown Pill Filter -->
+<div class="mt-1 flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+<button class="flex items-center justify-between gap-3 px-4 py-2.5 bg-paper-white rounded-full shadow-sm text-midnight-navy font-label-md text-label-md hover:bg-surface-container-low transition-colors whitespace-nowrap" id="pill-selector-btn">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-estate-gold">location_on</span>
+<span>Beverly Hills 90210 • Q3 2024</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-charcoal-slate/60">expand_more</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-2.5 bg-surface-container-low rounded-full text-charcoal-slate font-label-md text-caption hover:bg-surface-container transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined text-[16px]">tune</span>
+<span>Filters</span>
+</button>
+</div>
+</section>
+<!-- Market Health Sentiment Gauge Strip -->
+<section class="px-margin-mobile mb-6">
+<div class="bg-primary-container text-paper-white p-4 rounded-xl shadow-md flex items-center justify-between relative overflow-hidden">
+<div class="absolute -right-6 -bottom-6 w-24 h-24 bg-estate-gold/10 rounded-full blur-xl pointer-events-none"></div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-estate-gold/20 flex items-center justify-center text-estate-gold">
+<span class="material-symbols-outlined text-[22px]">trending_up</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-paper-white/90 flex items-center gap-2">
+<span>Strong Seller's Market</span>
+<span class="inline-block px-1.5 py-0.2 bg-success-emerald/20 text-success-emerald text-[11px] rounded font-semibold">Active</span>
+</div>
+<div class="font-caption text-caption text-paper-white/60">3.2 Months Inventory Supply</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-headline-md text-headline-md font-bold text-estate-gold leading-none">98.4%</div>
+<div class="font-caption text-caption text-paper-white/60 mt-1">Sale-to-List</div>
+</div>
+</div>
+</section>
+<!-- Key Performance Metric Badges (2x2 Grid) -->
+<section class="px-margin-mobile mb-8">
+<div class="flex items-center justify-between mb-3">
+<h2 class="font-headline-md text-headline-md text-midnight-navy">Key Luxury Benchmarks</h2>
+<span class="font-caption text-caption text-charcoal-slate/70">Westside Prime</span>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<!-- Metric 1: Median Price -->
+<div class="bg-paper-white p-4 rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-caption text-charcoal-slate/80">Median Price</span>
+<span class="material-symbols-outlined text-[18px] text-estate-gold">apartment</span>
+</div>
+<div class="my-2">
+<div class="font-headline-md text-headline-md text-midnight-navy font-bold">$9.45M</div>
+</div>
+<div class="flex items-center gap-1 font-caption text-caption text-success-emerald font-semibold">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+<span>+6.8% YoY</span>
+</div>
+</div>
+<!-- Metric 2: Avg Days on Market -->
+<div class="bg-paper-white p-4 rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-caption text-charcoal-slate/80">Avg Days on Market</span>
+<span class="material-symbols-outlined text-[18px] text-estate-gold">schedule</span>
+</div>
+<div class="my-2">
+<div class="font-headline-md text-headline-md text-midnight-navy font-bold">38 Days</div>
+</div>
+<div class="flex items-center gap-1 font-caption text-caption text-estate-gold font-semibold">
+<span class="material-symbols-outlined text-[14px]">bolt</span>
+<span>Fast Pace liquidity</span>
+</div>
+</div>
+<!-- Metric 3: Price / Sq Ft -->
+<div class="bg-paper-white p-4 rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-caption text-charcoal-slate/80">Price / Sq Ft</span>
+<span class="material-symbols-outlined text-[18px] text-estate-gold">square_foot</span>
+</div>
+<div class="my-2">
+<div class="font-headline-md text-headline-md text-midnight-navy font-bold">$1,840</div>
+</div>
+<div class="flex items-center gap-1 font-caption text-caption text-success-emerald font-semibold">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+<span>+4.2% YoY</span>
+</div>
+</div>
+<!-- Metric 4: Sales Volume -->
+<div class="bg-paper-white p-4 rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-caption text-charcoal-slate/80">Quarterly Volume</span>
+<span class="material-symbols-outlined text-[18px] text-estate-gold">query_stats</span>
+</div>
+<div class="my-2">
+<div class="font-headline-md text-headline-md text-midnight-navy font-bold">$412M</div>
+</div>
+<div class="flex items-center gap-1 font-caption text-caption text-charcoal-slate/70">
+<span class="material-symbols-outlined text-[14px]">domain</span>
+<span>44 Prime Closings</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Interactive Demographic Breakdown Cards -->
+<section class="px-margin-mobile mb-8 flex flex-col gap-5">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="font-headline-md text-headline-md text-midnight-navy">Buyer Demographics</h2>
+<p class="font-caption text-caption text-charcoal-slate/70">Capital profile of recent acquisition pool</p>
+</div>
+<button aria-label="Toggle Insights View" class="p-2 bg-surface-container rounded-full text-midnight-navy hover:text-estate-gold transition-colors">
+<span class="material-symbols-outlined text-[20px]">swap_vert</span>
+</button>
+</div>
+<!-- Wealth & Net Worth Card -->
+<div class="bg-paper-white p-5 rounded-xl shadow-sm flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-estate-gold text-[20px]">account_balance_wallet</span>
+<span class="font-label-md text-label-md text-midnight-navy">Net Worth Bracket Breakdown</span>
+</div>
+<span class="font-caption text-caption text-charcoal-slate/70">Liquid HNWI</span>
+</div>
+<!-- Segmented Stacked Bar Visual -->
+<div class="w-full flex h-3 rounded-full overflow-hidden bg-surface-container-low gap-0.5">
+<div class="bg-midnight-navy h-full" style="width: 28%;" title="UHNW $30M+ (28%)"></div>
+<div class="bg-estate-gold h-full" style="width: 44%;" title="VHNW $10M-$30M (44%)"></div>
+<div class="bg-charcoal-slate/70 h-full" style="width: 22%;" title="HNW $5M-$10M (22%)"></div>
+<div class="bg-surface-container-highest h-full" style="width: 6%;" title="Other (6%)"></div>
+</div>
+<!-- Detail rows with styled dots -->
+<div class="flex flex-col gap-2.5 mt-1">
+<div class="flex items-center justify-between text-body-md">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-midnight-navy"></span>
+<span class="font-body-md text-body-md text-charcoal-slate">Ultra High Net Worth ($30M+)</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-midnight-navy">28%</span>
+</div>
+<div class="flex items-center justify-between text-body-md">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-estate-gold"></span>
+<span class="font-body-md text-body-md text-charcoal-slate">Very High Net Worth ($10M–$30M)</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-midnight-navy">44%</span>
+</div>
+<div class="flex items-center justify-between text-body-md">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-charcoal-slate/70"></span>
+<span class="font-body-md text-body-md text-charcoal-slate">High Net Worth ($5M–$10M)</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-midnight-navy">22%</span>
+</div>
+<div class="flex items-center justify-between text-body-md">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-surface-container-highest"></span>
+<span class="font-body-md text-body-md text-charcoal-slate">Institutional &amp; Family Trust</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-midnight-navy">6%</span>
+</div>
+</div>
+</div>
+<!-- Buyer Age Cohorts & Generational Flow -->
+<div class="bg-paper-white p-5 rounded-xl shadow-sm flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-estate-gold text-[20px]">groups</span>
+<span class="font-label-md text-label-md text-midnight-navy">Purchaser Age Cohorts</span>
+</div>
+<span class="font-caption text-caption text-estate-gold font-semibold">Tech &amp; Media Surge</span>
+</div>
+<div class="grid grid-cols-3 gap-2 text-center">
+<!-- Millennials -->
+<div class="bg-surface-container-low p-3 rounded-lg flex flex-col items-center justify-center">
+<span class="font-caption text-caption text-charcoal-slate">Age 32–45</span>
+<span class="font-headline-md text-headline-md text-midnight-navy font-bold my-1">38%</span>
+<span class="font-caption text-[11px] text-success-emerald font-semibold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]">trending_up</span> Next-Gen
+          </span>
+</div>
+<!-- Gen X -->
+<div class="bg-surface-container-low p-3 rounded-lg flex flex-col items-center justify-center">
+<span class="font-caption text-caption text-charcoal-slate">Age 46–58</span>
+<span class="font-headline-md text-headline-md text-midnight-navy font-bold my-1">35%</span>
+<span class="font-caption text-[11px] text-charcoal-slate/70">Established</span>
+</div>
+<!-- Boomers -->
+<div class="bg-surface-container-low p-3 rounded-lg flex flex-col items-center justify-center">
+<span class="font-caption text-caption text-charcoal-slate">Age 59+</span>
+<span class="font-headline-md text-headline-md text-midnight-navy font-bold my-1">27%</span>
+<span class="font-caption text-[11px] text-charcoal-slate/70">Legacy Estates</span>
+</div>
+</div>
+</div>
+<!-- Buyer Capital Inflow / Origin -->
+<div class="bg-paper-white p-5 rounded-xl shadow-sm flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-estate-gold text-[20px]">flight_land</span>
+<span class="font-label-md text-label-md text-midnight-navy">Capital Origin &amp; Relocation</span>
+</div>
+<span class="font-caption text-caption text-charcoal-slate/70">Inflow Q3</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-1">
+<div class="p-3 bg-surface-container-low rounded-lg flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-midnight-navy">Local LA</span>
+<span class="font-caption text-caption text-charcoal-slate/70">Move-up &amp; Estates</span>
+</div>
+<span class="font-headline-md text-headline-md text-estate-gold font-bold">36%</span>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-midnight-navy">NY / Tri-State</span>
+<span class="font-caption text-caption text-charcoal-slate/70">Finance &amp; Fashion</span>
+</div>
+<span class="font-headline-md text-headline-md text-estate-gold font-bold">24%</span>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-midnight-navy">NorCal / Bay</span>
+<span class="font-caption text-caption text-charcoal-slate/70">Tech Founders</span>
+</div>
+<span class="font-headline-md text-headline-md text-estate-gold font-bold">21%</span>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-midnight-navy">Global / Intl</span>
+<span class="font-caption text-caption text-charcoal-slate/70">Europe &amp; Asia</span>
+</div>
+<span class="font-headline-md text-headline-md text-estate-gold font-bold">19%</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Neighborhood Quick Snapshot Cards -->
+<section class="px-margin-mobile mb-8 flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-md text-headline-md text-midnight-navy">Enclave Comparison</h2>
+<span class="font-caption text-caption text-estate-gold font-semibold">Q3 Velocity</span>
+</div>
+<!-- Enclave 1: Beverly Hills 90210 -->
+<div class="bg-paper-white p-4 rounded-xl shadow-sm flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div>
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-estate-gold/15 text-secondary font-label-md text-[11px] rounded">
+            90210 Flagship
+          </div>
+<h3 class="font-headline-md text-headline-md text-midnight-navy font-bold mt-1">Beverly Hills</h3>
+</div>
+<div class="text-right">
+<div class="font-headline-md text-headline-md text-estate-gold font-bold">$9.45M</div>
+<span class="font-caption text-caption text-charcoal-slate/60">Median Price</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-2 bg-surface-container-low/60 rounded-lg p-2.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-charcoal-slate/70">face</span>
+<div class="flex flex-col">
+<span class="font-caption text-[11px] text-charcoal-slate/60">Median Age</span>
+<span class="font-label-md text-label-md font-semibold text-midnight-navy">44 Years</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-charcoal-slate/70">work</span>
+<div class="flex flex-col">
+<span class="font-caption text-[11px] text-charcoal-slate/60">Top Sector</span>
+<span class="font-label-md text-label-md font-semibold text-midnight-navy truncate">Tech &amp; Media</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Enclave 2: Bel-Air 90077 -->
+<div class="bg-paper-white p-4 rounded-xl shadow-sm flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div>
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-surface-container text-charcoal-slate font-label-md text-[11px] rounded">
+            90077 Exclusive
+          </div>
+<h3 class="font-headline-md text-headline-md text-midnight-navy font-bold mt-1">Bel-Air</h3>
+</div>
+<div class="text-right">
+<div class="font-headline-md text-headline-md text-estate-gold font-bold">$11.2M</div>
+<span class="font-caption text-caption text-charcoal-slate/60">Median Price</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-2 bg-surface-container-low/60 rounded-lg p-2.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-charcoal-slate/70">face</span>
+<div class="flex flex-col">
+<span class="font-caption text-[11px] text-charcoal-slate/60">Median Age</span>
+<span class="font-label-md text-label-md font-semibold text-midnight-navy">49 Years</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-charcoal-slate/70">work</span>
+<div class="flex flex-col">
+<span class="font-caption text-[11px] text-charcoal-slate/60">Top Sector</span>
+<span class="font-label-md text-label-md font-semibold text-midnight-navy truncate">PE &amp; Founders</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Enclave 3: Brentwood 90049 -->
+<div class="bg-paper-white p-4 rounded-xl shadow-sm flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div>
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-surface-container text-charcoal-slate font-label-md text-[11px] rounded">
+            90049 Coastal Proximity
+          </div>
+<h3 class="font-headline-md text-headline-md text-midnight-navy font-bold mt-1">Brentwood</h3>
+</div>
+<div class="text-right">
+<div class="font-headline-md text-headline-md text-estate-gold font-bold">$6.80M</div>
+<span class="font-caption text-caption text-charcoal-slate/60">Median Price</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-2 bg-surface-container-low/60 rounded-lg p-2.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-charcoal-slate/70">face</span>
+<div class="flex flex-col">
+<span class="font-caption text-[11px] text-charcoal-slate/60">Median Age</span>
+<span class="font-label-md text-label-md font-semibold text-midnight-navy">41 Years</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-charcoal-slate/70">work</span>
+<div class="flex flex-col">
+<span class="font-caption text-[11px] text-charcoal-slate/60">Top Sector</span>
+<span class="font-label-md text-label-md font-semibold text-midnight-navy truncate">Tech &amp; Health</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- High-Touch Call to Action Dossier Card -->
+<section class="px-margin-mobile mb-4">
+<div class="bg-midnight-navy text-paper-white p-6 rounded-xl shadow-lg relative overflow-hidden flex flex-col gap-5">
+<!-- Decorative background accent -->
+<div class="absolute -top-12 -right-12 w-36 h-36 bg-estate-gold/15 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-start gap-4">
+<div class="w-14 h-14 rounded-full bg-paper-white/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[28px] text-estate-gold">analytics</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-caption uppercase tracking-wider text-estate-gold font-bold">Confidential Analysis</span>
+<h3 class="font-headline-md text-headline-md text-paper-white leading-tight">Request Tailored Neighborhood Dossier</h3>
+</div>
+</div>
+<p class="font-body-md text-body-md text-paper-white/80">
+        Access granular street-by-street micro-valuations, off-market pocket inventory, and comprehensive zoning appraisals prepared directly by Gurmeet.
+      </p>
+<!-- Gurmeet's Endorsement & Direct Touchpoints -->
+<div class="flex flex-col gap-3 pt-2">
+<button class="w-full bg-estate-gold hover:bg-paper-white hover:text-midnight-navy text-paper-white font-label-md text-label-md py-3.5 px-4 rounded transition-all duration-200 flex items-center justify-center gap-2 shadow-md" id="cta-connect-btn">
+<span class="material-symbols-outlined text-[20px]">send</span>
+<span>Connect with Gurmeet</span>
+</button>
+<div class="grid grid-cols-2 gap-2 mt-1">
+<a class="flex items-center justify-center gap-2 py-2.5 px-3 rounded bg-paper-white/10 text-paper-white hover:bg-paper-white/20 transition-colors font-label-md text-caption" href="tel:+13105550198">
+<span class="material-symbols-outlined text-[16px] text-estate-gold">call</span>
+<span>(310) 555-0198</span>
+</a>
+<a class="flex items-center justify-center gap-2 py-2.5 px-3 rounded bg-paper-white/10 text-paper-white hover:bg-paper-white/20 transition-colors font-label-md text-caption" href="mailto:gurmeet@homesbygurmeet.com">
+<span class="material-symbols-outlined text-[16px] text-estate-gold">mail</span>
+<span>Direct Email</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+</div>
+<script>
+  (function () {
+    const selectorBtn = document.getElementById('pill-selector-btn');
+    if (selectorBtn) {
+      selectorBtn.addEventListener('click', function () {
+        const enclaves = [
+          'Beverly Hills 90210 • Q3 2024',
+          'Bel-Air 90077 • Q3 2024',
+          'Brentwood 90049 • Q3 2024',
+          'Hollywood Hills 90069 • Q3 2024'
+        ];
+        const currentText = this.querySelector('span:nth-child(2)').innerText;
+        const nextIndex = (enclaves.indexOf(currentText) + 1) % enclaves.length;
+        this.querySelector('span:nth-child(2)').innerText = enclaves[nextIndex !== -1 ? nextIndex : 0];
+      });
+    }
+
+    const ctaBtn = document.getElementById('cta-connect-btn');
+    if (ctaBtn) {
+      ctaBtn.addEventListener('click', function () {
+        const originalText = this.innerHTML;
+        this.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">sync</span><span>Preparing Dossier Access...</span>';
+        setTimeout(() => {
+          this.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span><span>Request Dispatched to Gurmeet</span>';
+          this.classList.add('bg-success-emerald', 'text-paper-white');
+        }, 800);
+      });
+    }
+  })();
+</script></main>
+<!-- Footer -->
+<footer class="bg-midnight-navy w-full flat no shadows opacity-90 hover:opacity-100 transition-opacity">
+<div class="flex flex-col px-margin-mobile py-8 max-w-container-max mx-auto gap-8">
+<div class="flex flex-col gap-4">
+<div class="font-headline-md text-headline-md text-paper-white">HomesByGurmeet</div>
+<div class="flex flex-col gap-2">
+<a class="font-body-md text-body-md text-paper-white/80 hover:text-paper-white transition-colors" href="#">Facebook</a>
+<a class="font-body-md text-body-md text-paper-white/80 hover:text-paper-white transition-colors" href="#">Instagram</a>
+<a class="font-body-md text-body-md text-paper-white/80 hover:text-paper-white transition-colors" href="#">LinkedIn</a>
+<a class="font-body-md text-body-md text-paper-white/80 hover:text-paper-white transition-colors" href="#">Google Reviews</a>
+<a class="font-body-md text-body-md text-paper-white/80 hover:text-paper-white transition-colors" href="#">Zillow Profile</a>
+<a class="font-body-md text-body-md text-paper-white/80 hover:text-paper-white transition-colors" href="#">Redfin Partner</a>
+</div>
+</div>
+<div class="font-body-md text-body-md text-paper-white/60 text-sm border-t border-paper-white/10 pt-4">
+                © 2024 HomesByGurmeet. All rights reserved.
+            </div>
+</div>
+</footer>
+<!-- Mobile Sticky CTA Bottom Bar (Schedule Showing intent context) -->
+<div class="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-paper-white border-t border-charcoal-slate/15 p-4 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] z-50 flex gap-3">
+<button class="flex-1 bg-paper-white border border-charcoal-slate/15 text-midnight-navy font-label-md text-label-md py-3 rounded text-center hover:bg-surface-container-low transition-colors">
+            Contact
+        </button>
+<button class="flex-1 bg-midnight-navy text-paper-white font-label-md text-label-md py-3 rounded text-center hover:bg-estate-gold transition-colors">
+            Schedule Showing
+        </button>
+</div>
+</body></html>

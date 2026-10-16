@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildYearChartData, groupTopCities } from '../lib/market-insights.mjs';
+import { buildPrimaryMetrics, buildYearChartData, groupTopCities } from '../lib/market-insights.mjs';
 
 test('builds yearly bar and average-price line points in chronological order', () => {
   const chart = buildYearChartData([
@@ -31,4 +31,17 @@ test('keeps the eight largest cities and aggregates remaining cities as Others',
 test('does not add Others when there are eight or fewer cities', () => {
   const grouped = groupTopCities([{ city: 'Fremont', count: 4 }, { city: 'Hayward', count: 2 }]);
   assert.deepEqual(grouped, [{ city: 'Fremont', count: 4 }, { city: 'Hayward', count: 2 }]);
+});
+
+test('builds the four portfolio KPI values and safely defaults unavailable data', () => {
+  assert.deepEqual(
+    buildPrimaryMetrics({
+      medianSalePrice: 1200000,
+      averageSalePrice: 1450000,
+      averagePricePerSqft: 825,
+      totalSalesVolume: 72500000,
+    }),
+    { medianSalePrice: 1200000, averageSalePrice: 1450000, averagePricePerSqft: 825, totalSalesVolume: 72500000 },
+  );
+  assert.deepEqual(buildPrimaryMetrics(), { medianSalePrice: 0, averageSalePrice: 0, averagePricePerSqft: 0, totalSalesVolume: 0 });
 });

@@ -4,8 +4,8 @@ import { serverApiUrl } from '../../lib/api';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
-  title: 'Market Insights',
-  description: 'A market overview based on homes sold with Gurmeet.',
+  title: 'Market & Portfolio Insights',
+  description: 'Portfolio insights based on homes sold with Gurmeet.',
 };
 
 async function getInsights() {
@@ -21,10 +21,7 @@ export default async function MarketInsightsPage() {
   const data = await getInsights();
   return <>
     <Header />
-    <main>
-      <section className="page-hero"><div className="container"><p className="eyebrow">Sold market overview</p><h1>Market Insights</h1><p>Explore the patterns behind homes sold with Gurmeet, from pricing and size to the communities represented in this portfolio.</p></div></section>
-      <section className="container section"><MarketInsights data={data} /></section>
-    </main>
+    <MarketInsights data={data} />
     <Footer />
   </>;
 }
