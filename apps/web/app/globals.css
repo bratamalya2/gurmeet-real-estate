@@ -2784,12 +2784,12 @@ footer {
   border: 1px solid #edf0f4;
   border-radius: 6px;
   background: #f8fafc;
-  color: #506079;
-  font-size: 11px;
+  color: #30476f;
+  font-size: 13px;
 }
-.market-buyer-city-legend span { display: flex; min-width: 0; gap: 6px; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.market-buyer-city-legend span { display: flex; min-width: 0; gap: 7px; align-items: center; overflow: visible; color: #30476f; font-weight: 700; line-height: 1.25; word-break: break-word; }
 .market-buyer-city-legend i { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; }
-.market-buyer-city-legend strong { flex: 0 0 auto; color: #263d6b; font-size: 11px; }
+.market-buyer-city-legend strong { flex: 0 0 auto; color: #263d6b; font-size: 12px; }
 .market-buyer-city-legend small { color: #8792a2; font-size: 9px; font-weight: 500; }
 .market-empty-note { margin: 20px 0 0; color: #78859a; font-size: 13px; line-height: 1.55; }
 .market-recent-panel { padding-bottom: 9px; }

@@ -89,8 +89,8 @@ function BuyerCityDonut({ cities }) {
           <text x="100" y="114" textAnchor="middle" className="market-buyer-city-donut-label">homes bought</text>
         </svg>
       </div>
-      <div className="market-buyer-city-legend">
-        {segments.map(segment => <div key={segment.city}><span><i style={{ background: segment.color }} />{segment.city}</span><strong>{segment.count} <small>{Math.round(segment.count / total * 100)}%</small></strong></div>)}
+      <div className="market-buyer-city-legend" aria-label="Bought homes by city legend">
+        {segments.map(segment => <div key={segment.city}><span title={segment.city}><i style={{ background: segment.color }} />{segment.city}</span><strong>{segment.count} <small>{Math.round(segment.count / total * 100)}%</small></strong></div>)}
       </div>
     </div>
     <ChartTable caption="Bought homes by city" headers={['City', 'Homes bought', 'Share']} rows={segments.map(segment => [segment.city, segment.count, Math.round(segment.count / total * 100) + '%'])} />
