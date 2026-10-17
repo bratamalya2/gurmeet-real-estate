@@ -220,11 +220,15 @@ export default function MarketInsights({ data }) {
         <MetricCard icon={FiDollarSign} tone="teal" label="Total sales volume" value={money(metrics.totalSalesVolume)} detail={count(scope.pricedHomes) + ' recorded sale prices'} />
         <MetricCard icon={FiMaximize2} tone="gold" label="Average home size" value={squareFeet(data.averageSqft)} detail="Homes with square footage" />
       </section>
-      <section className="market-dashboard-grid">
+      <section className="market-dashboard-grid market-dashboard-primary-grid">
         <ClosedHomesMap cities={data.byCity || []} points={data.mapPoints || []} />
         <YearTrend items={data.byYear || []} />
         <Snapshot data={data} scope={scope} mapPointCount={mapPoints.length} approximateMapPointCount={approximateMapPointCount} />
+      </section>
+      <section className="market-buyer-city-section">
         <BuyerCityDonut cities={data.byBuyerCity || []} />
+      </section>
+      <section className="market-dashboard-grid market-dashboard-detail-grid">
         <BarPanel eyebrow="Price distribution" title="Sales by price band" copy="Recorded sale prices in the completed portfolio." items={data.priceBands || []} labelKey="label" valueKey="count" valueLabel={value => number(value) + ' homes'} tone="green" />
         <section className="market-panel market-profile-panel">
           <PanelTitle eyebrow="Property profile" title="Portfolio home characteristics" />

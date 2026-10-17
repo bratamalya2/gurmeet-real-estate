@@ -3607,3 +3607,69 @@ a {
   .market-table,
   .insight-table { min-width: 470px; }
 }
+
+/* Buyer-city chart: keep it in its own landscape section so the legend has room. */
+.market-buyer-city-section {
+  min-width: 0;
+  padding-top: 2px;
+}
+.market-buyer-city-section .market-buyer-city-panel {
+  grid-column: auto;
+  width: 100%;
+  min-height: 360px;
+}
+.market-buyer-city-section .market-buyer-city-chart {
+  grid-template-columns: minmax(230px, .6fr) minmax(0, 1.4fr);
+  gap: 34px;
+  min-height: 245px;
+}
+.market-buyer-city-section .market-buyer-city-donut {
+  width: min(255px, 100%);
+}
+.market-buyer-city-section .market-buyer-city-legend {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-content: center;
+  gap: 10px;
+}
+.market-buyer-city-section .market-buyer-city-legend > div {
+  min-height: 52px;
+}
+.market-buyer-city-legend span {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+@media (max-width: 900px) {
+  .market-buyer-city-section .market-buyer-city-chart {
+    grid-template-columns: minmax(190px, .75fr) minmax(0, 1.25fr);
+    gap: 22px;
+  }
+  .market-buyer-city-section .market-buyer-city-legend {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .market-buyer-city-section .market-buyer-city-panel {
+    min-height: 0;
+  }
+  .market-buyer-city-section .market-buyer-city-chart {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .market-buyer-city-section .market-buyer-city-donut-wrap {
+    min-height: 210px;
+  }
+  .market-buyer-city-section .market-buyer-city-legend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .market-buyer-city-section .market-buyer-city-legend {
+    grid-template-columns: 1fr;
+  }
+}
