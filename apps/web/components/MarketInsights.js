@@ -31,7 +31,7 @@ function MetricCard({ icon: Icon, tone, label, value, detail }) {
     <span className={'market-metric-icon ' + tone} aria-hidden="true"><Icon /></span>
     <div>
       <span className="market-metric-label">{label}</span>
-      <strong>{value}</strong>
+      <strong className={String(value).length > 11 ? 'market-metric-value-long' : ''}>{value}</strong>
       <small>{detail}</small>
     </div>
   </article>;

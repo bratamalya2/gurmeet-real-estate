@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
-import { FiMaximize2, FiSearch } from 'react-icons/fi';
-import { buildMappableCities } from '../lib/market-insights.mjs';
+import { FiMaximize2 } from 'react-icons/fi';
+import { buildMappableCities, groupTopCities } from '../lib/market-insights.mjs';
 
 const money = value => value ? '$' + Math.round(value).toLocaleString('en-US') : 'Not recorded';
 const number = value => Number.isFinite(Number(value)) ? Number(value).toLocaleString('en-US', { maximumFractionDigits: 1 }) : '—';
@@ -20,7 +20,7 @@ function popupContent(city) {
   const heading = document.createElement('h3');
   heading.textContent = city.city;
   const facts = document.createElement('dl');
-  [['Homes sold', `${number(city.count)} homes`], ['Average price', money(city.averageSalePrice)], ['Map location', city.approximate ? 'Approximate city center' : 'Stored property coordinates'], ['Mapped records', number(city.coordinateCount)]].forEach(([term, value]) => {
+  [['Homes sold', `${number(city.count)} homes`], ['Average price', money(city.averageSalePrice)], ['Map location', 'City location'], ['Mapped records', number(city.coordinateCount)]].forEach(([term, value]) => {
     const row = document.createElement('div');
     const dt = document.createElement('dt');
     const dd = document.createElement('dd');
@@ -33,19 +33,66 @@ function popupContent(city) {
   return wrapper;
 }
 
+const donutColors = ['#2d74d1', '#34a566', '#c59b27', '#7b7de8', '#e27d45', '#4aa9b8', '#8a6db5', '#6d879e', '#b7a36b'];
+
+function CityDonut({ items, onSelect, activeKey }) {
+  const total = items.reduce((sum, item) => sum + (Number(item.count) || 0), 0);
+  if (!total) return <p className="market-empty-note">No city records are available.</p>;
+  const radius = 68;
+  const circumference = 2 * Math.PI * radius;
+  let cumulative = 0;
+  const segments = items.map((item, index) => {
+    const count = Number(item.count) || 0;
+    const length = count / total * circumference;
+    const segment = { ...item, color: donutColors[index % donutColors.length], length, offset: cumulative };
+    cumulative += length;
+    return segment;
+  });
+
+  return <div className="closed-homes-city-chart">
+    <div className="closed-homes-donut-wrap">
+      <svg className="closed-homes-donut" viewBox="0 0 200 200" role="img" aria-labelledby="closed-homes-donut-title closed-homes-donut-description">
+        <title id="closed-homes-donut-title">Sold homes by city</title>
+        <desc id="closed-homes-donut-description">A donut chart showing the distribution of sold homes across the eight leading cities and an Others group.</desc>
+        <circle cx="100" cy="100" r={radius} fill="none" stroke="#edf1f5" strokeWidth="28" />
+        {segments.map(segment => <circle key={segment.city} cx="100" cy="100" r={radius} fill="none" stroke={segment.color} strokeWidth="28" strokeDasharray={`${segment.length} ${circumference - segment.length}`} strokeDashoffset={-segment.offset} transform="rotate(-90 100 100)" />)}
+        <text x="100" y="96" textAnchor="middle" className="closed-homes-donut-total">{total}</text>
+        <text x="100" y="114" textAnchor="middle" className="closed-homes-donut-label">homes sold</text>
+      </svg>
+    </div>
+    <div className="closed-homes-donut-legend">
+      {segments.map(segment => {
+        const key = String(segment.city).toLocaleLowerCase();
+        const mapped = segment.coordinateCount || segment.approximate;
+        return <button key={segment.city} type="button" className={activeKey === key ? 'active' : ''} onClick={() => onSelect(segment)} disabled={!mapped}>
+          <span><i style={{ background: segment.color }} />{segment.city}</span>
+          <strong>{segment.count} <small>{Math.round(segment.count / total * 100)}%</small></strong>
+        </button>;
+      })}
+    </div>
+    <details className="market-chart-data closed-homes-city-data">
+      <summary>View city data</summary>
+      <div className="market-table-scroll">
+        <table className="market-table">
+          <caption className="sr-only">Sold homes by city</caption>
+          <thead><tr><th scope="col">City</th><th scope="col">Homes sold</th><th scope="col">Share</th></tr></thead>
+          <tbody>{segments.map(segment => <tr key={`table-${segment.city}`}><td>{segment.city}</td><td>{segment.count}</td><td>{Math.round(segment.count / total * 100)}%</td></tr>)}</tbody>
+        </table>
+      </div>
+    </details>
+  </div>;
+}
+
 export default function ClosedHomesMap({ cities = [], points = [] }) {
   const elementRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef(new Map());
   const boundsRef = useRef(null);
-  const [search, setSearch] = useState('');
   const [activeKey, setActiveKey] = useState('');
-  const cityHubs = useMemo(() => buildMappableCities(cities, points), [cities, points]);
+  const cityItems = useMemo(() => groupTopCities(cities), [cities]);
+  const visibleCities = useMemo(() => cityItems.filter(city => city.city !== 'Others'), [cityItems]);
+  const cityHubs = useMemo(() => buildMappableCities(visibleCities, points), [visibleCities, points]);
   const mappedCities = useMemo(() => cityHubs.filter(city => city.coordinateCount), [cityHubs]);
-  const filteredCities = useMemo(() => {
-    const query = search.trim().toLocaleLowerCase();
-    return query ? cityHubs.filter(city => cityKey(city).includes(query)) : cityHubs;
-  }, [cityHubs, search]);
 
   useEffect(() => {
     if (!elementRef.current || mapRef.current) return undefined;
@@ -73,7 +120,7 @@ export default function ClosedHomesMap({ cities = [], points = [] }) {
           fillOpacity: .96,
           className: 'closed-homes-marker',
         }).addTo(map).bindPopup(popupContent(city), { closeButton: true, maxWidth: 240 });
-        marker.bindTooltip(`${city.city}: ${number(city.count)} homes${city.approximate ? ' · approximate center' : ''}`, {
+        marker.bindTooltip(`${city.city}: ${number(city.count)} homes`, {
           direction: 'top',
           offset: [0, -radius],
           permanent: true,
@@ -95,7 +142,7 @@ export default function ClosedHomesMap({ cities = [], points = [] }) {
   }, [mappedCities]);
 
   function selectCity(city) {
-    if (!city.coordinateCount) return;
+    if (!city.coordinateCount && !city.approximate) return;
     const key = cityKey(city);
     const marker = markersRef.current.get(key);
     if (!marker || !mapRef.current) return;
@@ -128,37 +175,19 @@ export default function ClosedHomesMap({ cities = [], points = [] }) {
       </div>
     </div>
     <div className="closed-homes-map-shell">
-      <section className="closed-homes-city-list" aria-label="City representation list">
-        <div className="closed-homes-map-controls">
-          <label>
-            <span className="sr-only">Filter cities</span>
-            <FiSearch aria-hidden="true" />
-            <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Filter by city name…" />
-          </label>
-          <button type="button" onClick={resetMap} aria-label="Reset map view" title="Reset map view"><FiMaximize2 aria-hidden="true" /></button>
-        </div>
-        <div className="closed-homes-list-labels"><span>Rank &amp; city</span><span>Volume</span></div>
-        <ol>
-          {filteredCities.map((city, index) => {
-            const key = cityKey(city);
-            const active = key === activeKey;
-            const maximum = Math.max(...cityHubs.map(item => Number(item.count) || 0), 1);
-            const percentage = (Number(city.count) || 0) / maximum * 100;
-            return <li key={key}>
-              <button type="button" onClick={() => selectCity(city)} disabled={!city.coordinateCount} className={active ? 'active' : ''}>
-                <span className="closed-homes-city-row"><i>{String(index + 1).padStart(2, '0')}</i><strong>{city.city}</strong>{city.approximate && <em>Approx. center</em>}{!city.coordinateCount && !city.approximate && <em>Not mapped</em>}</span>
-                <span className="closed-homes-city-volume">{number(city.count)} <small>homes</small></span>
-                <span className="closed-homes-city-bar"><b style={{ width: `${percentage}%` }} /></span>
-              </button>
-            </li>;
-          })}
-          {!filteredCities.length && <li className="closed-homes-no-results">No cities match “{search}”.</li>}
-        </ol>
-        <p className="closed-homes-map-footnote">Markers use stored property coordinates when available. Approximate city-center markers are labeled and are for orientation only.</p>
-      </section>
       <section className="closed-homes-leaflet-wrap" aria-label="Interactive map of sold portfolio city hubs">
+        <button className="closed-homes-map-reset" type="button" onClick={resetMap} aria-label="Reset map view" title="Reset map view"><FiMaximize2 aria-hidden="true" /></button>
         <div ref={elementRef} className="closed-homes-leaflet" />
         <div className="closed-homes-map-legend"><b>Representation</b><span><i /> City hub</span><small>Marker size reflects homes sold</small></div>
+      </section>
+      <section className="closed-homes-city-list closed-homes-donut-panel" aria-label="Sold homes by city chart">
+        <div>
+          <p className="closed-homes-donut-eyebrow">City distribution</p>
+          <h3>Sold homes by city</h3>
+          <span>Top eight cities, with remaining cities grouped as Others.</span>
+        </div>
+        <CityDonut items={cityItems.map(item => cityHubs.find(city => cityKey(city) === cityKey(item)) || item)} onSelect={selectCity} activeKey={activeKey} />
+        <p className="closed-homes-map-footnote">Markers use stored property coordinates when available. City-center locations are for portfolio orientation only.</p>
       </section>
     </div>
   </section>;
