@@ -28,6 +28,7 @@ export const soldFeaturedPropertyFilter = {
 };
 
 export const featuredPropertySort = { price: -1, updatedAt: -1, _id: 1 };
+export const FEATURED_PROPERTY_LIMIT = 9;
 
 export function highestValueProperties(properties = [], { statuses = ['Active', 'Pending'] } = {}) {
   const sorted = [...properties]
@@ -45,7 +46,7 @@ export function highestValueProperties(properties = [], { statuses = ['Active', 
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
-  }).slice(0, 10);
+  }).slice(0, FEATURED_PROPERTY_LIMIT);
 }
 
 export function selectFeaturedProperties(activePending = [], sold = []) {

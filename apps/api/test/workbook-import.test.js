@@ -208,7 +208,7 @@ test('rejects a workbook uploaded through the wrong source control', () => {
   assert.doesNotThrow(() => validateExpectedWorkbookSource('workbook', 'workbook'));
 });
 
-test('keeps the ten highest-priced unique active and pending listings for homepage features', () => {
+test('keeps the nine highest-priced unique active and pending listings for homepage features', () => {
   const properties = [
     { _id: 'sold', status: 'Sold', price: 9000000, updatedAt: '2026-10-04' },
     { _id: 'unpriced', status: 'Active', updatedAt: '2026-10-04' },
@@ -218,7 +218,7 @@ test('keeps the ten highest-priced unique active and pending listings for homepa
       _id: String(index), status: index % 2 ? 'Pending' : 'Active', price, address: { normalized: `address-${index}` }, updatedAt: `2026-10-${String(index + 1).padStart(2, '0')}`,
     })),
   ];
-  assert.deepEqual(highestValueProperties(properties).map(property => property.price), [800, 700, 600, 500, 400, 300, 200, 100, 50, 25]);
+  assert.deepEqual(highestValueProperties(properties).map(property => property.price), [800, 700, 600, 500, 400, 300, 200, 100, 50]);
   assert.equal(highestValueProperties(properties).filter(property => property.address?.normalized === 'sameaddress').length, 1);
 });
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { highestValueProperties, selectFeaturedProperties } from '../src/services/featured-properties.js';
+import { FEATURED_PROPERTY_LIMIT, highestValueProperties, selectFeaturedProperties } from '../src/services/featured-properties.js';
 
 const property = (id, status, price, normalized, updatedAt = '2026-10-01') => ({
   _id: id,
@@ -56,7 +56,7 @@ test('returns no results when neither active/pending nor sold records have price
   assert.deepEqual(result, []);
 });
 
-test('limits featured results to ten properties', () => {
+test('limits featured results to nine properties', () => {
   const result = highestValueProperties(Array.from({ length: 12 }, (_, index) => property(String(index), 'Sold', 1000000 - index, `address-${index}`)), { statuses: ['Sold'] });
-  assert.equal(result.length, 10);
+  assert.equal(result.length, FEATURED_PROPERTY_LIMIT);
 });
