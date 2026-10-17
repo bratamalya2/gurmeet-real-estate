@@ -73,7 +73,12 @@ export default function ClosedHomesMap({ cities = [], points = [] }) {
           fillOpacity: .96,
           className: 'closed-homes-marker',
         }).addTo(map).bindPopup(popupContent(city), { closeButton: true, maxWidth: 240 });
-        marker.bindTooltip(`${city.city}: ${number(city.count)} homes`, { direction: 'top', offset: [0, -radius], className: 'closed-homes-tooltip' });
+        marker.bindTooltip(`${city.city}: ${number(city.count)} homes`, {
+          direction: 'top',
+          offset: [0, -radius],
+          permanent: true,
+          className: 'closed-homes-tooltip closed-homes-city-label',
+        });
         marker.on('click', () => setActiveKey(key));
         markersRef.current.set(key, marker);
         bounds.push([city.latitude, city.longitude]);

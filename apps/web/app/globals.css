@@ -3051,6 +3051,8 @@ footer {
   font-weight: 700;
 }
 .closed-homes-tooltip::before { border-top-color: #fffdf7; }
+.closed-homes-city-label { pointer-events: none; white-space: nowrap; }
+.closed-homes-city-label::before { display: none; }
 .closed-homes-popup { min-width: 190px; padding: 14px; color: #26344d; font-family: "Hanken Grotesk", sans-serif; }
 .closed-homes-popup > span { display: block; color: #b0841e; font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .closed-homes-popup h3 { margin: 4px 0 10px; color: #1c2d52; font-size: 20px; }
