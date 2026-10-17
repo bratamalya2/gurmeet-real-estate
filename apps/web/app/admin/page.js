@@ -250,7 +250,7 @@ export default function Admin() {
   async function importSoldPortfolio(event) {
     event.preventDefault();
     const file = soldPortfolioRef.current?.files?.[0];
-    if (!file) return setNotice("Choose the Sold_Properties_Portfolio_Formatted.xlsx workbook first.");
+    if (!file) return setNotice("Choose the real_estate_transactions_data.xlsx workbook first.");
     setImportingSoldPortfolio(true);
     setSoldPortfolioResult(null);
     setNotice("Validating and adding sold portfolio data…");
@@ -655,12 +655,12 @@ export default function Admin() {
                     <form className="fields workbook-imports" onSubmit={importSoldPortfolio}>
                       <label>
                         Additional sold portfolio workbook (.xlsx)
-                        <small className="muted">Expected format: Sold_Properties_Portfolio_Formatted.xlsx</small>
+                        <small className="muted">Expected format: real_estate_transactions_data.xlsx (Sales Transactions sheet)</small>
                         <input ref={soldPortfolioRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={syncBusy} />
                       </label>
                       <button className="btn" disabled={syncBusy}>{importingSoldPortfolio ? "Adding sold portfolio data…" : "Add sold portfolio data"}</button>
                     </form>
-                    <p className="muted">Incomplete address rows, summary rows, and benchmark rows are skipped and reported. Relative sale dates are stored as estimates.</p>
+                    <p className="muted">Incomplete address rows and summary rows are skipped and reported. Recorded sale dates are imported exactly; relative sale dates are stored as estimates.</p>
                     {soldPortfolioResult && (soldPortfolioResult.ok ? (
                       <dl className="drive-import-result notice" aria-live="polite">
                         <div><dt>Source rows</dt><dd>{soldPortfolioResult.sourceRows ?? 0}</dd></div>

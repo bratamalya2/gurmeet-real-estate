@@ -422,11 +422,11 @@ paths:
       tags: [Staff administration]
       summary: Add sold portfolio records without deleting listings
       description: |
-        Upload Sold_Properties_Portfolio_Formatted.xlsx. The workbook is validated and
+        Upload real_estate_transactions_data.xlsx with a Sales Transactions sheet. The workbook is validated and
         applied transactionally. Matching properties are enriched by normalized address,
         new addresses create sold records, and existing properties are never removed.
-        Summary, blank, and incomplete rows are skipped and reported. Relative sale dates
-        are stored as estimates based on the import date.
+        Summary, blank, and incomplete rows are skipped and reported. Recorded sale dates
+        are imported exactly; relative sale dates are stored as estimates based on the import date.
       security: [{ CookieAuth: [] }]
       requestBody:
         required: true
@@ -439,7 +439,7 @@ paths:
                 file:
                   type: string
                   format: binary
-                  description: Sold_Properties_Portfolio_Formatted.xlsx
+                  description: real_estate_transactions_data.xlsx
       responses:
         '200':
           description: Sold portfolio data added

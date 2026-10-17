@@ -49,7 +49,21 @@ test('parses the supplied 251-listing photo manifest', async () => {
   assert.equal(parsed.rows[0].transactionSide, 'Buyer');
 });
 
-test('parses the additive sold portfolio workbook and ignores non-property rows', async () => {
+test('parses the current additive sales transaction workbook and imports exact sale dates', async () => {
+  const parsed = parseWorkbook(await readWorkbook('real_estate_transactions_data.xlsx'), 'real-estate-transactions.xlsx', { importedAt: new Date('2026-10-17T00:00:00.000Z') });
+  assert.equal(parsed.source, 'sold-portfolio');
+  assert.equal(parsed.rows.length, 68);
+  assert.equal(parsed.ignored, 2);
+  assert.equal(parsed.rows.filter(row => row.transaction.side === 'Buyer').length, 48);
+  assert.equal(parsed.rows.filter(row => row.transaction.side === 'Seller').length, 18);
+  assert.equal(parsed.rows.filter(row => row.transaction.side === 'Buyer & Seller').length, 2);
+  const somerset = parsed.rows.find(row => row.address.street === '3586 Somerset Ave');
+  assert.equal(somerset.transaction.soldDate.toISOString(), '2026-05-29T00:00:00.000Z');
+  assert.match(somerset.transaction.verification, /recorded/i);
+  assert.equal(somerset.transaction.notes, '2026-05-29');
+});
+
+test('keeps the legacy additive sold portfolio workbook compatible', async () => {
   const parsed = parseWorkbook(await readWorkbook('Sold_Properties_Portfolio_Formatted.xlsx'), 'sold-portfolio.xlsx', { importedAt: new Date('2026-10-17T00:00:00.000Z') });
   assert.equal(parsed.source, 'sold-portfolio');
   assert.equal(parsed.rows.length, 33);
@@ -64,7 +78,7 @@ test('parses the additive sold portfolio workbook and ignores non-property rows'
 });
 
 test('additive sold portfolio plans preserve matching property fields and never remove records', async () => {
-  const parsed = parseWorkbook(await readWorkbook('Sold_Properties_Portfolio_Formatted.xlsx'), 'sold-portfolio.xlsx', { importedAt: new Date('2026-10-17T00:00:00.000Z') });
+  const parsed = parseWorkbook(await readWorkbook('real_estate_transactions_data.xlsx'), 'real-estate-transactions.xlsx', { importedAt: new Date('2026-10-17T00:00:00.000Z') });
   const existing = [{
     _id: 'matched-id',
     slug: 'existing-somerset',
@@ -81,9 +95,9 @@ test('additive sold portfolio plans preserve matching property fields and never 
   const plan = buildSoldPortfolioAdditivePlan(parsed.rows, existing, new Date('2026-10-17T00:00:00.000Z'));
   const matched = plan.listings.find(item => item.match?._id === 'matched-id');
   assert.equal(plan.updated, 1);
-  assert.equal(plan.created, 32);
+  assert.equal(plan.created, 67);
   assert.equal(plan.removed, 0);
-  assert.equal(plan.totalListings, 33);
+  assert.equal(plan.totalListings, 68);
   assert.equal(matched.payload.price, 949000);
   assert.equal(matched.payload.title, '3586 Somerset Ave, Castro Valley');
   assert.deepEqual(matched.payload.images, ['/uploads/manual.jpg']);
@@ -91,6 +105,7 @@ test('additive sold portfolio plans preserve matching property fields and never 
   assert.equal(matched.payload.description, 'Manual description');
   assert.equal(matched.payload.status, 'Sold');
   assert.equal(matched.payload.transaction.side, 'Buyer');
+  assert.equal(matched.payload.transaction.soldDate.toISOString(), '2026-05-29T00:00:00.000Z');
   assert.equal(matched.payload.source.name, 'redfin');
   assert.deepEqual(matched.payload.source.providers.sort(), ['redfin', 'workbook']);
   assert.equal(plan.listings.find(item => !item.match).payload.images[0], PROPERTY_PLACEHOLDER_IMAGE);

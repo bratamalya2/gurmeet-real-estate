@@ -12,6 +12,7 @@ const LEGACY_REDFIN_HEADERS = ['ID', 'Status', 'Address', 'City', 'State', 'ZIP'
 const ZILLOW_ALL_PROPERTIES_HEADERS = ['Status', 'Full property address', 'Price', 'Date', 'Beds', 'Baths', 'Sq Ft', 'Gurmeet’s side', 'Confidence'];
 const PHOTO_MANIFEST_HEADERS = ['Property name', 'Address', 'Google Drive image link', 'Status', 'Page(s)', 'Property page', 'Photo source', 'Verification notes'];
 const SOLD_PORTFOLIO_HEADERS = ['Transaction Type', 'Sold Price ($)', 'Beds', 'Baths', 'Living Area (Sq Ft)', 'Property Address', 'Sale Timeline'];
+const SOLD_PORTFOLIO_SHEET_NAMES = ['Sales Transactions', 'Sold Properties'];
 
 export class WorkbookImportError extends Error {
   constructor(message) {
@@ -411,7 +412,7 @@ function soldPortfolioSide(value) {
   const side = text(value).toLowerCase().replace(/\s+/g, ' ');
   if (side === 'buyer') return 'Buyer';
   if (side === 'seller') return 'Seller';
-  if (side === 'buyer / seller' || side === 'buyer and seller' || side === 'buyer & seller') return 'Buyer & Seller';
+  if (side === 'both' || side === 'buyer / seller' || side === 'buyer and seller' || side === 'buyer & seller') return 'Buyer & Seller';
   return undefined;
 }
 
@@ -426,8 +427,9 @@ function estimatedRelativeSoldDate(value, importedAt) {
 }
 
 function parseSoldPortfolio(workbook, importedAt = new Date()) {
-  const sheet = workbook.Sheets['Sold Properties'];
-  if (!sheet) throw new WorkbookImportError('The sold portfolio workbook must include a Sold Properties sheet.');
+  const sheetName = SOLD_PORTFOLIO_SHEET_NAMES.find(name => workbook.SheetNames.includes(name));
+  const sheet = sheetName && workbook.Sheets[sheetName];
+  if (!sheet) throw new WorkbookImportError('The sold portfolio workbook must include a Sales Transactions sheet.');
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
   const headerRowIndex = findHeaderRow(rows, SOLD_PORTFOLIO_HEADERS);
   if (headerRowIndex < 0) throw new WorkbookImportError('The sold portfolio workbook is missing required columns.');
@@ -448,8 +450,13 @@ function parseSoldPortfolio(workbook, importedAt = new Date()) {
       continue;
     }
     const timeline = text(row[indices['Sale Timeline']]);
-    const soldDate = estimatedRelativeSoldDate(timeline, importedAt);
-    const verification = soldDate ? `Sold date estimated from the workbook timeline: ${timeline}.` : timeline ? `Workbook sale timeline: ${timeline}.` : 'Sold portfolio workbook.';
+    const exactSoldDate = dateValue(row[indices['Sale Timeline']]);
+    const soldDate = exactSoldDate || estimatedRelativeSoldDate(timeline, importedAt);
+    const verification = exactSoldDate
+      ? `Sold date recorded in the workbook: ${timeline}.`
+      : soldDate
+        ? `Sold date estimated from the workbook timeline: ${timeline}.`
+        : timeline ? `Workbook sale timeline: ${timeline}.` : 'Sold portfolio workbook.';
     const record = makeRecord({
       source: 'workbook',
       address,
@@ -475,7 +482,7 @@ function parseSoldPortfolio(workbook, importedAt = new Date()) {
 }
 
 export function detectWorkbookSource(workbook) {
-  if (workbook.SheetNames.includes('Sold Properties')) return 'sold-portfolio';
+  if (SOLD_PORTFOLIO_SHEET_NAMES.some(name => workbook.SheetNames.includes(name))) return 'sold-portfolio';
   if (workbook.SheetNames.includes('Portfolio — all listings')) return 'workbook';
   if (workbook.SheetNames.includes('Profile and activity') || workbook.SheetNames.includes('All Properties')) return 'zillow';
   if (workbook.SheetNames.includes('Current Redfin') || workbook.SheetNames.includes('Earlier workbook rows') || workbook.SheetNames.includes('Transactions')) return 'redfin';

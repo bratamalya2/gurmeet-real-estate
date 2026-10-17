@@ -274,7 +274,7 @@ app.post('/api/admin/listings/import', auth(['admin']), workbookUpload.single('f
   }
 });
 app.post('/api/admin/listings/sold-portfolio-import', auth(['admin']), workbookUpload.single('file'), async (req, res, next) => {
-  if (!req.file) return res.status(422).json({ error: 'Choose the Sold_Properties_Portfolio_Formatted.xlsx workbook.' });
+  if (!req.file) return res.status(422).json({ error: 'Choose the real_estate_transactions_data.xlsx workbook.' });
   const log = await SystemLog.create({ source: 'workbook:sold-portfolio', status: 'running', startedAt: new Date(), filename: req.file.originalname });
   let session;
   try {
