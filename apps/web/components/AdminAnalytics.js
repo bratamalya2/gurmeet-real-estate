@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { publicApiUrl } from '../lib/api';
+import { buildDoughnutSegments, doughnutSegmentGeometry } from '../lib/analytics-charts.mjs';
 
 const emptyData = {
   overview: {},
@@ -45,6 +46,12 @@ function formatDate(value) {
   return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function formatCategoryLabel(value) {
+  return String(value || 'Unknown')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, character => character.toUpperCase());
+}
+
 function StatCard({ label, value, detail }) {
   return <div className="analytics-stat"><span>{label}</span><strong>{value}</strong>{detail && <small>{detail}</small>}</div>;
 }
@@ -71,6 +78,62 @@ function LeadTrend({ data }) {
 function DataTable({ headers, rows, empty = 'No data yet.' }) {
   if (!rows.length) return <p className="muted analytics-empty">{empty}</p>;
   return <table className="admin-table analytics-table"><thead><tr>{headers.map(header => <th key={header}>{header}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={row.key || index}>{row.cells.map((cell, cellIndex) => <td key={cellIndex}>{cell}</td>)}</tr>)}</tbody></table>;
+}
+
+function DoughnutChart({ title, items }) {
+  const chart = buildDoughnutSegments(items);
+  const circumference = 2 * Math.PI * 42;
+  const chartId = `analytics-doughnut-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+
+  if (!items.length || chart.empty) return <p className="muted analytics-empty">No data yet.</p>;
+
+  return <div className="analytics-doughnut-content">
+    <div className="analytics-doughnut-visual">
+      <svg className="analytics-doughnut" viewBox="0 0 128 128" role="img" aria-labelledby={chartId}>
+        <title id={chartId}>{title} distribution</title>
+        <circle className="analytics-doughnut-track" cx="64" cy="64" r="42" />
+        {chart.segments.filter(segment => segment.count > 0).map(segment => {
+          const geometry = doughnutSegmentGeometry(segment, circumference);
+          return <circle
+            className="analytics-doughnut-segment"
+            key={segment.label}
+            cx="64"
+            cy="64"
+            r="42"
+            stroke={segment.color}
+            strokeDasharray={geometry.dashArray}
+            strokeDashoffset={geometry.dashOffset}
+            transform="rotate(-90 64 64)"
+          />;
+        })}
+        <text className="analytics-doughnut-total" x="64" y="61" textAnchor="middle">{formatNumber(chart.total)}</text>
+        <text className="analytics-doughnut-total-label" x="64" y="76" textAnchor="middle">TOTAL</text>
+      </svg>
+      <ul className="analytics-doughnut-legend" aria-label={`${title} legend`}>
+        {chart.segments.map(segment => <li key={segment.label}>
+          <span className="analytics-doughnut-key" style={{ backgroundColor: segment.color }} />
+          <span className="analytics-doughnut-label">{segment.label}</span>
+          <strong>{formatNumber(segment.count)}</strong>
+          <small>{segment.percentage.toFixed(1)}%</small>
+        </li>)}
+      </ul>
+    </div>
+    <details className="analytics-doughnut-data">
+      <summary>View data table</summary>
+      <table className="analytics-table">
+        <caption className="sr-only">{title} distribution data</caption>
+        <thead><tr><th>Category</th><th>Count</th><th>Share</th></tr></thead>
+        <tbody>{chart.segments.map(segment => <tr key={segment.label}><td>{segment.label}</td><td>{formatNumber(segment.count)}</td><td>{segment.percentage.toFixed(1)}%</td></tr>)}</tbody>
+      </table>
+    </details>
+  </div>;
+}
+
+function DoughnutPanel({ title, items }) {
+  return <section className="admin-panel analytics-panel analytics-doughnut-panel" aria-labelledby={`analytics-panel-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
+    <h3 id={`analytics-panel-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>{title}</h3>
+    <DoughnutChart title={title} items={items} />
+  </section>;
 }
 
 export default function AdminAnalytics() {
@@ -116,6 +179,15 @@ export default function AdminAnalytics() {
     {error && <p className="error">{error}</p>}
     {loading ? <div className="empty">Loading analytics…</div> : <>
       <div className="analytics-kpis"><StatCard label="Page views" value={formatNumber(overview.pageViews)} /><StatCard label="Listing views" value={formatNumber(overview.listingViews)} /><StatCard label="Leads" value={formatNumber(overview.leads)} /><StatCard label="Total listings" value={formatNumber(overview.totalListings)} /><StatCard label="Active listings" value={formatNumber(overview.activeListings)} /><StatCard label="Avg. active price" value={formatCurrency(overview.activeAveragePrice)} /></div>
+      <section className="analytics-distributions" aria-labelledby="analytics-distributions-title">
+        <div className="analytics-distributions-heading"><div><p className="eyebrow">Portfolio mix</p><h2 id="analytics-distributions-title">Portfolio distributions</h2></div><p>See how your listings, leads, sources, and imagery are distributed.</p></div>
+        <div className="analytics-donut-grid">
+          <DoughnutPanel title="Listing status" items={(data.inventory?.byStatus || []).map(item => ({ label: item.status, count: item.count }))} />
+          <DoughnutPanel title="Lead type" items={(data.leads?.byType || []).map(item => ({ label: formatCategoryLabel(item.type), count: item.count }))} />
+          <DoughnutPanel title="Source coverage" items={(data.inventory?.sourceCoverage || []).map(item => ({ label: formatCategoryLabel(item.label), count: item.count }))} />
+          <DoughnutPanel title="Image coverage" items={[{ label: 'With images', count: data.inventory?.imageCoverage?.withImages || 0 }, { label: 'Without images', count: data.inventory?.imageCoverage?.withoutImages || 0 }]} />
+        </div>
+      </section>
       <div className="analytics-grid two"><Panel title="Traffic trend"><TrendChart data={data.traffic?.trend || []} firstKey="pageViews" secondKey="listingViews" firstLabel="Page views" secondLabel="Listing views" /></Panel><Panel title="Lead trend"><LeadTrend data={data.leads?.trend || []} /></Panel></div>
       <div className="analytics-grid three"><Panel title="Lead types"><BarList items={(data.leads?.byType || []).map(item => ({ label: item.type, count: item.count }))} /></Panel><Panel title="Listing status"><BarList items={(data.inventory?.byStatus || []).map(item => ({ label: item.status, count: item.count }))} /></Panel><Panel title="Price range"><div className="analytics-price-list"><span>Average active price <b>{formatCurrency(price.average)}</b></span><span>Lowest active price <b>{formatCurrency(price.minimum)}</b></span><span>Highest active price <b>{formatCurrency(price.maximum)}</b></span></div></Panel></div>
       <div className="analytics-grid two"><Panel title="Listings by city"><BarList items={data.inventory?.byCity || []} /></Panel><Panel title="Source coverage"><BarList items={data.inventory?.sourceCoverage || []} /></Panel></div>
