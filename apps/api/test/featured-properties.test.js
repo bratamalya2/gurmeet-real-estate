@@ -10,13 +10,13 @@ const property = (id, status, price, normalized, updatedAt = '2026-10-01') => ({
   address: { normalized },
 });
 
-test('prefers priced active and pending properties over sold properties', () => {
+test('keeps priced active and pending properties first, then fills remaining featured slots with sold properties', () => {
   const result = selectFeaturedProperties([
     property('active', 'Active', 500000, 'active-address'),
   ], [
     property('sold', 'Sold', 900000, 'sold-address'),
   ]);
-  assert.deepEqual(result.map(item => item._id), ['active']);
+  assert.deepEqual(result.map(item => item._id), ['active', 'sold']);
 });
 
 test('falls back to the highest-priced sold properties when no active or pending listings exist', () => {
@@ -35,6 +35,16 @@ test('deduplicates addresses and keeps the highest-priced duplicate', () => {
     property('other', 'Active', 600000, 'other-address'),
   ]);
   assert.deepEqual(result.map(item => item._id), ['higher', 'other']);
+});
+
+test('does not use a sold fallback record when its address is already represented by an active or pending listing', () => {
+  const result = selectFeaturedProperties([
+    property('active', 'Active', 500000, 'same-address'),
+  ], [
+    property('sold-duplicate', 'Sold', 900000, 'same-address'),
+    property('sold-other', 'Sold', 400000, 'other-address'),
+  ]);
+  assert.deepEqual(result.map(item => item._id), ['active', 'sold-other']);
 });
 
 test('keeps equal-price ordering deterministic by updated date and id', () => {

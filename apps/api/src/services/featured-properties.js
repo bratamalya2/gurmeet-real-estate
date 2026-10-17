@@ -51,7 +51,16 @@ export function highestValueProperties(properties = [], { statuses = ['Active', 
 
 export function selectFeaturedProperties(activePending = [], sold = []) {
   const available = highestValueProperties(activePending, { statuses: ['Active', 'Pending'] });
-  return available.length
-    ? available
-    : highestValueProperties(sold, { statuses: ['Sold'] });
+  if (available.length >= FEATURED_PROPERTY_LIMIT) return available;
+
+  const seen = new Set(available.map(featuredAddressKey));
+  const soldFallback = highestValueProperties(sold, { statuses: ['Sold'] })
+    .filter(property => {
+      const key = featuredAddressKey(property);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+  return [...available, ...soldFallback].slice(0, FEATURED_PROPERTY_LIMIT);
 }

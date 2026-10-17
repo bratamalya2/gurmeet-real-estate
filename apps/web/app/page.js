@@ -38,7 +38,7 @@ export default function Home() {
               <p className="eyebrow">Curated collection</p>
               <h2 style={{ fontSize: 42 }}>Featured Residences</h2>
             </div>
-            <Link className="btn alt" href="/homes-for-sale">
+            <Link className="btn alt" href="/recently-sold">
               View all homes
             </Link>
           </div>

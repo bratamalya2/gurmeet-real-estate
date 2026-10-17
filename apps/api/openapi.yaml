@@ -58,7 +58,7 @@ paths:
   /properties/featured:
     get:
       tags: [Properties]
-      summary: List up to nine highest-priced properties
+      summary: List up to nine prioritized, highest-priced featured properties
       security: []
       responses:
         '200':
