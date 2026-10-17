@@ -3,9 +3,14 @@
 import { useState } from 'react';
 
 const recipient = process.env.NEXT_PUBLIC_FORMSUBMIT_EMAIL || process.env.NEXT_PUBLIC_AGENT_EMAIL || 'gurmeetrealtor@gmail.com';
+const formCopy = {
+  contact: { subject: 'New direct contact message from Homes By Gurmeet', button: 'Send message' },
+  valuation: { subject: 'New home valuation request from Homes By Gurmeet', button: 'Request valuation' },
+};
 
-export default function DirectContactForm() {
+export default function DirectContactForm({ type = 'contact' }) {
   const [status, setStatus] = useState('');
+  const copy = formCopy[type] || formCopy.contact;
 
   async function submit(event) {
     event.preventDefault();
@@ -30,18 +35,30 @@ export default function DirectContactForm() {
 
   return (
     <form className="fields" onSubmit={submit}>
-      <input type="hidden" name="_subject" value="New direct contact message from Homes By Gurmeet" />
+      <input type="hidden" name="_subject" value={copy.subject} />
       <input type="hidden" name="_template" value="table" />
+      <input type="hidden" name="formType" value={type} />
       <input type="text" name="_honey" tabIndex="-1" autoComplete="off" style={{ display: 'none' }} />
       <input required name="name" placeholder="Full name" />
       <input required name="email" type="email" placeholder="Email address" />
       <input required name="phone" placeholder="Phone number" />
-      <textarea required name="message" placeholder="How can Gurmeet help?" />
+      {type === 'valuation' && <>
+        <input required name="propertyAddress" placeholder="Property address" />
+        <input name="squareFootage" type="number" min="1" placeholder="Approximate square feet" />
+        <select name="condition" defaultValue="">
+          <option value="">Property condition (optional)</option>
+          <option>Excellent</option>
+          <option>Good</option>
+          <option>Fair</option>
+          <option>Needs updates</option>
+        </select>
+      </>}
+      <textarea name="message" placeholder={type === 'valuation' ? 'Anything else Gurmeet should know?' : 'How can Gurmeet help?'} />
       {status === 'success' ? (
         <p className="notice">Thank you. Gurmeet will be in touch shortly.</p>
       ) : (
         <button className="btn" disabled={status === 'loading'}>
-          {status === 'loading' ? 'Sending…' : 'Send message'}
+          {status === 'loading' ? 'Sending…' : copy.button}
         </button>
       )}
       {status && !['success', 'loading'].includes(status) && <p className="error">{status}</p>}

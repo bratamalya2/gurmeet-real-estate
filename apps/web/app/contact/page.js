@@ -196,7 +196,7 @@ export default function Contact() {
             </div>
 
             <div style={{ marginTop: 28 }}>
-              <Link className="btn alt" href="/home-valuation" style={{ width: "100%", justifyContent: "center" }}>
+              <Link className="btn alt contact-valuation-cta" href="/home-valuation">
                 Request a Complimentary Home Valuation
               </Link>
             </div>
