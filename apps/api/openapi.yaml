@@ -417,6 +417,50 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /admin/listings/sold-portfolio-import:
+    post:
+      tags: [Staff administration]
+      summary: Add sold portfolio records without deleting listings
+      description: |
+        Upload Sold_Properties_Portfolio_Formatted.xlsx. The workbook is validated and
+        applied transactionally. Matching properties are enriched by normalized address,
+        new addresses create sold records, and existing properties are never removed.
+        Summary, blank, and incomplete rows are skipped and reported. Relative sale dates
+        are stored as estimates based on the import date.
+      security: [{ CookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Sold_Properties_Portfolio_Formatted.xlsx
+      responses:
+        '200':
+          description: Sold portfolio data added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  source: { type: string, example: sold-portfolio }
+                  filename: { type: string }
+                  sourceRows: { type: integer, example: 33 }
+                  totalListings: { type: integer }
+                  created: { type: integer }
+                  updated: { type: integer }
+                  removed: { type: integer, example: 0 }
+                  ignored: { type: integer }
+                  ignoredRows: { type: array, items: { type: object } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /admin/listings/drive-images-import:
     post:
       tags: [Staff administration]

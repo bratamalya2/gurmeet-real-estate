@@ -6,11 +6,12 @@ import { PROPERTY_PLACEHOLDER_IMAGE } from '../constants/property-assets.js';
 
 export { PROPERTY_PLACEHOLDER_IMAGE };
 
-const SOURCE_NAMES = new Set(['redfin', 'zillow', 'workbook']);
+const SOURCE_NAMES = new Set(['redfin', 'zillow', 'workbook', 'sold-portfolio']);
 const REDFIN_TABLE_HEADERS = ['Role', 'Address', 'City', 'State', 'ZIP'];
 const LEGACY_REDFIN_HEADERS = ['ID', 'Status', 'Address', 'City', 'State', 'ZIP', 'Price'];
 const ZILLOW_ALL_PROPERTIES_HEADERS = ['Status', 'Full property address', 'Price', 'Date', 'Beds', 'Baths', 'Sq Ft', 'Gurmeet’s side', 'Confidence'];
 const PHOTO_MANIFEST_HEADERS = ['Property name', 'Address', 'Google Drive image link', 'Status', 'Page(s)', 'Property page', 'Photo source', 'Verification notes'];
+const SOLD_PORTFOLIO_HEADERS = ['Transaction Type', 'Sold Price ($)', 'Beds', 'Baths', 'Living Area (Sq Ft)', 'Property Address', 'Sale Timeline'];
 
 export class WorkbookImportError extends Error {
   constructor(message) {
@@ -406,14 +407,82 @@ function parseZillow(workbook) {
   return records.filter(Boolean);
 }
 
+function soldPortfolioSide(value) {
+  const side = text(value).toLowerCase().replace(/\s+/g, ' ');
+  if (side === 'buyer') return 'Buyer';
+  if (side === 'seller') return 'Seller';
+  if (side === 'buyer / seller' || side === 'buyer and seller' || side === 'buyer & seller') return 'Buyer & Seller';
+  return undefined;
+}
+
+function estimatedRelativeSoldDate(value, importedAt) {
+  const match = text(value).match(/^sold\s+(\d+)\s+(month|year)s?\s+ago$/i);
+  if (!match || !(importedAt instanceof Date) || Number.isNaN(importedAt.valueOf())) return undefined;
+  const estimated = new Date(Date.UTC(importedAt.getUTCFullYear(), importedAt.getUTCMonth(), importedAt.getUTCDate()));
+  const amount = Number(match[1]);
+  if (match[2].toLowerCase() === 'month') estimated.setUTCMonth(estimated.getUTCMonth() - amount);
+  else estimated.setUTCFullYear(estimated.getUTCFullYear() - amount);
+  return estimated;
+}
+
+function parseSoldPortfolio(workbook, importedAt = new Date()) {
+  const sheet = workbook.Sheets['Sold Properties'];
+  if (!sheet) throw new WorkbookImportError('The sold portfolio workbook must include a Sold Properties sheet.');
+  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
+  const headerRowIndex = findHeaderRow(rows, SOLD_PORTFOLIO_HEADERS);
+  if (headerRowIndex < 0) throw new WorkbookImportError('The sold portfolio workbook is missing required columns.');
+  const indices = headerIndex(rows[headerRowIndex]);
+  const records = [];
+  const ignoredRows = [];
+  for (const [offset, row] of rowsAfterHeader(rows, headerRowIndex).entries()) {
+    const rowNumber = headerRowIndex + offset + 2;
+    if (!row.some(value => text(value))) continue;
+    const side = soldPortfolioSide(row[indices['Transaction Type']]);
+    if (!side) {
+      ignoredRows.push({ row: rowNumber, reason: 'Not a supported property transaction row.' });
+      continue;
+    }
+    const address = fullAddress(row[indices['Property Address']]);
+    if (!address) {
+      ignoredRows.push({ row: rowNumber, reason: 'Property address is incomplete or invalid.' });
+      continue;
+    }
+    const timeline = text(row[indices['Sale Timeline']]);
+    const soldDate = estimatedRelativeSoldDate(timeline, importedAt);
+    const verification = soldDate ? `Sold date estimated from the workbook timeline: ${timeline}.` : timeline ? `Workbook sale timeline: ${timeline}.` : 'Sold portfolio workbook.';
+    const record = makeRecord({
+      source: 'workbook',
+      address,
+      price: numeric(row[indices['Sold Price ($)']]),
+      status: 'Sold',
+      beds: numeric(row[indices.Beds]),
+      baths: numeric(row[indices.Baths]),
+      sqft: numeric(row[indices['Living Area (Sq Ft)']]),
+      soldDate,
+      side,
+      verification,
+      notes: timeline,
+      externalId: `sold-portfolio-${normalizeAddress(address)}`,
+    });
+    if (!record) {
+      ignoredRows.push({ row: rowNumber, reason: 'Property address could not be normalized.' });
+      continue;
+    }
+    records.push(record);
+  }
+  if (!records.length) throw new WorkbookImportError('The sold portfolio workbook contains no valid property rows.');
+  return { rows: records, ignoredRows };
+}
+
 export function detectWorkbookSource(workbook) {
+  if (workbook.SheetNames.includes('Sold Properties')) return 'sold-portfolio';
   if (workbook.SheetNames.includes('Portfolio — all listings')) return 'workbook';
   if (workbook.SheetNames.includes('Profile and activity') || workbook.SheetNames.includes('All Properties')) return 'zillow';
   if (workbook.SheetNames.includes('Current Redfin') || workbook.SheetNames.includes('Earlier workbook rows') || workbook.SheetNames.includes('Transactions')) return 'redfin';
   throw new WorkbookImportError('Unsupported workbook. Upload the Homes By Gurmeet portfolio workbook with a Portfolio — all listings sheet.');
 }
 
-export function parseWorkbook(buffer, filename = 'uploaded.xlsx') {
+export function parseWorkbook(buffer, filename = 'uploaded.xlsx', options = {}) {
   if (!Buffer.isBuffer(buffer) || !buffer.length) throw new WorkbookImportError('The uploaded workbook is empty.');
   let workbook;
   try {
@@ -422,7 +491,14 @@ export function parseWorkbook(buffer, filename = 'uploaded.xlsx') {
     throw new WorkbookImportError('The uploaded file is not a readable .xlsx workbook.');
   }
   const source = detectWorkbookSource(workbook);
-  const rows = source === 'redfin' ? parseRedfin(workbook) : source === 'zillow' ? parseZillow(workbook) : parsePhotoManifest(workbook);
+  const parsed = source === 'redfin'
+    ? { rows: parseRedfin(workbook), ignoredRows: [] }
+    : source === 'zillow'
+      ? { rows: parseZillow(workbook), ignoredRows: [] }
+      : source === 'sold-portfolio'
+        ? parseSoldPortfolio(workbook, options.importedAt || new Date())
+        : { rows: parsePhotoManifest(workbook), ignoredRows: [] };
+  const rows = parsed.rows;
   if (!rows.length) throw new WorkbookImportError('The workbook contains no valid listing addresses.');
   const occurrences = new Map();
   const identifiedRows = rows.map(row => {
@@ -439,6 +515,8 @@ export function parseWorkbook(buffer, filename = 'uploaded.xlsx') {
     filename,
     checksum: crypto.createHash('sha256').update(buffer).digest('hex'),
     rows: identifiedRows,
+    ignored: parsed.ignoredRows.length,
+    ignoredRows: parsed.ignoredRows,
   };
 }
 
@@ -449,6 +527,8 @@ export function snapshotForDocument(parsed) {
     checksum: parsed.checksum,
     rowCount: parsed.rows.length,
     rows: parsed.rows,
+    ignored: parsed.ignored || 0,
+    ignoredRows: parsed.ignoredRows || [],
     uploadedAt: new Date(),
   };
 }
@@ -653,6 +733,158 @@ export async function rebuildManifestProperties(rows = [], { session } = {}) {
   if (plan.removeIds.length) await Property.deleteMany({ _id: { $in: plan.removeIds } }, { session });
   if (operations.length) await Property.bulkWrite(operations, { ordered: true, session });
   return { created: plan.created, updated: plan.updated, removed: plan.removeIds.length, ignored: plan.ignored, totalListings: plan.totalListings };
+}
+
+function soldPortfolioCompleteness(row = {}) {
+  return [
+    row.title,
+    row.address?.street,
+    row.address?.city,
+    row.address?.state,
+    row.address?.zip,
+    row.price,
+    row.beds,
+    row.baths,
+    row.sqft,
+    row.transaction?.soldDate,
+    row.transaction?.side,
+    row.transaction?.verification,
+  ].filter(hasValue).length;
+}
+
+function mergeSoldPortfolioRows(group = []) {
+  const ordered = group
+    .map((row, index) => ({ row, index }))
+    .sort((left, right) => soldPortfolioCompleteness(right.row) - soldPortfolioCompleteness(left.row) || left.index - right.index)
+    .map(item => item.row);
+  const winner = ordered[0];
+  const merged = { ...winner, address: { ...(winner.address || {}) }, transaction: { ...(winner.transaction || {}) } };
+  for (const field of ['title', 'price', 'beds', 'baths', 'sqft', 'description']) {
+    if (!hasValue(merged[field])) {
+      const fallback = ordered.find(row => hasValue(row[field]));
+      if (fallback) merged[field] = fallback[field];
+    }
+  }
+  for (const field of ['street', 'city', 'state', 'zip', 'normalized']) {
+    if (!hasValue(merged.address[field])) {
+      const fallback = ordered.find(row => hasValue(row.address?.[field]));
+      if (fallback) merged.address[field] = fallback.address[field];
+    }
+  }
+  const side = mergedTransactionSide(ordered.map(row => ({ transactionSide: row.transaction?.side })));
+  const verification = uniqueValues(ordered.map(row => row.transaction?.verification)).join(' ');
+  const notes = uniqueValues(ordered.map(row => row.transaction?.notes)).join(' ');
+  merged.transaction = {
+    ...merged.transaction,
+    soldDate: ordered.find(row => hasValue(row.transaction?.soldDate))?.transaction?.soldDate,
+    side,
+    verification: verification || merged.transaction.verification,
+    notes: notes || merged.transaction.notes,
+  };
+  merged.description = [`Transaction side: ${side}.`, merged.transaction.verification, merged.transaction.notes].filter(Boolean).join(' ');
+  return merged;
+}
+
+export function deduplicateSoldPortfolioRows(rows = []) {
+  const groups = new Map();
+  for (const row of rows) {
+    const key = row.address?.normalized || streetCityKey(row.address) || row.source?.externalId;
+    const group = groups.get(key) || [];
+    group.push(row);
+    groups.set(key, group);
+  }
+  const deduplicated = [...groups.values()].map(mergeSoldPortfolioRows);
+  return { rows: deduplicated, ignored: rows.length - deduplicated.length };
+}
+
+function additivePropertyMatch(row, existing = [], matchedIds = new Set()) {
+  return existing.find(property => !matchedIds.has(String(property._id)) && sameManifestAddress(property.address, row.address)) || null;
+}
+
+export function buildSoldPortfolioAdditivePlan(rows = [], existing = [], importedAt = new Date()) {
+  const deduplicated = deduplicateSoldPortfolioRows(rows);
+  const matchedIds = new Set();
+  const usedSlugs = new Set(existing.map(property => property.slug).filter(Boolean));
+  const listings = [];
+  let created = 0;
+  let updated = 0;
+
+  for (const row of deduplicated.rows) {
+    const match = additivePropertyMatch(row, existing, matchedIds);
+    const baseSlug = match?.slug || slugify(`sold-${row.address.street}-${row.address.city}-${row.address.state}-${row.address.zip}`, { lower: true, strict: true }) || `sold-property-${created + updated + 1}`;
+    let slug = baseSlug;
+    let suffix = 2;
+    while (!match && usedSlugs.has(slug)) slug = `${baseSlug}-${suffix++}`;
+    usedSlugs.add(slug);
+    const existingAddress = match?.address || {};
+    const existingSource = match?.source || {};
+    const existingTransaction = match?.transaction || {};
+    const images = match?.images?.length ? match.images : [PROPERTY_PLACEHOLDER_IMAGE];
+    const transaction = cleanValue({
+      ...existingTransaction,
+      soldDate: row.transaction?.soldDate || existingTransaction.soldDate,
+      side: row.transaction?.side || existingTransaction.side,
+      verification: row.transaction?.verification || existingTransaction.verification,
+      notes: row.transaction?.notes || existingTransaction.notes,
+    });
+    const payload = cleanValue({
+      title: row.title || match?.title || `${row.address.street}, ${row.address.city}`,
+      slug,
+      address: {
+        street: row.address.street || existingAddress.street,
+        city: row.address.city || existingAddress.city,
+        state: row.address.state || existingAddress.state,
+        zip: row.address.zip || existingAddress.zip,
+        normalized: row.address.normalized || existingAddress.normalized,
+      },
+      price: row.price ?? match?.price,
+      beds: row.beds ?? match?.beds,
+      baths: row.baths ?? match?.baths,
+      sqft: row.sqft ?? match?.sqft,
+      description: match?.description || row.description,
+      status: 'Sold',
+      featured: match?.featured ?? false,
+      images,
+      photoManifest: match?.photoManifest,
+      coordinates: match?.coordinates,
+      coordinatesSource: match?.coordinatesSource,
+      source: {
+        ...existingSource,
+        name: existingSource.name || 'workbook',
+        externalId: row.source?.externalId,
+        lastSyncedAt: importedAt,
+        providers: uniqueValues([...(existingSource.providers || []), existingSource.name, 'workbook']),
+      },
+      manualOverrides: match?.manualOverrides || { price: false, description: false, images: false },
+      transaction,
+      createdBy: match?.createdBy,
+    });
+    if (match) {
+      matchedIds.add(String(match._id));
+      updated++;
+    } else {
+      created++;
+    }
+    listings.push({ match, payload });
+  }
+  return {
+    listings,
+    created,
+    updated,
+    removed: 0,
+    ignored: deduplicated.ignored,
+    totalListings: existing.length + created,
+  };
+}
+
+export async function addSoldPortfolioProperties(rows = [], { session, importedAt = new Date() } = {}) {
+  const existing = await Property.find().session(session || null).lean();
+  const plan = buildSoldPortfolioAdditivePlan(rows, existing, importedAt);
+  const operations = plan.listings.map(({ match, payload }) => match
+    ? { updateOne: { filter: { _id: match._id }, update: { $set: payload } } }
+    : { insertOne: { document: payload } });
+  if (operations.length) await Property.bulkWrite(operations, { ordered: true, session });
+  return plan;
 }
 
 function cleanValue(value) {

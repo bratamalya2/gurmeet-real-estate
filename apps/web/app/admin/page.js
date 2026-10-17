@@ -36,6 +36,7 @@ export default function Admin() {
   const router = useRouter();
   const uploadRef = useRef();
   const workbookRef = useRef();
+  const soldPortfolioRef = useRef();
   const driveFolderRef = useRef();
   const [tab, setTab] = useState("dashboard");
   const [data, setData] = useState({
@@ -51,7 +52,9 @@ export default function Admin() {
   const [uploadConnectResult, setUploadConnectResult] = useState(null);
   const [deduplicateResult, setDeduplicateResult] = useState(null);
   const [approximateCoordinatesResult, setApproximateCoordinatesResult] = useState(null);
+  const [soldPortfolioResult, setSoldPortfolioResult] = useState(null);
   const [importingWorkbook, setImportingWorkbook] = useState(false);
+  const [importingSoldPortfolio, setImportingSoldPortfolio] = useState(false);
   const [importingDriveImages, setImportingDriveImages] = useState(false);
   const [connectingUploadImages, setConnectingUploadImages] = useState(false);
   const [deduplicatingProperties, setDeduplicatingProperties] = useState(false);
@@ -244,6 +247,30 @@ export default function Admin() {
       setImportingWorkbook(false);
     }
   }
+  async function importSoldPortfolio(event) {
+    event.preventDefault();
+    const file = soldPortfolioRef.current?.files?.[0];
+    if (!file) return setNotice("Choose the Sold_Properties_Portfolio_Formatted.xlsx workbook first.");
+    setImportingSoldPortfolio(true);
+    setSoldPortfolioResult(null);
+    setNotice("Validating and adding sold portfolio data…");
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const response = await request("admin/listings/sold-portfolio-import", { method: "POST", body });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Sold portfolio import failed.");
+      if (soldPortfolioRef.current) soldPortfolioRef.current.value = "";
+      setSoldPortfolioResult({ ...result, ok: true });
+      setNotice(`Sold portfolio data added: ${result.created} created, ${result.updated} updated${result.ignored ? `, ${result.ignored} ignored` : ""}.`);
+      await load();
+    } catch (error) {
+      setSoldPortfolioResult({ ok: false, error: error.message || "Sold portfolio import failed." });
+      setNotice(error.message || "Sold portfolio import failed.");
+    } finally {
+      setImportingSoldPortfolio(false);
+    }
+  }
   async function importDriveImages(event) {
     event.preventDefault();
     const folderUrl = driveFolderRef.current?.value?.trim();
@@ -327,7 +354,7 @@ export default function Admin() {
   }
 
   const propertyName = property.title || property.street || 'this property';
-  const syncBusy = importingWorkbook || importingDriveImages || connectingUploadImages || deduplicatingProperties || syncingApproximateCoordinates;
+  const syncBusy = importingWorkbook || importingSoldPortfolio || importingDriveImages || connectingUploadImages || deduplicatingProperties || syncingApproximateCoordinates;
   if (!data.user) return null;
   return (
     <div className="admin">
@@ -622,6 +649,31 @@ export default function Admin() {
                     <button className="btn" disabled={syncBusy}>{importingWorkbook ? "Importing portfolio workbook…" : "Replace listing dataset"}</button>
                   </form>
                   <p className="warning">Warning: this import is destructive. It replaces the complete public listing dataset, removes properties absent from the workbook, and sets imported properties to Sold. Invalid workbooks are rejected before any data changes.</p>
+                  <div className="drive-import-panel">
+                    <h3>Additional sold portfolio workbook (.xlsx)</h3>
+                    <p className="muted">This workbook adds or enriches sold properties only. It never removes existing listings. Matching addresses preserve their property IDs, images, coordinates, descriptions, and manual fields.</p>
+                    <form className="fields workbook-imports" onSubmit={importSoldPortfolio}>
+                      <label>
+                        Additional sold portfolio workbook (.xlsx)
+                        <small className="muted">Expected format: Sold_Properties_Portfolio_Formatted.xlsx</small>
+                        <input ref={soldPortfolioRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={syncBusy} />
+                      </label>
+                      <button className="btn" disabled={syncBusy}>{importingSoldPortfolio ? "Adding sold portfolio data…" : "Add sold portfolio data"}</button>
+                    </form>
+                    <p className="muted">Incomplete address rows, summary rows, and benchmark rows are skipped and reported. Relative sale dates are stored as estimates.</p>
+                    {soldPortfolioResult && (soldPortfolioResult.ok ? (
+                      <dl className="drive-import-result notice" aria-live="polite">
+                        <div><dt>Source rows</dt><dd>{soldPortfolioResult.sourceRows ?? 0}</dd></div>
+                        <div><dt>Total listings</dt><dd>{soldPortfolioResult.totalListings ?? 0}</dd></div>
+                        <div><dt>Created</dt><dd>{soldPortfolioResult.created ?? 0}</dd></div>
+                        <div><dt>Updated</dt><dd>{soldPortfolioResult.updated ?? 0}</dd></div>
+                        <div><dt>Ignored</dt><dd>{soldPortfolioResult.ignored ?? 0}</dd></div>
+                        {soldPortfolioResult.ignoredRows?.length > 0 && <div><dt>Ignored details</dt><dd>{soldPortfolioResult.ignoredRows.map((item) => `Row ${item.row}: ${item.reason}`).join("; ")}</dd></div>}
+                      </dl>
+                    ) : (
+                      <p className="error" role="alert">{soldPortfolioResult.error}</p>
+                    ))}
+                  </div>
                   <div className="drive-import-panel">
                     <h3>Download folder images</h3>
                     <p className="muted">Enter a publicly accessible Google Drive folder. Image filenames should contain the property slug or normalized address. Only matched properties are updated; existing manually uploaded images are preserved.</p>

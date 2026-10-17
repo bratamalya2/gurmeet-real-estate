@@ -18,7 +18,7 @@ import { User, Property, Lead, SystemLog, WorkbookImport, AnalyticsEvent } from 
 import { syncSource } from './services/scraper.js';
 import { scrapeAuthorizedUrl } from './services/decodo-scraper.js';
 import { sendLeadNotification } from './services/mail.js';
-import { WorkbookImportError, parseWorkbook, rebuildManifestProperties, snapshotForDocument } from './services/workbook-import.js';
+import { WorkbookImportError, addSoldPortfolioProperties, parseWorkbook, rebuildManifestProperties, snapshotForDocument } from './services/workbook-import.js';
 import { AnalyticsRangeError, getAnalytics } from './services/analytics.js';
 import { propertySideFilter, propertySourceFilter } from './services/property-filters.js';
 import { getMarketInsights } from './services/market-insights.js';
@@ -265,6 +265,30 @@ app.post('/api/admin/listings/import', auth(['admin']), workbookUpload.single('f
     });
     await SystemLog.findByIdAndUpdate(log.id, { status: 'success', completedAt: new Date(), created: result.created, updated: result.updated, removed: result.removed, sourceRows: parsed.rows.length, totalListings: result.totalListings });
     return res.json({ ok: true, source: 'workbook', filename: parsed.filename, sourceRows: parsed.rows.length, ...result });
+  } catch (error) {
+    await SystemLog.findByIdAndUpdate(log.id, { status: 'failed', completedAt: new Date(), error: String(error.message || error).slice(0, 1000) }).catch(() => {});
+    if (error instanceof WorkbookImportError) return res.status(error.statusCode).json({ error: error.message });
+    return next(error);
+  } finally {
+    await session?.endSession();
+  }
+});
+app.post('/api/admin/listings/sold-portfolio-import', auth(['admin']), workbookUpload.single('file'), async (req, res, next) => {
+  if (!req.file) return res.status(422).json({ error: 'Choose the Sold_Properties_Portfolio_Formatted.xlsx workbook.' });
+  const log = await SystemLog.create({ source: 'workbook:sold-portfolio', status: 'running', startedAt: new Date(), filename: req.file.originalname });
+  let session;
+  try {
+    const importedAt = new Date();
+    const parsed = parseWorkbook(req.file.buffer, req.file.originalname, { importedAt });
+    if (parsed.source !== 'sold-portfolio') throw new WorkbookImportError('This file is not the supported sold portfolio workbook.');
+    session = await mongoose.startSession();
+    let result;
+    await session.withTransaction(async () => {
+      await WorkbookImport.findOneAndUpdate({ source: 'sold-portfolio' }, snapshotForDocument(parsed), { upsert: true, new: true, setDefaultsOnInsert: true, session });
+      result = await addSoldPortfolioProperties(parsed.rows, { importedAt, session });
+    });
+    await SystemLog.findByIdAndUpdate(log.id, { status: 'success', completedAt: new Date(), created: result.created, updated: result.updated, removed: 0, sourceRows: parsed.rows.length, totalListings: result.totalListings });
+    return res.json({ ok: true, source: 'sold-portfolio', filename: parsed.filename, sourceRows: parsed.rows.length, ...result, ignored: parsed.ignored + result.ignored, ignoredRows: parsed.ignoredRows });
   } catch (error) {
     await SystemLog.findByIdAndUpdate(log.id, { status: 'failed', completedAt: new Date(), error: String(error.message || error).slice(0, 1000) }).catch(() => {});
     if (error instanceof WorkbookImportError) return res.status(error.statusCode).json({ error: error.message });

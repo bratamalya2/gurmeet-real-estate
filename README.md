@@ -22,6 +22,8 @@ The Admin dashboard **Sync** tab accepts `Homes By Gurmeet — Bought & Sold Pho
 
 For matching properties, the import preserves listing fields that are not present in the workbook, such as price, dimensions, coordinates, descriptions, and transaction dates. Unmatched rows are created as sold properties with empty unavailable fields. The workbook supplies the title, address, image, buyer/seller classification, verification metadata, and portfolio source information.
 
+The Admin dashboard **Sync** tab also accepts `Sold_Properties_Portfolio_Formatted.xlsx` through **Add sold portfolio data**. This is an additive, administrator-only import: it enriches matching sold properties by normalized address, creates new sold records for new addresses, and never removes existing listings. It parses Buyer, Seller, and Buyer / Seller rows, estimates relative sale dates from the import date, and reports skipped summary or incomplete rows. New records receive the standard property placeholder until images are connected.
+
 The Admin dashboard **Analytics** tab reports current inventory, pricing, lead activity, workbook freshness, and first-party page/listing views. Traffic events are anonymous, contain no query strings or personal data, and are retained for 24 months.
 
 ## Updating property images from Google Drive

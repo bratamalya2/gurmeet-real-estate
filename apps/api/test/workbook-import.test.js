@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import XLSX from 'xlsx';
-import { WorkbookImportError, PROPERTY_PLACEHOLDER_IMAGE, buildManifestPropertyPlan, deduplicateManifestRows, driveImageUrl, findManifestPropertyMatch, parseWorkbook, validateExpectedWorkbookSource } from '../src/services/workbook-import.js';
+import { WorkbookImportError, PROPERTY_PLACEHOLDER_IMAGE, buildManifestPropertyPlan, buildSoldPortfolioAdditivePlan, deduplicateManifestRows, deduplicateSoldPortfolioRows, driveImageUrl, findManifestPropertyMatch, parseWorkbook, validateExpectedWorkbookSource } from '../src/services/workbook-import.js';
 import { highestValueProperties } from '../src/services/featured-properties.js';
 
 const projectRoot = path.resolve(import.meta.dirname, '../../..');
@@ -47,6 +47,66 @@ test('parses the supplied 251-listing photo manifest', async () => {
   assert.equal(new Set(parsed.rows.map(row => row.imageUrl)).size, 189);
   assert.equal(parsed.rows[0].propertySource, 'zillow');
   assert.equal(parsed.rows[0].transactionSide, 'Buyer');
+});
+
+test('parses the additive sold portfolio workbook and ignores non-property rows', async () => {
+  const parsed = parseWorkbook(await readWorkbook('Sold_Properties_Portfolio_Formatted.xlsx'), 'sold-portfolio.xlsx', { importedAt: new Date('2026-10-17T00:00:00.000Z') });
+  assert.equal(parsed.source, 'sold-portfolio');
+  assert.equal(parsed.rows.length, 33);
+  assert.equal(parsed.ignored, 3);
+  assert.equal(parsed.rows.filter(row => row.transaction.side === 'Buyer').length, 24);
+  assert.equal(parsed.rows.filter(row => row.transaction.side === 'Seller').length, 8);
+  assert.equal(parsed.rows.filter(row => row.transaction.side === 'Buyer & Seller').length, 1);
+  assert.equal(parsed.rows.find(row => row.address.street === '3586 Somerset Ave').transaction.soldDate.toISOString(), '2026-05-17T00:00:00.000Z');
+  assert.match(parsed.rows.find(row => row.address.street === '3586 Somerset Ave').transaction.verification, /estimated/i);
+  assert.equal(parsed.rows.find(row => row.address.street === '39843 Cedar Blvd Unit 219').address.zip, '');
+  assert.equal(parsed.ignoredRows.some(item => /incomplete|invalid/i.test(item.reason)), true);
+});
+
+test('additive sold portfolio plans preserve matching property fields and never remove records', async () => {
+  const parsed = parseWorkbook(await readWorkbook('Sold_Properties_Portfolio_Formatted.xlsx'), 'sold-portfolio.xlsx', { importedAt: new Date('2026-10-17T00:00:00.000Z') });
+  const existing = [{
+    _id: 'matched-id',
+    slug: 'existing-somerset',
+    title: 'Existing Somerset',
+    address: { street: '3586 Somerset Ave', city: 'Castro Valley', state: 'CA', zip: '94546', normalized: '3586somersetavecastrovalleyca94546' },
+    price: 900000,
+    description: 'Manual description',
+    images: ['/uploads/manual.jpg'],
+    coordinates: { lat: 37.69, lng: -122.08 },
+    source: { name: 'redfin', providers: ['redfin'] },
+    transaction: { side: 'Seller' },
+    featured: true,
+  }];
+  const plan = buildSoldPortfolioAdditivePlan(parsed.rows, existing, new Date('2026-10-17T00:00:00.000Z'));
+  const matched = plan.listings.find(item => item.match?._id === 'matched-id');
+  assert.equal(plan.updated, 1);
+  assert.equal(plan.created, 32);
+  assert.equal(plan.removed, 0);
+  assert.equal(plan.totalListings, 33);
+  assert.equal(matched.payload.price, 949000);
+  assert.equal(matched.payload.title, '3586 Somerset Ave, Castro Valley');
+  assert.deepEqual(matched.payload.images, ['/uploads/manual.jpg']);
+  assert.deepEqual(matched.payload.coordinates, { lat: 37.69, lng: -122.08 });
+  assert.equal(matched.payload.description, 'Manual description');
+  assert.equal(matched.payload.status, 'Sold');
+  assert.equal(matched.payload.transaction.side, 'Buyer');
+  assert.equal(matched.payload.source.name, 'redfin');
+  assert.deepEqual(matched.payload.source.providers.sort(), ['redfin', 'workbook']);
+  assert.equal(plan.listings.find(item => !item.match).payload.images[0], PROPERTY_PLACEHOLDER_IMAGE);
+});
+
+test('merges duplicate additive rows and combines transaction sides', () => {
+  const result = deduplicateSoldPortfolioRows([
+    { address: { street: '1 Main St', city: 'Fremont', state: 'CA', zip: '94536', normalized: '1mainstfremontca94536' }, price: 700000, transaction: { side: 'Buyer', notes: 'Sold 2 years ago' }, source: { externalId: 'one' } },
+    { address: { street: '1 Main St', city: 'Fremont', state: 'CA', zip: '94536', normalized: '1mainstfremontca94536' }, beds: 3, transaction: { side: 'Seller', notes: 'Sold 2 years ago' }, source: { externalId: 'two' } },
+  ]);
+  assert.equal(result.ignored, 1);
+  assert.equal(result.rows.length, 1);
+  assert.equal(result.rows[0].transaction.side, 'Buyer & Seller');
+  assert.equal(result.rows[0].price, 700000);
+  assert.equal(result.rows[0].beds, 3);
+  assert.equal(result.rows[0].address.zip, '94536');
 });
 
 test('builds a manifest replacement plan with stable matching and preserved fields', () => {
@@ -167,6 +227,13 @@ test('rejects unsupported workbooks before any database work', () => {
   XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['Unknown']]), 'Unknown');
   const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
   assert.throws(() => parseWorkbook(buffer, 'unknown.xlsx'), WorkbookImportError);
+});
+
+test('rejects a Sold Properties workbook with missing required headers', () => {
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['Sold Properties'], ['Wrong header']]), 'Sold Properties');
+  const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+  assert.throws(() => parseWorkbook(buffer, 'sold-portfolio.xlsx'), WorkbookImportError);
 });
 
 test('rejects malformed photo manifests', () => {
