@@ -50,10 +50,12 @@ export default function Admin() {
   const [driveImportResult, setDriveImportResult] = useState(null);
   const [uploadConnectResult, setUploadConnectResult] = useState(null);
   const [deduplicateResult, setDeduplicateResult] = useState(null);
+  const [approximateCoordinatesResult, setApproximateCoordinatesResult] = useState(null);
   const [importingWorkbook, setImportingWorkbook] = useState(false);
   const [importingDriveImages, setImportingDriveImages] = useState(false);
   const [connectingUploadImages, setConnectingUploadImages] = useState(false);
   const [deduplicatingProperties, setDeduplicatingProperties] = useState(false);
+  const [syncingApproximateCoordinates, setSyncingApproximateCoordinates] = useState(false);
 
   async function load() {
     try {
@@ -303,8 +305,29 @@ export default function Admin() {
       setDeduplicatingProperties(false);
     }
   }
+  async function syncApproximateCoordinates(event) {
+    event.preventDefault();
+    if (!window.confirm("Assign approximate city-center coordinates to properties that do not have coordinates? Existing coordinates will not be changed.")) return;
+    setSyncingApproximateCoordinates(true);
+    setApproximateCoordinatesResult(null);
+    setNotice("Assigning approximate city-center coordinates…");
+    try {
+      const response = await request("admin/listings/coordinates-sync", { method: "POST" });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Coordinate sync failed.");
+      setApproximateCoordinatesResult({ ...result, ok: true });
+      setNotice(`Approximate coordinates assigned: ${result.updated} properties updated; ${result.skippedExisting} already had coordinates.`);
+      await load();
+    } catch (error) {
+      setApproximateCoordinatesResult({ ok: false, error: error.message || "Coordinate sync failed." });
+      setNotice(error.message || "Coordinate sync failed.");
+    } finally {
+      setSyncingApproximateCoordinates(false);
+    }
+  }
 
   const propertyName = property.title || property.street || 'this property';
+  const syncBusy = importingWorkbook || importingDriveImages || connectingUploadImages || deduplicatingProperties || syncingApproximateCoordinates;
   if (!data.user) return null;
   return (
     <div className="admin">
@@ -594,17 +617,17 @@ export default function Admin() {
                     <label>
                       Photo and portfolio workbook (.xlsx)
                       <small className="muted">Expected format: Homes By Gurmeet — Bought &amp; Sold Photos (251 listings).xlsx</small>
-                    <input ref={workbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={importingWorkbook || importingDriveImages || connectingUploadImages || deduplicatingProperties} />
+                    <input ref={workbookRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={syncBusy} />
                     </label>
-                    <button className="btn" disabled={importingWorkbook || importingDriveImages || connectingUploadImages || deduplicatingProperties}>{importingWorkbook ? "Importing portfolio workbook…" : "Replace listing dataset"}</button>
+                    <button className="btn" disabled={syncBusy}>{importingWorkbook ? "Importing portfolio workbook…" : "Replace listing dataset"}</button>
                   </form>
                   <p className="warning">Warning: this import is destructive. It replaces the complete public listing dataset, removes properties absent from the workbook, and sets imported properties to Sold. Invalid workbooks are rejected before any data changes.</p>
                   <div className="drive-import-panel">
                     <h3>Download folder images</h3>
                     <p className="muted">Enter a publicly accessible Google Drive folder. Image filenames should contain the property slug or normalized address. Only matched properties are updated; existing manually uploaded images are preserved.</p>
                     <form className="fields" onSubmit={importDriveImages}>
-                      <input ref={driveFolderRef} type="url" placeholder="https://drive.google.com/drive/folders/..." disabled={importingDriveImages || importingWorkbook || connectingUploadImages || deduplicatingProperties} aria-label="Google Drive folder URL" />
-                      <button className="btn" disabled={importingDriveImages || importingWorkbook || connectingUploadImages || deduplicatingProperties}>{importingDriveImages ? "Downloading folder images…" : "Download folder images"}</button>
+                      <input ref={driveFolderRef} type="url" placeholder="https://drive.google.com/drive/folders/..." disabled={syncBusy} aria-label="Google Drive folder URL" />
+                      <button className="btn" disabled={syncBusy}>{importingDriveImages ? "Downloading folder images…" : "Download folder images"}</button>
                     </form>
                     {driveImportResult && (driveImportResult.ok ? (
                       <dl className="drive-import-result notice" aria-live="polite">
@@ -623,7 +646,7 @@ export default function Admin() {
                     <h3>Connect images already in uploads</h3>
                     <p className="muted">Scan <code>apps/api/uploads</code> and connect supported image files to properties by exact property slug or normalized address. Existing images are preserved; ambiguous or unmatched filenames are reported and never assigned randomly.</p>
                     <form className="fields" onSubmit={connectUploadImages}>
-                      <button className="btn" disabled={connectingUploadImages || importingDriveImages || importingWorkbook || deduplicatingProperties}>{connectingUploadImages ? "Connecting uploaded images…" : "Connect uploaded images"}</button>
+                      <button className="btn" disabled={syncBusy}>{connectingUploadImages ? "Connecting uploaded images…" : "Connect uploaded images"}</button>
                     </form>
                     {uploadConnectResult && (uploadConnectResult.ok ? (
                       <dl className="drive-import-result notice" aria-live="polite">
@@ -644,7 +667,7 @@ export default function Admin() {
                     <h3>Remove duplicate properties</h3>
                     <p className="muted">Finds properties with the same normalized address, keeps the most complete record, merges available metadata, moves linked leads to it, and removes the duplicate records. Properties without a normalized address are left unchanged.</p>
                     <form className="fields" onSubmit={deduplicateProperties}>
-                      <button className="btn" type="submit" disabled={deduplicatingProperties || importingDriveImages || importingWorkbook || connectingUploadImages}>{deduplicatingProperties ? "Removing duplicate properties…" : "Remove all duplicate properties"}</button>
+                      <button className="btn" type="submit" disabled={syncBusy}>{deduplicatingProperties ? "Removing duplicate properties…" : "Remove all duplicate properties"}</button>
                     </form>
                     {deduplicateResult && (deduplicateResult.ok ? (
                       <dl className="drive-import-result notice" aria-live="polite">
@@ -656,6 +679,24 @@ export default function Admin() {
                       </dl>
                     ) : (
                       <p className="error" role="alert">{deduplicateResult.error}</p>
+                    ))}
+                  </div>
+                  <div className="drive-import-panel">
+                    <h3>Assign approximate city-center map locations</h3>
+                    <p className="muted">Use the stored city names to add approximate California city-center coordinates to properties that do not have coordinates. Existing coordinates are preserved. These locations are for portfolio orientation only and are not exact property locations.</p>
+                    <form className="fields" onSubmit={syncApproximateCoordinates}>
+                      <button className="btn" type="submit" disabled={syncBusy}>{syncingApproximateCoordinates ? "Assigning approximate locations…" : "Sync approximate map locations"}</button>
+                    </form>
+                    {approximateCoordinatesResult && (approximateCoordinatesResult.ok ? (
+                      <dl className="drive-import-result notice" aria-live="polite">
+                        <div><dt>Properties scanned</dt><dd>{approximateCoordinatesResult.totalProperties ?? 0}</dd></div>
+                        <div><dt>Properties updated</dt><dd>{approximateCoordinatesResult.updated ?? 0}</dd></div>
+                        <div><dt>Already had coordinates</dt><dd>{approximateCoordinatesResult.skippedExisting ?? 0}</dd></div>
+                        <div><dt>Missing city</dt><dd>{approximateCoordinatesResult.skippedMissingCity ?? 0}</dd></div>
+                        <div><dt>Unsupported city</dt><dd>{approximateCoordinatesResult.skippedUnsupportedCity ?? 0}</dd></div>
+                      </dl>
+                    ) : (
+                      <p className="error" role="alert">{approximateCoordinatesResult.error}</p>
                     ))}
                   </div>
                 </>

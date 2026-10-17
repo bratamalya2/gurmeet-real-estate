@@ -94,6 +94,7 @@ function mergePropertyRecords(canonical, rankedProperties) {
     status: firstValue(rankedProperties, property => property.status),
     featured: canonical.featured,
     coordinates: firstValue(rankedProperties, property => property.coordinates),
+    coordinatesSource: firstValue(rankedProperties, property => property.coordinatesSource),
     manualOverrides: {
       price: rankedProperties.some(property => property.manualOverrides?.price),
       description: rankedProperties.some(property => property.manualOverrides?.description),

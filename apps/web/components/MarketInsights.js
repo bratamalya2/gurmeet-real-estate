@@ -113,14 +113,15 @@ function BarPanel({ eyebrow, title, copy, items, labelKey, valueKey, valueLabel,
   </section>;
 }
 
-function Snapshot({ data, scope, mapPointCount }) {
+function Snapshot({ data, scope, mapPointCount, approximateMapPointCount }) {
   return <section className="market-panel market-snapshot-panel">
     <PanelTitle eyebrow="Portfolio snapshot" title="Data at a glance" />
     <dl className="market-snapshot-list">
       <div><dt>Priced sales</dt><dd>{count(scope.pricedHomes)} <span>of {count(data.soldCount)}</span></dd></div>
       <div><dt>Recorded sale dates</dt><dd>{count(scope.datedHomes)} <span>of {count(data.soldCount)}</span></dd></div>
       <div><dt>Cities represented</dt><dd>{count(scope.cityCount)}</dd></div>
-      <div><dt>Mapped homes</dt><dd>{count(mapPointCount)}</dd></div>
+      <div><dt>Map locations</dt><dd>{count(mapPointCount)}</dd></div>
+      {approximateMapPointCount > 0 && <div><dt>Approximate city-center locations</dt><dd>{count(approximateMapPointCount)}</dd></div>}
     </dl>
     <p>Insights reflect only the completed portfolio records and fields currently available.</p>
   </section>;
@@ -159,6 +160,8 @@ export default function MarketInsights({ data }) {
   const scope = buildPortfolioScope(data);
   const cityItems = groupTopCities(data.byCity || []);
   const mapPoints = projectCaliforniaMapPoints(data.mapPoints || []);
+  const approximateMapPointCount = mapPoints.filter(point => point.approximate).length;
+  const storedMapPointCount = mapPoints.length - approximateMapPointCount;
 
   return <main className="market-dashboard-page">
     <section className="market-dashboard-header">
@@ -182,7 +185,7 @@ export default function MarketInsights({ data }) {
       <section className="market-dashboard-grid">
         <ClosedHomesMap cities={data.byCity || []} points={data.mapPoints || []} />
         <YearTrend items={data.byYear || []} />
-        <Snapshot data={data} scope={scope} mapPointCount={mapPoints.length} />
+        <Snapshot data={data} scope={scope} mapPointCount={mapPoints.length} approximateMapPointCount={approximateMapPointCount} />
         <BarPanel eyebrow="Location mix" title="Sold homes by city" copy="Top eight cities, with remaining cities grouped as Others." items={cityItems} labelKey="city" valueKey="count" valueLabel={value => number(value) + ' homes'} />
         <BarPanel eyebrow="Price distribution" title="Sales by price band" copy="Recorded sale prices in the completed portfolio." items={data.priceBands || []} labelKey="label" valueKey="count" valueLabel={value => number(value) + ' homes'} tone="green" />
         <section className="market-panel market-profile-panel">
@@ -196,7 +199,7 @@ export default function MarketInsights({ data }) {
         </section>
       </section>
       <RecentSales sales={data.recentSales || []} />
-      <p className="market-coverage-note">Data coverage: prices are recorded for {count(data.coverage?.priced)} of {count(data.soldCount)} sold homes; square footage for {count(data.coverage?.withSquareFootage)}; transaction dates for {count(data.coverage?.withSoldDate)}; and California map coordinates for {count(mapPoints.length)}. Unavailable fields are excluded from their metrics.</p>
+      <p className="market-coverage-note">Data coverage: prices are recorded for {count(data.coverage?.priced)} of {count(data.soldCount)} sold homes; square footage for {count(data.coverage?.withSquareFootage)}; transaction dates for {count(data.coverage?.withSoldDate)}; stored California coordinates for {count(storedMapPointCount)} and approximate city-center locations for {count(approximateMapPointCount)}. Unavailable fields are excluded from their metrics.</p>
       <section className="market-dashboard-cta">
         <div><p>Private advisory</p><h2>Need a clearer view of your local market?</h2><span>Talk directly with Gurmeet about your home, your target neighborhood, or your next move.</span></div>
         <div><Link className="btn" href="/home-valuation">Request a valuation</Link><Link href="/contact">Connect with Gurmeet <span aria-hidden="true">→</span></Link></div>

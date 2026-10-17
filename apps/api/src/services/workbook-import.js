@@ -613,6 +613,7 @@ export function buildManifestPropertyPlan(rows = [], existing = []) {
       images: publicImages,
       photoManifest: { ...(match?.photoManifest || {}), ...manifestPhotoDocument(row, importedAt), managedImagePaths: existingManagedImages },
       coordinates: match?.coordinates,
+      coordinatesSource: match?.coordinatesSource,
       source: {
         name: 'workbook',
         externalId: row.source?.externalId || row.propertySlug,

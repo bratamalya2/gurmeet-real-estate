@@ -25,12 +25,13 @@ import { getMarketInsights } from './services/market-insights.js';
 import { featuredPropertyFilter, featuredPropertySort, highestValueProperties, soldFeaturedPropertyFilter } from './services/featured-properties.js';
 import { DriveImageImportError, stageDriveFolderImages, commitStagedDriveImages, removeCommittedDriveImages, removeUnreferencedDriveImages, listLocalUploadImages, applyDriveImageUpdates, applyLocalUploadImageUpdates } from './services/drive-images.js';
 import { applyPropertyDeduplication } from './services/property-deduplication.js';
+import { buildApproximateCoordinateUpdates } from './services/approximate-coordinates.js';
 
 const app = express();
 app.set('trust proxy', 1);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDirectory = path.resolve(__dirname, '../uploads');
-const publicFields = 'title slug address price beds baths sqft description status featured images photoManifest.managedImagePaths photoManifest.localUploadPaths coordinates source createdAt updatedAt transaction.soldDate transaction.side transaction.verification';
+const publicFields = 'title slug address price beds baths sqft description status featured images photoManifest.managedImagePaths photoManifest.localUploadPaths coordinates coordinatesSource source createdAt updatedAt transaction.soldDate transaction.side transaction.verification';
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: process.env.WEB_ORIGIN || 'http://localhost:3000', credentials: true }));
@@ -139,7 +140,7 @@ app.get('/api/properties', async (req, res, next) => {
           { $sort: { _missingPrice: 1, price: sort === 'price_asc' ? 1 : -1, updatedAt: -1, _id: 1 } },
           { $skip: (page - 1) * limit },
           { $limit: limit },
-          { $project: { title: 1, slug: 1, address: 1, price: 1, beds: 1, baths: 1, sqft: 1, description: 1, status: 1, featured: 1, images: 1, coordinates: 1, source: 1, createdAt: 1, updatedAt: 1, 'transaction.soldDate': 1, 'transaction.side': 1, 'transaction.verification': 1 } },
+          { $project: { title: 1, slug: 1, address: 1, price: 1, beds: 1, baths: 1, sqft: 1, description: 1, status: 1, featured: 1, images: 1, coordinates: 1, coordinatesSource: 1, source: 1, createdAt: 1, updatedAt: 1, 'transaction.soldDate': 1, 'transaction.side': 1, 'transaction.verification': 1 } },
         ])
         : Property.find(filter).select(publicFields).sort({ featured: -1, createdAt: -1 }).skip((page - 1) * limit).limit(limit),
       Property.countDocuments(filter),
@@ -212,6 +213,32 @@ app.post('/api/admin/properties/deduplicate', auth(['admin']), async (req, res, 
       totalListings: result.retained,
     });
     return res.json({ ok: true, groups: result.groups, removed: result.removed, retained: result.retained, leadsReassigned: result.leadsReassigned, skipped: result.skipped });
+  } catch (error) {
+    await SystemLog.findByIdAndUpdate(log.id, { status: 'failed', completedAt: new Date(), error: String(error.message || error).slice(0, 1000) }).catch(() => {});
+    return next(error);
+  } finally {
+    await session?.endSession();
+  }
+});
+app.post('/api/admin/listings/coordinates-sync', auth(['admin']), async (req, res, next) => {
+  const log = await SystemLog.create({ source: 'coordinates:approximate-city-centers', status: 'running', startedAt: new Date() });
+  let session;
+  try {
+    const properties = await Property.find().select('_id address coordinates').lean();
+    const plan = buildApproximateCoordinateUpdates(properties);
+    session = await mongoose.startSession();
+    await session.withTransaction(async () => {
+      if (plan.updates.length) {
+        await Property.bulkWrite(plan.updates.map(update => ({
+          updateOne: {
+            filter: { _id: update.id },
+            update: { $set: { coordinates: update.coordinates, coordinatesSource: 'approximate-city-center' } },
+          },
+        })), { session });
+      }
+    });
+    await SystemLog.findByIdAndUpdate(log.id, { status: 'success', completedAt: new Date(), updated: plan.updates.length, totalListings: properties.length });
+    return res.json({ ok: true, totalProperties: properties.length, updated: plan.updates.length, skippedExisting: plan.skippedExisting, skippedMissingCity: plan.skippedMissingCity, skippedUnsupportedCity: plan.skippedUnsupportedCity, approximate: true });
   } catch (error) {
     await SystemLog.findByIdAndUpdate(log.id, { status: 'failed', completedAt: new Date(), error: String(error.message || error).slice(0, 1000) }).catch(() => {});
     return next(error);

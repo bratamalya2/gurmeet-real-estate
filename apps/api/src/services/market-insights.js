@@ -96,6 +96,7 @@ export function buildMarketInsights(properties = []) {
       price: record.metrics.price || 0,
       latitude: Number(record.property.coordinates.lat),
       longitude: Number(record.property.coordinates.lng),
+      approximate: record.property.coordinatesSource === 'approximate-city-center',
     }));
 
   return {
@@ -117,6 +118,6 @@ export function buildMarketInsights(properties = []) {
 }
 
 export async function getMarketInsights() {
-  const properties = await Property.find({ status: 'Sold' }).select('title slug address price beds baths sqft images coordinates transaction.soldDate updatedAt').lean();
+  const properties = await Property.find({ status: 'Sold' }).select('title slug address price beds baths sqft images coordinates coordinatesSource transaction.soldDate updatedAt').lean();
   return buildMarketInsights(properties);
 }

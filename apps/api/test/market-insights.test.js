@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildMarketInsights } from '../src/services/market-insights.js';
+import { approximateCityCoordinate, buildApproximateCoordinateUpdates } from '../src/services/approximate-coordinates.js';
 import { propertySideFilter, propertySourceFilter } from '../src/services/property-filters.js';
 
 const soldProperties = [
@@ -72,4 +73,18 @@ test('market insights only exposes valid California coordinates as map points', 
     { _id: 'invalid', slug: 'invalid', address: { city: 'San Jose' }, coordinates: { lat: 'not-a-number', lng: -121.8863 } },
   ]);
   assert.deepEqual(result.mapPoints.map(point => point.slug), ['ca']);
+});
+
+test('builds approximate city-center coordinate updates without overwriting stored coordinates', () => {
+  assert.deepEqual(approximateCityCoordinate('Fremont'), { lat: 37.5483, lng: -121.9886 });
+  const result = buildApproximateCoordinateUpdates([
+    { _id: 'fremont', address: { city: 'Fremont' } },
+    { _id: 'existing', address: { city: 'Hayward' }, coordinates: { lat: 37.67, lng: -122.08 } },
+    { _id: 'unknown', address: { city: 'Not A City' } },
+    { _id: 'missing-city', address: {} },
+  ]);
+  assert.deepEqual(result.updates, [{ id: 'fremont', city: 'Fremont', coordinates: { lat: 37.5483, lng: -121.9886 } }]);
+  assert.equal(result.skippedExisting, 1);
+  assert.equal(result.skippedUnsupportedCity, 1);
+  assert.equal(result.skippedMissingCity, 1);
 });

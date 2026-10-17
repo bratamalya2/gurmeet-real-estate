@@ -20,7 +20,7 @@ function popupContent(city) {
   const heading = document.createElement('h3');
   heading.textContent = city.city;
   const facts = document.createElement('dl');
-  [['Homes sold', `${number(city.count)} homes`], ['Average price', money(city.averageSalePrice)], ['Mapped records', number(city.coordinateCount)]].forEach(([term, value]) => {
+  [['Homes sold', `${number(city.count)} homes`], ['Average price', money(city.averageSalePrice)], ['Map location', city.approximate ? 'Approximate city center' : 'Stored property coordinates'], ['Mapped records', number(city.coordinateCount)]].forEach(([term, value]) => {
     const row = document.createElement('div');
     const dt = document.createElement('dt');
     const dd = document.createElement('dd');
@@ -73,7 +73,7 @@ export default function ClosedHomesMap({ cities = [], points = [] }) {
           fillOpacity: .96,
           className: 'closed-homes-marker',
         }).addTo(map).bindPopup(popupContent(city), { closeButton: true, maxWidth: 240 });
-        marker.bindTooltip(`${city.city}: ${number(city.count)} homes`, {
+        marker.bindTooltip(`${city.city}: ${number(city.count)} homes${city.approximate ? ' · approximate center' : ''}`, {
           direction: 'top',
           offset: [0, -radius],
           permanent: true,
@@ -146,7 +146,7 @@ export default function ClosedHomesMap({ cities = [], points = [] }) {
             const percentage = (Number(city.count) || 0) / maximum * 100;
             return <li key={key}>
               <button type="button" onClick={() => selectCity(city)} disabled={!city.coordinateCount} className={active ? 'active' : ''}>
-                <span className="closed-homes-city-row"><i>{String(index + 1).padStart(2, '0')}</i><strong>{city.city}</strong>{!city.coordinateCount && <em>Not mapped</em>}</span>
+                <span className="closed-homes-city-row"><i>{String(index + 1).padStart(2, '0')}</i><strong>{city.city}</strong>{city.approximate && <em>Approx. center</em>}{!city.coordinateCount && !city.approximate && <em>Not mapped</em>}</span>
                 <span className="closed-homes-city-volume">{number(city.count)} <small>homes</small></span>
                 <span className="closed-homes-city-bar"><b style={{ width: `${percentage}%` }} /></span>
               </button>
@@ -154,7 +154,7 @@ export default function ClosedHomesMap({ cities = [], points = [] }) {
           })}
           {!filteredCities.length && <li className="closed-homes-no-results">No cities match “{search}”.</li>}
         </ol>
-        <p className="closed-homes-map-footnote">Map points use only stored property coordinates. Cities without coordinates remain in the portfolio totals.</p>
+        <p className="closed-homes-map-footnote">Markers use stored property coordinates when available. Approximate city-center markers are labeled and are for orientation only.</p>
       </section>
       <section className="closed-homes-leaflet-wrap" aria-label="Interactive map of sold portfolio city hubs">
         <div ref={elementRef} className="closed-homes-leaflet" />

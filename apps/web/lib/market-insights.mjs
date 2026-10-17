@@ -61,22 +61,25 @@ export function buildMappableCities(cities = [], points = []) {
     const longitude = Number(point?.longitude);
     if (!city || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
     const key = city.toLocaleLowerCase();
-    const group = coordinateGroups.get(key) || { latitude: 0, longitude: 0, coordinateCount: 0 };
+    const group = coordinateGroups.get(key) || { latitude: 0, longitude: 0, coordinateCount: 0, approximate: false };
     group.latitude += latitude;
     group.longitude += longitude;
     group.coordinateCount += 1;
+    group.approximate = group.approximate || Boolean(point?.approximate);
     coordinateGroups.set(key, group);
   });
 
   return cities.map(city => {
     const key = String(city?.city || '').trim().toLocaleLowerCase();
     const group = coordinateGroups.get(key);
-    return {
+    const result = {
       ...city,
       latitude: group ? group.latitude / group.coordinateCount : null,
       longitude: group ? group.longitude / group.coordinateCount : null,
       coordinateCount: group?.coordinateCount || 0,
     };
+    if (group?.approximate) result.approximate = true;
+    return result;
   });
 }
 

@@ -516,6 +516,32 @@ paths:
                   skipped: { type: integer, description: Properties without a normalized address }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/listings/coordinates-sync:
+    post:
+      tags: [Staff administration]
+      summary: Assign approximate city-center coordinates
+      description: |
+        Administrator-only sync that assigns hardcoded approximate California city-center
+        coordinates to properties missing coordinates. Existing coordinates are preserved;
+        the resulting locations are for portfolio orientation and are not exact property locations.
+      security: [{ CookieAuth: [] }]
+      responses:
+        '200':
+          description: Approximate coordinate sync completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  totalProperties: { type: integer }
+                  updated: { type: integer }
+                  skippedExisting: { type: integer }
+                  skippedMissingCity: { type: integer }
+                  skippedUnsupportedCity: { type: integer }
+                  approximate: { type: boolean, example: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /admin/users:
     get:
       tags: [Staff administration]
