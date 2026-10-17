@@ -2637,7 +2637,8 @@ footer {
 .market-trend-panel { grid-column: span 5; }
 .market-snapshot-panel { grid-column: span 3; }
 .market-bar-panel,
-.market-profile-panel { grid-column: span 4; }
+.market-profile-panel,
+.market-buyer-city-panel { grid-column: span 4; }
 .market-map-layout {
   display: grid;
   grid-template-columns: minmax(150px, .9fr) minmax(125px, .8fr);
@@ -2760,6 +2761,36 @@ footer {
 .market-profile-stats div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
 .market-profile-stats span { color: #6d7a91; font-size: 11px; }
 .market-profile-stats strong { color: #1d4d96; font-size: 15px; }
+.market-buyer-city-panel { display: flex; flex-direction: column; }
+.market-buyer-city-chart {
+  display: grid;
+  grid-template-columns: minmax(170px, .8fr) minmax(0, 1.2fr);
+  gap: 18px;
+  align-items: center;
+  margin-top: 15px;
+}
+.market-buyer-city-donut-wrap { display: grid; min-height: 220px; place-items: center; }
+.market-buyer-city-donut { display: block; width: min(220px, 100%); height: auto; overflow: visible; }
+.market-buyer-city-donut-total { fill: #1b2e56; font-size: 27px; font-weight: 800; }
+.market-buyer-city-donut-label { fill: #7b8799; font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.market-buyer-city-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; }
+.market-buyer-city-legend > div {
+  display: flex;
+  min-width: 0;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid #edf0f4;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #506079;
+  font-size: 11px;
+}
+.market-buyer-city-legend span { display: flex; min-width: 0; gap: 6px; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.market-buyer-city-legend i { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; }
+.market-buyer-city-legend strong { flex: 0 0 auto; color: #263d6b; font-size: 11px; }
+.market-buyer-city-legend small { color: #8792a2; font-size: 9px; font-weight: 500; }
 .market-empty-note { margin: 20px 0 0; color: #78859a; font-size: 13px; line-height: 1.55; }
 .market-recent-panel { padding-bottom: 9px; }
 .market-recent-scroll { margin-top: 14px; overflow-x: auto; outline-offset: 4px; }
@@ -2799,7 +2830,8 @@ footer {
   .market-trend-panel,
   .market-snapshot-panel,
   .market-bar-panel,
-  .market-profile-panel { grid-column: span 1; }
+  .market-profile-panel,
+  .market-buyer-city-panel { grid-column: span 1; }
   .market-map-panel,
   .market-trend-panel,
   .market-snapshot-panel { grid-column: 1 / -1; }
@@ -2819,7 +2851,8 @@ footer {
   .market-trend-panel,
   .market-snapshot-panel,
   .market-bar-panel,
-  .market-profile-panel { grid-column: 1; }
+  .market-profile-panel,
+  .market-buyer-city-panel { grid-column: 1; }
   .market-panel { padding: 17px; }
   .market-map-layout { grid-template-columns: minmax(120px, .9fr) minmax(118px, .8fr); min-height: 290px; }
   .market-california-map { max-height: 294px; }
@@ -3540,6 +3573,10 @@ a {
   .closed-homes-donut-wrap { min-height: 205px; }
   .closed-homes-donut { width: min(230px, 80vw); }
   .closed-homes-donut-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .market-buyer-city-chart { grid-template-columns: 1fr; gap: 10px; }
+  .market-buyer-city-donut-wrap { min-height: 200px; }
+  .market-buyer-city-donut { width: min(230px, 80vw); }
+  .market-buyer-city-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .market-recent-table { min-width: 680px; }
 }
 
@@ -3563,6 +3600,7 @@ a {
   .market-metric-card strong.market-metric-value-long { font-size: 18px; }
   .market-map-summary { grid-template-columns: 1fr; }
   .closed-homes-donut-legend { grid-template-columns: 1fr; }
+  .market-buyer-city-legend { grid-template-columns: 1fr; }
   .closed-homes-leaflet,
   .closed-homes-leaflet-wrap { min-height: 330px; }
   .closed-homes-map-legend { position: static; margin: 10px; max-width: none; }

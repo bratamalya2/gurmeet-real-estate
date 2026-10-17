@@ -18,16 +18,16 @@ export default function Home() {
               Thoughtful real estate guidance for the homes, neighborhoods, and
               next chapters that matter most.
             </p>
-            <div style={{ display: "flex", gap: 12, marginTop: 30 }}>
-              <Link className="btn" href="/homes-for-sale">
-                Explore Listings
+            <div className="hero-actions" style={{ display: "flex", gap: 12, marginTop: 30 }}>
+              <Link className="btn" href="/bought-with-gurmeet">
+                Bought with Gurmeet
               </Link>
               <Link
                 className="btn alt"
                 style={{ color: "#fff", borderColor: "#fff" }}
-                href="/contact"
+                href="/sold-by-gurmeet"
               >
-                Work with {brandOwner}
+                Sold by Gurmeet
               </Link>
             </div>
           </div>

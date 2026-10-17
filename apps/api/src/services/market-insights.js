@@ -60,6 +60,20 @@ export function buildMarketInsights(properties = []) {
     return { city, count: cityRecords.length, totalSalesVolume: cityPrices.reduce((sum, value) => sum + value, 0), averageSalePrice: round(average(cityPrices)), averagePricePerSqft: round(average(cityPpsf)) };
   }).sort((a, b) => b.count - a.count || b.totalSalesVolume - a.totalSalesVolume || a.city.localeCompare(b.city));
 
+  const buyerCities = new Map();
+  records
+    .filter(record => String(record.property.transaction?.side || '').toLowerCase().includes('buyer'))
+    .forEach(record => {
+      const city = String(record.property.address?.city || '').trim();
+      if (!city) return;
+      if (!buyerCities.has(city)) buyerCities.set(city, []);
+      buyerCities.get(city).push(record);
+    });
+  const byBuyerCity = [...buyerCities.entries()].map(([city, cityRecords]) => ({
+    city,
+    count: cityRecords.length,
+  })).sort((a, b) => b.count - a.count || a.city.localeCompare(b.city));
+
   const years = new Map();
   withSoldDate.forEach(record => {
     const year = String(record.metrics.soldDate.getUTCFullYear());
@@ -111,6 +125,7 @@ export function buildMarketInsights(properties = []) {
     coverage: { priced: priced.length, withSquareFootage: withSquareFootage.length, withSoldDate: withSoldDate.length },
     byYear,
     byCity,
+    byBuyerCity,
     priceBands: byPriceBand,
     recentSales,
     mapPoints,
@@ -118,6 +133,6 @@ export function buildMarketInsights(properties = []) {
 }
 
 export async function getMarketInsights() {
-  const properties = await Property.find({ status: 'Sold' }).select('title slug address price beds baths sqft images coordinates coordinatesSource transaction.soldDate updatedAt').lean();
+  const properties = await Property.find({ status: 'Sold' }).select('title slug address price beds baths sqft images coordinates coordinatesSource transaction.soldDate transaction.side updatedAt').lean();
   return buildMarketInsights(properties);
 }

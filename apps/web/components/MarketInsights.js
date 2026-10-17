@@ -58,6 +58,45 @@ function ChartTable({ caption, headers, rows }) {
   </details>;
 }
 
+const buyerCityDonutColors = ['#2d74d1', '#34a566', '#c59b27', '#7b7de8', '#e27d45', '#4aa9b8', '#8a6db5', '#6d879e', '#b7a36b'];
+
+function BuyerCityDonut({ cities }) {
+  const items = groupTopCities(cities || []);
+  const total = items.reduce((sum, item) => sum + (Number(item.count) || 0), 0);
+  if (!total) return <section className="market-panel market-buyer-city-panel"><PanelTitle eyebrow="Buyer representation" title="Bought homes by city" /><p className="market-empty-note">No buyer-side city records are available.</p></section>;
+
+  const radius = 68;
+  const circumference = 2 * Math.PI * radius;
+  let cumulative = 0;
+  const segments = items.map((item, index) => {
+    const count = Number(item.count) || 0;
+    const length = count / total * circumference;
+    const segment = { ...item, count, color: buyerCityDonutColors[index % buyerCityDonutColors.length], length, offset: cumulative };
+    cumulative += length;
+    return segment;
+  });
+
+  return <section className="market-panel market-buyer-city-panel">
+    <PanelTitle eyebrow="Buyer representation" title="Bought homes by city"><p className="market-panel-copy">Top eight cities, with remaining buyer transactions grouped as Others.</p></PanelTitle>
+    <div className="market-buyer-city-chart">
+      <div className="market-buyer-city-donut-wrap">
+        <svg className="market-buyer-city-donut" viewBox="0 0 200 200" role="img" aria-labelledby="buyer-city-donut-title buyer-city-donut-description">
+          <title id="buyer-city-donut-title">Bought homes by city</title>
+          <desc id="buyer-city-donut-description">A doughnut chart showing the distribution of homes bought with Gurmeet across the leading cities and an Others group.</desc>
+          <circle cx="100" cy="100" r={radius} fill="none" stroke="#edf1f5" strokeWidth="28" />
+          {segments.map(segment => <circle key={segment.city} cx="100" cy="100" r={radius} fill="none" stroke={segment.color} strokeWidth="28" strokeDasharray={`${segment.length} ${circumference - segment.length}`} strokeDashoffset={-segment.offset} transform="rotate(-90 100 100)" />)}
+          <text x="100" y="96" textAnchor="middle" className="market-buyer-city-donut-total">{total}</text>
+          <text x="100" y="114" textAnchor="middle" className="market-buyer-city-donut-label">homes bought</text>
+        </svg>
+      </div>
+      <div className="market-buyer-city-legend">
+        {segments.map(segment => <div key={segment.city}><span><i style={{ background: segment.color }} />{segment.city}</span><strong>{segment.count} <small>{Math.round(segment.count / total * 100)}%</small></strong></div>)}
+      </div>
+    </div>
+    <ChartTable caption="Bought homes by city" headers={['City', 'Homes bought', 'Share']} rows={segments.map(segment => [segment.city, segment.count, Math.round(segment.count / total * 100) + '%'])} />
+  </section>;
+}
+
 function YearTrend({ items }) {
   const chart = buildYearChartData(items, 720, 282);
   const chartId = 'portfolio-sales-trend';
@@ -158,7 +197,6 @@ export default function MarketInsights({ data }) {
 
   const metrics = buildPrimaryMetrics(data);
   const scope = buildPortfolioScope(data);
-  const cityItems = groupTopCities(data.byCity || []);
   const mapPoints = projectCaliforniaMapPoints(data.mapPoints || []);
   const approximateMapPointCount = mapPoints.filter(point => point.approximate).length;
   const storedMapPointCount = mapPoints.length - approximateMapPointCount;
@@ -186,7 +224,7 @@ export default function MarketInsights({ data }) {
         <ClosedHomesMap cities={data.byCity || []} points={data.mapPoints || []} />
         <YearTrend items={data.byYear || []} />
         <Snapshot data={data} scope={scope} mapPointCount={mapPoints.length} approximateMapPointCount={approximateMapPointCount} />
-        <BarPanel eyebrow="Location mix" title="Sold homes by city" copy="Top eight cities, with remaining cities grouped as Others." items={cityItems} labelKey="city" valueKey="count" valueLabel={value => number(value) + ' homes'} />
+        <BuyerCityDonut cities={data.byBuyerCity || []} />
         <BarPanel eyebrow="Price distribution" title="Sales by price band" copy="Recorded sale prices in the completed portfolio." items={data.priceBands || []} labelKey="label" valueKey="count" valueLabel={value => number(value) + ' homes'} tone="green" />
         <section className="market-panel market-profile-panel">
           <PanelTitle eyebrow="Property profile" title="Portfolio home characteristics" />

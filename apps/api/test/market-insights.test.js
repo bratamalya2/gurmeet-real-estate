@@ -5,8 +5,8 @@ import { approximateCityCoordinate, buildApproximateCoordinateUpdates } from '..
 import { propertySideFilter, propertySourceFilter } from '../src/services/property-filters.js';
 
 const soldProperties = [
-  { _id: 'one', slug: 'one', address: { street: '1 Main St', city: 'Fremont' }, price: 500000, beds: 3, baths: 2, sqft: 1000, images: ['/uploads/one.jpg'], coordinates: { lat: 37.5485, lng: -121.9886 }, transaction: { soldDate: new Date('2024-01-15') }, updatedAt: new Date('2024-02-01') },
-  { _id: 'two', slug: 'two', address: { street: '2 Main St', city: 'Fremont' }, price: 700000, beds: 4, baths: 3, sqft: 1400, images: ['/uploads/two.jpg'], coordinates: { lat: 37.5, lng: -121.9 }, transaction: { soldDate: new Date('2025-01-15') }, updatedAt: new Date('2025-02-01') },
+  { _id: 'one', slug: 'one', address: { street: '1 Main St', city: 'Fremont' }, price: 500000, beds: 3, baths: 2, sqft: 1000, images: ['/uploads/one.jpg'], coordinates: { lat: 37.5485, lng: -121.9886 }, transaction: { soldDate: new Date('2024-01-15'), side: 'Buyer' }, updatedAt: new Date('2024-02-01') },
+  { _id: 'two', slug: 'two', address: { street: '2 Main St', city: 'Fremont' }, price: 700000, beds: 4, baths: 3, sqft: 1400, images: ['/uploads/two.jpg'], coordinates: { lat: 37.5, lng: -121.9 }, transaction: { soldDate: new Date('2025-01-15'), side: 'Seller' }, updatedAt: new Date('2025-02-01') },
   { _id: 'three', slug: 'three', address: { street: '3 Main St', city: 'Hayward' }, beds: 2, baths: 1, updatedAt: new Date('2026-01-01') },
 ];
 
@@ -35,6 +35,7 @@ test('market insights calculate price, size, city, year, and price-band metrics'
   assert.deepEqual(result.coverage, { priced: 2, withSquareFootage: 2, withSoldDate: 2 });
   assert.deepEqual(result.byYear.map(item => item.year), [2024, 2025]);
   assert.deepEqual(result.byCity.map(item => item.city), ['Fremont', 'Hayward']);
+  assert.deepEqual(result.byBuyerCity, [{ city: 'Fremont', count: 1 }]);
   assert.deepEqual(result.priceBands.map(item => item.count), [0, 2, 0, 0]);
   assert.equal(result.recentSales[0].street, '3 Main St');
   assert.equal(result.recentSales[1].image, '/uploads/two.jpg');
@@ -60,6 +61,7 @@ test('market insights exclude malformed metrics and return an empty shape', () =
     coverage: { priced: 0, withSquareFootage: 0, withSoldDate: 0 },
     byYear: [],
     byCity: [],
+    byBuyerCity: [],
     priceBands: [{ label: 'Under $500K', count: 0 }, { label: '$500K–$750K', count: 0 }, { label: '$750K–$1M', count: 0 }, { label: '$1M+', count: 0 }],
     recentSales: [],
     mapPoints: [],
