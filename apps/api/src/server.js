@@ -111,7 +111,7 @@ app.get('/api/properties', async (req, res, next) => {
     const status = ['Active', 'Pending', 'Sold'].includes(req.query.status) ? req.query.status : undefined;
     const side = ['buyer', 'seller'].includes(req.query.side) ? req.query.side : undefined;
     const source = ['redfin', 'zillow'].includes(req.query.source) ? req.query.source : undefined;
-    const sort = ['price_desc', 'price_asc'].includes(req.query.sort) ? req.query.sort : undefined;
+    const sort = ['price_desc', 'price_asc', 'time_earliest', 'time_latest'].includes(req.query.sort) ? req.query.sort : undefined;
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(24, Math.max(1, Number(req.query.limit) || 9));
     const minPrice = numberQuery(req.query.minPrice), maxPrice = numberQuery(req.query.maxPrice), beds = numberQuery(req.query.beds), baths = numberQuery(req.query.baths);
@@ -134,14 +134,22 @@ app.get('/api/properties', async (req, res, next) => {
     if (compoundFilters.length) filter.$and = compoundFilters;
     const [items, total] = await Promise.all([
       sort
-        ? Property.aggregate([
+        ? (() => {
+          const priceSort = sort.startsWith('price_');
+          const field = priceSort ? 'price' : 'transaction.soldDate';
+          const direction = sort === 'price_asc' || sort === 'time_earliest' ? 1 : -1;
+          const missingExpression = priceSort
+            ? { $gt: [{ $ifNull: ['$price', 0] }, 0] }
+            : { $ne: [{ $ifNull: ['$transaction.soldDate', null] }, null] };
+          return Property.aggregate([
           { $match: filter },
-          { $addFields: { _missingPrice: { $cond: [{ $gt: [{ $ifNull: ['$price', 0] }, 0] }, 0, 1] } } },
-          { $sort: { _missingPrice: 1, price: sort === 'price_asc' ? 1 : -1, updatedAt: -1, _id: 1 } },
+          { $addFields: { _missingSortValue: { $cond: [missingExpression, 0, 1] } } },
+          { $sort: { _missingSortValue: 1, [field]: direction, updatedAt: -1, _id: 1 } },
           { $skip: (page - 1) * limit },
           { $limit: limit },
           { $project: { title: 1, slug: 1, address: 1, price: 1, beds: 1, baths: 1, sqft: 1, description: 1, status: 1, featured: 1, images: 1, coordinates: 1, coordinatesSource: 1, source: 1, createdAt: 1, updatedAt: 1, 'transaction.soldDate': 1, 'transaction.side': 1, 'transaction.verification': 1 } },
-        ])
+          ]);
+        })()
         : Property.find(filter).select(publicFields).sort({ featured: -1, createdAt: -1 }).skip((page - 1) * limit).limit(limit),
       Property.countDocuments(filter),
     ]);

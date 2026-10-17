@@ -55,6 +55,8 @@ export default function PropertyGrid({ status, side, featured = false, showFilte
         <select value={sort} onChange={event => { setSort(event.target.value); setPage(1); }}>
           <option value="price_desc">Price: high to low</option>
           <option value="price_asc">Price: low to high</option>
+          <option value="time_latest">Time: latest first</option>
+          <option value="time_earliest">Time: earliest first</option>
         </select>
       </label>}
     </div>}

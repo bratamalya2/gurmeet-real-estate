@@ -44,7 +44,7 @@ paths:
           schema: { type: string, enum: [redfin, zillow] }
         - name: sort
           in: query
-          schema: { type: string, enum: [price_desc, price_asc] }
+          schema: { type: string, enum: [price_desc, price_asc, time_latest, time_earliest] }
         - name: page
           in: query
           schema: { type: integer, minimum: 1, default: 1 }
