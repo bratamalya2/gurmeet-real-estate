@@ -31,6 +31,62 @@ paths:
               schema:
                 type: object
                 properties: { ok: { type: boolean, example: true } }
+  /chat:
+    post:
+      tags: [Public]
+      summary: Ask the public AI property assistant
+      description: |
+        Searches the public property portfolio and returns a concise assistant reply.
+        Conversation history is used only for this request and is not stored by this API.
+        The endpoint permits 24 requests per IP address per 15 minutes.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message: { type: string, minLength: 1, maxLength: 1200, example: Show homes in Fremont with 3 bedrooms }
+                history:
+                  type: array
+                  maxItems: 6
+                  items:
+                    type: object
+                    required: [role, content]
+                    properties:
+                      role: { type: string, enum: [user, assistant] }
+                      content: { type: string, maxLength: 1200 }
+      responses:
+        '200':
+          description: Assistant reply with optional portfolio matches and navigation action
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reply: { type: string }
+                  provider: { type: string, enum: [openai, fallback] }
+                  action: { type: string, enum: [valuation, contact], nullable: true }
+                  properties:
+                    type: array
+                    maxItems: 4
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        title: { type: string }
+                        slug: { type: string }
+                        price: { type: number, nullable: true }
+                        city: { type: string, nullable: true }
+                        beds: { type: number, nullable: true }
+                        baths: { type: number, nullable: true }
+                        status: { type: string }
+                        image: { type: string }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429':
+          description: Too many chat requests
   /properties:
     get:
       tags: [Properties]

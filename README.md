@@ -26,6 +26,12 @@ The Admin dashboard **Sync** tab also accepts `real_estate_transactions_data.xls
 
 The Admin dashboard **Analytics** tab reports current inventory, pricing, lead activity, workbook freshness, and first-party page/listing views. Traffic events are anonymous, contain no query strings or personal data, and are retained for 24 months.
 
+## AI property assistant
+
+The public site includes a floating AI property assistant. It can search the live portfolio, provide concise general buying or selling guidance, and direct visitors to the existing Contact and Home Valuation forms. Chats stay in the visitor's browser and are not stored in MongoDB.
+
+Set `OPENAI_API_KEY` only in `apps/api/.env`; never expose it in the web environment. `OPENAI_CHAT_MODEL` defaults to `gpt-5-mini` and can be overridden for the API container. Without a configured key, the widget still provides local portfolio matches and contact/valuation guidance without an AI model response.
+
 ## Updating property images from Google Drive
 
 The Admin dashboard **Sync** tab includes **Download folder images**. The folder must be publicly accessible, and image filenames should contain the matching property slug or normalized address. Supported formats are JPEG, PNG, WebP, and GIF; subfolders are scanned recursively. Workbook-stored Google Drive file IDs are matched first, so one shared Drive file can be attached to every property that explicitly references it. Only matched properties are updated, and manually uploaded images are preserved.

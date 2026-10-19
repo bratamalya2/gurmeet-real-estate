@@ -26,6 +26,7 @@ import { featuredPropertyFilter, featuredPropertySort, highestValueProperties, s
 import { DriveImageImportError, stageDriveFolderImages, commitStagedDriveImages, removeCommittedDriveImages, removeUnreferencedDriveImages, listLocalUploadImages, applyDriveImageUpdates, applyLocalUploadImageUpdates } from './services/drive-images.js';
 import { applyPropertyDeduplication } from './services/property-deduplication.js';
 import { buildApproximateCoordinateUpdates } from './services/approximate-coordinates.js';
+import { chatRequestSchema, createAssistantReply, detectChatIntent, searchChatProperties } from './services/chat-assistant.js';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -98,6 +99,17 @@ const analyticsEventSchema = z.object({
 });
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
+app.post('/api/chat', rateLimit({ windowMs: 15 * 60 * 1000, max: 24, standardHeaders: true, legacyHeaders: false }), async (req, res, next) => {
+  try {
+    const parsed = chatRequestSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(422).json({ error: parsed.error.issues[0]?.message || 'Provide a valid chat message.' });
+    const { message, history } = parsed.data;
+    const intent = detectChatIntent(message);
+    const properties = await searchChatProperties(Property, message);
+    const response = await createAssistantReply({ message, history, properties, action: intent.action });
+    return res.json({ ...response, properties, action: intent.action });
+  } catch (error) { return next(error); }
+});
 app.post('/api/analytics/events', rateLimit({ windowMs: 15 * 60 * 1000, max: 120, standardHeaders: true, legacyHeaders: false }), async (req, res, next) => {
   try {
     const parsed = analyticsEventSchema.safeParse(req.body);
