@@ -106,8 +106,9 @@ async function handlePublicChat(req, res, next) {
     if (!parsed.success) return res.status(422).json({ error: parsed.error.issues[0]?.message || 'Provide a valid chat message.' });
     const { message, history, mode, filters } = parsed.data;
     const intent = detectChatIntent(message);
-    const properties = await searchChatProperties(Property, message, filters);
-    const response = await createAssistantReply({ message, history, properties, action: intent.action, mode });
+    const fullPageSearch = req.path === '/api/ai-search';
+    const properties = await searchChatProperties(Property, message, filters, fullPageSearch ? 250 : 4);
+    const response = await createAssistantReply({ message, history, properties, contextProperties: properties.slice(0, 4), action: intent.action, mode });
     const actionType = intent.action === 'valuation' ? 'home_valuation' : intent.action;
     return res.json({ ...response, properties, action: intent.action, actionType, mode });
   } catch (error) { return next(error); }

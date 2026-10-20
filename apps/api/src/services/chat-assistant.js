@@ -6,6 +6,8 @@ const MAX_HISTORY_MESSAGES = 6;
 const PROPERTY_TERMS = /\b(property|properties|home|homes|house|houses|listing|listings|buy|buying|search|showing|tour|bed|bedroom|br)\b/i;
 const VALUATION_TERMS = /\b(worth|value|valuation|cma|appraisal|estimate|price my home|sell my home|selling)\b/i;
 const CONTACT_TERMS = /\b(contact|call|phone|email|speak|talk|consultation|showing|tour|visit)\b/i;
+const BUYER_SIDE_TERMS = /\b(bought|purchased|buyer representation|buyer side)\b/i;
+const SELLER_SIDE_TERMS = /\b(sold by gurmeet|seller representation|seller side)\b/i;
 
 const filtersSchema = z.object({
   city: z.preprocess(value => String(value || '').trim() || undefined, z.string().max(80).optional()),
@@ -59,7 +61,7 @@ export function extractPropertyCriteria(message = '', cities = [], filters = {})
   }
 
   const address = value.match(/\b\d{1,6}\s+[\w\s.'#-]+(?:street|st|avenue|ave|road|rd|drive|dr|court|ct|lane|ln|way|place|pl|boulevard|blvd)\b/i)?.[0];
-  const stopWords = new Set(['a', 'an', 'and', 'are', 'bed', 'beds', 'bedroom', 'bedrooms', 'br', 'bought', 'buy', 'buying', 'ca', 'california', 'completed', 'find', 'for', 'home', 'homes', 'house', 'houses', 'in', 'listing', 'listings', 'me', 'of', 'on', 'portfolio', 'property', 'properties', 'sale', 'sold', 'search', 'show', 'the', 'under', 'with']);
+  const stopWords = new Set(['a', 'an', 'and', 'are', 'bed', 'beds', 'bedroom', 'bedrooms', 'br', 'bought', 'buy', 'buyer', 'buying', 'ca', 'california', 'completed', 'find', 'for', 'home', 'homes', 'house', 'houses', 'in', 'listing', 'listings', 'me', 'of', 'on', 'portfolio', 'property', 'properties', 'purchased', 'representation', 'sale', 'seller', 'side', 'sold', 'search', 'show', 'the', 'under', 'with']);
   const text = value
     .replace(/\$?[\d,.]+\s*(?:m|million|k|thousand)?/gi, ' ')
     .split(/[^a-zA-Z0-9]+/)
@@ -67,7 +69,8 @@ export function extractPropertyCriteria(message = '', cities = [], filters = {})
     .filter(token => token.length > 2 && !stopWords.has(token) && !/^\d+$/.test(token) && token !== city?.toLowerCase())
     .slice(0, 4)
     .join(' ');
-  return { city, bedrooms, maxPrice, address: address || undefined, ...(address || !text ? {} : { text }) };
+  const side = BUYER_SIDE_TERMS.test(value) ? 'buyer' : SELLER_SIDE_TERMS.test(value) ? 'seller' : undefined;
+  return { city, bedrooms, maxPrice, side, address: address || undefined, ...(address || !text ? {} : { text }) };
 }
 
 export function buildPropertySearchFilter(criteria = {}) {
@@ -75,6 +78,7 @@ export function buildPropertySearchFilter(criteria = {}) {
   if (criteria.city) filter['address.city'] = new RegExp(`^${escapeRegex(criteria.city)}$`, 'i');
   if (criteria.bedrooms) filter.beds = { $gte: criteria.bedrooms };
   if (criteria.maxPrice) filter.price = { $lte: criteria.maxPrice };
+  if (criteria.side) filter['transaction.side'] = criteria.side === 'buyer' ? /Buyer/i : /Seller/i;
   if (criteria.address || criteria.text) {
     const addressExpression = new RegExp(escapeRegex(criteria.address || criteria.text), 'i');
     filter.$or = [{ title: addressExpression }, { 'address.street': addressExpression }];
@@ -99,7 +103,7 @@ export function chatPropertyDocument(property = {}) {
   };
 }
 
-export async function searchChatProperties(PropertyModel, message, filters = {}) {
+export async function searchChatProperties(PropertyModel, message, filters = {}, maxResults = 4) {
   const intent = detectChatIntent(message);
   if (!intent.propertySearch && !filters.city && !filters.beds && !filters.maxPrice) return [];
   const cities = await PropertyModel.distinct('address.city', { 'address.city': { $exists: true, $ne: '' } });
@@ -107,7 +111,7 @@ export async function searchChatProperties(PropertyModel, message, filters = {})
   const properties = await PropertyModel.find(buildPropertySearchFilter(criteria))
     .select('title slug address price beds baths sqft status images transaction.soldDate updatedAt')
     .sort({ 'transaction.soldDate': -1, updatedAt: -1, _id: 1 })
-    .limit(4)
+    .limit(Math.min(250, Math.max(1, maxResults)))
     .lean();
   return properties.map(chatPropertyDocument).filter(property => property.slug);
 }
@@ -138,7 +142,7 @@ export function chatCompletionMessages({ message, history = [], properties = [],
   ];
 }
 
-export async function createAssistantReply({ message, history = [], properties = [], action = null, mode = 'database', apiKey = process.env.OPENAI_API_KEY, model = process.env.OPENAI_CHAT_MODEL || 'gpt-5-mini', fetchImpl = fetch } = {}) {
+export async function createAssistantReply({ message, history = [], properties = [], contextProperties = properties.slice(0, 4), action = null, mode = 'database', apiKey = process.env.OPENAI_API_KEY, model = process.env.OPENAI_CHAT_MODEL || 'gpt-5-mini', fetchImpl = fetch } = {}) {
   const fallback = fallbackReply({ message, properties, action });
   if (!apiKey) return { reply: fallback, provider: 'local_fallback' };
   try {
@@ -147,7 +151,7 @@ export async function createAssistantReply({ message, history = [], properties =
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model,
-        messages: chatCompletionMessages({ message, history, properties, mode }),
+        messages: chatCompletionMessages({ message, history, properties: contextProperties, mode }),
         store: false,
         max_completion_tokens: 450,
       }),

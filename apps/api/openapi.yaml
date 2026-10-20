@@ -81,7 +81,7 @@ paths:
                   mode: { type: string, enum: [database, assistant] }
                   properties:
                     type: array
-                    maxItems: 4
+                    maxItems: 250
                     items:
                       type: object
                       properties:
@@ -92,6 +92,7 @@ paths:
                         city: { type: string, nullable: true }
                         beds: { type: number, nullable: true }
                         baths: { type: number, nullable: true }
+                        sqft: { type: number, nullable: true }
                         status: { type: string }
                         image: { type: string }
         '422': { $ref: '#/components/responses/ValidationError' }
@@ -777,7 +778,7 @@ paths:
               type: object
               required: [url]
               properties:
-                url: { type: string, format: uri, example: https://approved.example.com/feed }
+                url: { type: string, format: uri, example: 'https://approved.example.com/feed' }
       responses:
         '200':
           description: Authorized target fetched
@@ -1042,7 +1043,7 @@ components:
         mode: { type: string, enum: [database, assistant] }
         properties:
           type: array
-          maxItems: 4
+          maxItems: 250
           items:
             type: object
             properties:

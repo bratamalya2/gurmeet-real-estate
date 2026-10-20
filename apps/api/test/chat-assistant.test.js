@@ -20,7 +20,7 @@ test('detects valuation, contact, and property-search intent without model outpu
 
 test('extracts safe city, bedroom, price, and address property criteria', () => {
   const criteria = extractPropertyCriteria('Find a 3 bedroom home in Fremont under $1.2m', ['Fremont', 'San Jose']);
-  assert.deepEqual(criteria, { city: 'Fremont', bedrooms: 3, maxPrice: 1200000, address: undefined });
+  assert.deepEqual(criteria, { city: 'Fremont', bedrooms: 3, maxPrice: 1200000, side: undefined, address: undefined });
   const filter = buildPropertySearchFilter(criteria);
   assert.equal(filter['address.city'].test('Fremont'), true);
   assert.deepEqual(filter.beds, { $gte: 3 });
@@ -30,6 +30,7 @@ test('extracts safe city, bedroom, price, and address property criteria', () => 
   assert.equal(textFilter.$or[0].title.test('1995 Eleanor Loop'), true);
   const portfolioFilter = buildPropertySearchFilter(extractPropertyCriteria('Homes bought in Fremont', ['Fremont']));
   assert.equal(portfolioFilter['address.city'].test('Fremont'), true);
+  assert.equal(portfolioFilter['transaction.side'].test('Buyer & Seller'), true);
   assert.equal(portfolioFilter.$or, undefined);
 });
 
