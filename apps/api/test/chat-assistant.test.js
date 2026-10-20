@@ -71,6 +71,22 @@ test('AI Assistant mode gives process guidance unless the visitor explicitly ask
   assert.match(reply.reply, /financing terms/i);
 });
 
+test('Gurmeet AI mode searches when the visitor explicitly asks for homes', async () => {
+  const chain = {
+    select() { return this; },
+    sort() { return this; },
+    limit(value) { assert.equal(value, 250); return this; },
+    lean: async () => [{ _id: 'property-id', title: '1 Main St, Fremont', slug: '1-main-st-fremont', address: { city: 'Fremont' }, status: 'Sold' }],
+  };
+  const PropertyModel = {
+    distinct: async () => ['Fremont'],
+    find(filter) { assert.equal(filter['address.city'].test('Fremont'), true); return chain; },
+  };
+  const result = await searchChatProperties(PropertyModel, 'Show homes in Fremont', {}, 250, 'assistant');
+  assert.equal(result.length, 1);
+  assert.equal(result[0].slug, '1-main-st-fremont');
+});
+
 test('builds grounded Chat Completions messages from sanitized context', () => {
   const messages = chatCompletionMessages({
     message: 'Tell me about a Fremont home',

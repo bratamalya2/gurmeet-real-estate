@@ -14,7 +14,7 @@ const quickQuestions = ['Homes in Fremont', '3 bedroom homes', "What's my home w
 const welcome = {
   id: 'welcome',
   role: 'assistant',
-  content: 'Hello! I’m Gurmeet’s AI Assistant. I can help you explore portfolio homes, understand the buying or selling process, or start a home valuation.',
+  content: 'Hello! I’m Gurmeet AI. I can help you explore portfolio homes, understand the buying or selling process, or start a home valuation.',
   time: now(),
 };
 
@@ -106,13 +106,13 @@ export default function ChatWidget() {
   }
 
   return <aside className="chat-widget">
-    {!open && <button className="chat-launcher chat-launcher-round" type="button" aria-label="Open Gurmeet’s AI property assistant" onClick={() => setOpen(true)}>
+    {!open && <button className="chat-launcher chat-launcher-round" type="button" aria-label="Open Gurmeet AI" onClick={() => setOpen(true)}>
       <FiMessageCircle aria-hidden="true" /><span className="chat-status-dot" aria-hidden="true" />
     </button>}
-    {open && <section className="chat-panel" role="dialog" aria-modal="false" aria-label="Gurmeet’s AI property assistant">
+    {open && <section className="chat-panel" role="dialog" aria-modal="false" aria-label="Gurmeet AI">
       <header className="chat-header">
-        <div className="chat-header-identity"><span className="chat-bot-mark"><FiCpu aria-hidden="true" /><span className="chat-status-dot" aria-hidden="true" /></span><span><strong>Gurmeet AI Assistant</strong><small>Homes By Gurmeet Assistant</small></span></div>
-        <div className="chat-header-actions"><Link href="/ai-search" onClick={() => setOpen(false)} className="chat-full-page-link" aria-label="Open full AI assistant"><FiMaximize2 aria-hidden="true" /><span>Full Page</span></Link><button type="button" aria-label="Close chat" onClick={() => setOpen(false)}><FiX aria-hidden="true" /></button></div>
+        <div className="chat-header-identity"><span className="chat-bot-mark"><FiCpu aria-hidden="true" /><span className="chat-status-dot" aria-hidden="true" /></span><span><strong>Gurmeet AI</strong><small>Homes By Gurmeet</small></span></div>
+        <div className="chat-header-actions"><Link href="/ai-search" onClick={() => setOpen(false)} className="chat-full-page-link" aria-label="Open full Gurmeet AI"><FiMaximize2 aria-hidden="true" /><span>Full Page</span></Link><button type="button" aria-label="Close chat" onClick={() => setOpen(false)}><FiX aria-hidden="true" /></button></div>
       </header>
       <div className="chat-messages" role="log" aria-live="polite" aria-relevant="additions">
         {messages.map(message => <div className={`chat-message ${message.role}`} key={message.id}>
@@ -121,7 +121,7 @@ export default function ChatWidget() {
           {message.role === 'user' && <span className="chat-avatar user"><FiUser aria-hidden="true" /></span>}
         </div>)}
         {messages.length < 3 && !loading && <div className="chat-prompts"><span>Suggested questions</span>{quickQuestions.map(question => <button type="button" key={question} onClick={() => send(question)}>{question}</button>)}</div>}
-        {loading && <div className="chat-loading"><span className="chat-loading-avatar"><FiCpu aria-hidden="true" /></span><span>Assistant searching the portfolio…</span><i /><i /><i /></div>}
+        {loading && <div className="chat-loading"><span className="chat-loading-avatar"><FiCpu aria-hidden="true" /></span><span>Gurmeet AI is searching the portfolio…</span><i /><i /><i /></div>}
         <div ref={endRef} />
       </div>
       <form className="chat-form" onSubmit={event => { event.preventDefault(); send(); }}>

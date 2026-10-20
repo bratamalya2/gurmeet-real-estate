@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { FiArrowRight, FiCheck, FiChevronDown, FiCpu, FiDatabase, FiExternalLink, FiHome, FiMapPin, FiPhone, FiRefreshCw, FiSend, FiSliders, FiStar, FiTrendingUp, FiUser } from 'react-icons/fi';
 import { publicApiUrl, publicAssetUrl } from '../lib/api';
+import { buildAiSearchRequest, GURMEET_AI_LABEL } from '../lib/ai-search.mjs';
 import PropertyImage from './PropertyImage';
 
 const agentPhone = process.env.NEXT_PUBLIC_AGENT_PHONE || '';
@@ -11,7 +12,7 @@ const agentEmail = process.env.NEXT_PUBLIC_AGENT_EMAIL || '';
 const phoneHref = agentPhone ? `tel:${agentPhone.replace(/\D/g, '')}` : '/contact';
 const modes = {
   database: { label: 'Database Search', description: 'Search the live Homes By Gurmeet property portfolio.' },
-  assistant: { label: 'AI Assistant', description: 'Ask for concise buying, selling, or valuation guidance.' },
+  assistant: { label: GURMEET_AI_LABEL, description: 'Ask for concise buying, selling, or valuation guidance.' },
 };
 const quickPrompts = {
   database: ['Homes in Fremont', '3 bedroom homes under $1.2M', 'Show sold homes in San Jose', 'Homes with images'],
@@ -38,8 +39,7 @@ function FormattedText({ text }) {
 }
 
 function ProviderBadge({ provider }) {
-  const label = provider === 'openai' ? 'Homes By Gurmeet AI' : provider === 'local_fallback' ? 'Portfolio Assistant' : 'Assistant';
-  return <span className="ai-search-provider"><FiCheck aria-hidden="true" /> {label}</span>;
+  return <span className="ai-search-provider"><FiCheck aria-hidden="true" /> {GURMEET_AI_LABEL}</span>;
 }
 
 function PropertyResults({ properties = [] }) {
@@ -98,7 +98,6 @@ export default function AiSearchClient() {
     const query = String(explicitMessage ?? message).trim();
     if (!query || loading) return;
     const userTurn = { id: `user-${Date.now()}`, role: 'user', content: query, time: timeLabel() };
-    const priorHistory = history.slice(-6).map(turn => ({ role: turn.role, content: turn.content }));
     setHistory(current => [...current, userTurn]);
     setMessage('');
     setLoading(true);
@@ -107,7 +106,7 @@ export default function AiSearchClient() {
       const response = await fetch(publicApiUrl('ai-search'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: query, mode, history: priorHistory, filters: { city: filters.city || undefined, beds: filters.beds || undefined, maxPrice: filters.maxPrice || undefined } }),
+        body: JSON.stringify(buildAiSearchRequest({ message: query, mode, history, filters })),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || 'The assistant could not process that request.');
@@ -123,10 +122,10 @@ export default function AiSearchClient() {
   return <main className="ai-search-page">
     <section className="ai-search-hero">
       <div className="container ai-search-hero-inner">
-        <div className="ai-search-hero-badge"><FiStar aria-hidden="true" /> AI Assistant Real Estate Suite</div>
+        <div className="ai-search-hero-badge"><FiStar aria-hidden="true" /> Gurmeet AI Real Estate Suite</div>
         <p className="eyebrow">California portfolio search</p>
-        <h1>AI Property Search &amp; Assistant</h1>
-        <p>Explore verified Homes By Gurmeet properties or ask for clear guidance on buying, selling, and home valuation.</p>
+        <h1>Gurmeet AI Property Search</h1>
+        <p>Explore verified Homes By Gurmeet properties or ask Gurmeet AI for clear guidance on buying, selling, and home valuation.</p>
         <div className="ai-search-contact-strip"><span><FiHome aria-hidden="true" /> Homes By Gurmeet</span>{agentPhone && <a href={phoneHref}><FiPhone aria-hidden="true" /> {agentPhone}</a>}{agentEmail && <a href={`mailto:${agentEmail}`}>{agentEmail}</a>}</div>
       </div>
     </section>
@@ -134,8 +133,8 @@ export default function AiSearchClient() {
     <section className="ai-search-main">
       <div className="container ai-search-container">
         <div className="ai-search-console">
-          <div className="ai-search-console-heading"><div><p className="eyebrow">Search engine console</p><h2>Select your assistant mode</h2><p>Use structured portfolio filters or ask Gurmeet’s assistant a natural-language question.</p></div>{history.length > 0 && <button className="ai-search-reset" type="button" onClick={resetSession}><FiRefreshCw aria-hidden="true" /> New search session</button>}</div>
-          <div className="ai-search-mode-toggle" role="tablist" aria-label="AI assistant mode">
+          <div className="ai-search-console-heading"><div><p className="eyebrow">Search engine console</p><h2>Select your assistant mode</h2><p>Use structured portfolio filters or ask Gurmeet AI a natural-language question.</p></div>{history.length > 0 && <button className="ai-search-reset" type="button" onClick={resetSession}><FiRefreshCw aria-hidden="true" /> New search session</button>}</div>
+          <div className="ai-search-mode-toggle" role="tablist" aria-label="Gurmeet AI mode">
             {Object.entries(modes).map(([key, value]) => <button key={key} type="button" role="tab" aria-selected={mode === key} className={mode === key ? 'active' : ''} onClick={() => setMode(key)}><span className="ai-search-mode-icon">{key === 'database' ? <FiDatabase aria-hidden="true" /> : <FiCpu aria-hidden="true" />}</span><span><strong>{value.label}</strong><small>{value.description}</small></span>{mode === key && <FiCheck className="ai-search-mode-check" aria-hidden="true" />}</button>)}
           </div>
           <div className="ai-search-filter-bar"><button type="button" onClick={() => setShowFilters(value => !value)} aria-expanded={showFilters}><FiSliders aria-hidden="true" /> {showFilters ? 'Hide property filters' : 'Show property filters'} <FiChevronDown className={showFilters ? 'rotated' : ''} aria-hidden="true" /></button>{Object.values(filters).some(Boolean) && <button type="button" className="ai-search-clear" onClick={() => setFilters({ city: '', beds: '', maxPrice: '' })}>Clear filters</button>}<Link href="/property-catalogue" className="ai-search-catalogue-link">Browse full catalogue <FiArrowRight aria-hidden="true" /></Link></div>
@@ -145,12 +144,12 @@ export default function AiSearchClient() {
         <div className="ai-search-conversation" aria-live="polite">
           {!history.length && <div className="ai-search-empty"><span className="ai-search-empty-icon"><FiCpu aria-hidden="true" /></span><h2>What would you like to explore?</h2><p>Ask about portfolio homes, use the filters above, or get connected with Gurmeet.</p></div>}
           {history.map(turn => <article className={`ai-search-turn ${turn.role}`} key={turn.id}><div className="ai-search-turn-header">{turn.role === 'assistant' ? <><span className="ai-search-turn-avatar"><FiCpu aria-hidden="true" /></span><ProviderBadge provider={turn.provider} /></> : <><span className="ai-search-turn-avatar user"><FiUser aria-hidden="true" /></span><strong>You</strong></>}<time>{turn.time}</time></div><div className="ai-search-turn-body"><FormattedText text={turn.content} /><PropertyResults properties={turn.properties} /><ActionCard action={turn.action} /></div></article>)}
-          {loading && <div className="ai-search-loading"><span className="ai-search-turn-avatar"><FiRefreshCw aria-hidden="true" /></span><span>Assistant is searching the portfolio…</span></div>}
+          {loading && <div className="ai-search-loading"><span className="ai-search-turn-avatar"><FiRefreshCw aria-hidden="true" /></span><span>Gurmeet AI is searching the portfolio…</span></div>}
           {error && <p className="error ai-search-error">{error}</p>}
           <div ref={resultsEndRef} />
         </div>
 
-        <div className="ai-search-composer"><div className="ai-search-suggestions"><span>Suggested questions</span>{quickPrompts[mode].map(prompt => <button type="button" key={prompt} onClick={() => submit(prompt)} disabled={loading}>{prompt}</button>)}</div><form onSubmit={event => { event.preventDefault(); submit(); }}><label className="sr-only" htmlFor="ai-search-input">Ask the AI property assistant</label><input ref={inputRef} id="ai-search-input" value={message} onChange={event => setMessage(event.target.value)} maxLength={1200} placeholder={mode === 'database' ? 'Search by city, beds, price, or address…' : 'Ask about buying, selling, or home valuation…'} disabled={loading} /><button type="submit" disabled={!message.trim() || loading} aria-label="Submit assistant question"><FiSend aria-hidden="true" /></button></form><p className="ai-search-disclosure">AI responses may be inaccurate. Property information is drawn from the current Homes By Gurmeet portfolio and should be verified.</p></div>
+        <div className="ai-search-composer"><div className="ai-search-suggestions"><span>Suggested questions</span>{quickPrompts[mode].map(prompt => <button type="button" key={prompt} onClick={() => submit(prompt)} disabled={loading}>{prompt}</button>)}</div><form onSubmit={event => { event.preventDefault(); submit(); }}><label className="sr-only" htmlFor="ai-search-input">Ask Gurmeet AI</label><input ref={inputRef} id="ai-search-input" value={message} onChange={event => setMessage(event.target.value)} maxLength={1200} placeholder={mode === 'database' ? 'Search by city, beds, price, or address…' : 'Ask Gurmeet AI about buying, selling, or home valuation…'} disabled={loading} /><button type="submit" disabled={!message.trim() || loading} aria-label="Submit Gurmeet AI question"><FiSend aria-hidden="true" /></button></form><p className="ai-search-disclosure">AI responses may be inaccurate. Property information is drawn from the current Homes By Gurmeet portfolio and should be verified.</p></div>
       </div>
     </section>
   </main>;
