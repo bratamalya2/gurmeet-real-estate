@@ -5,7 +5,7 @@ const MAX_MESSAGE_LENGTH = 1200;
 const MAX_HISTORY_MESSAGES = 6;
 const PROPERTY_TERMS = /\b(property|properties|home|homes|house|houses|listing|listings|buy|buying|search|showing|tour|bed|bedroom|br)\b/i;
 const EXPLICIT_SEARCH_TERMS = /\b(show|find|search|browse|available|matching|listings?|properties)\b|\bhomes?\s+(?:in|under|below)\b/i;
-const ASSISTANT_GUIDANCE_TERMS = /\b(i\s+(?:want|would like)|how can i|what are the steps|tell me how|help me|financ|mortgage|loan|pre-approval|preapproval)\b/i;
+const ASSISTANT_GUIDANCE_TERMS = /\b(i\s+(?:want|would like)|how can i|what are the steps|tell me how|help me|finance|financing|mortgage|loan|pre-approval|preapproval)\b/i;
 const VALUATION_TERMS = /\b(worth|value|valuation|cma|appraisal|estimate|price my home|sell my home|selling)\b/i;
 const CONTACT_TERMS = /\b(contact|call|phone|email|speak|talk|consultation|showing|tour|visit)\b/i;
 const BUYER_SIDE_TERMS = /\b(bought|purchased|buyer representation|buyer side)\b/i;
@@ -126,7 +126,7 @@ export function fallbackReply({ message, properties = [], action, mode = 'databa
   if (action === 'contact') return 'Gurmeet would be glad to help with your question or arrange a conversation. Use the Contact page to share the best way to reach you.';
   if (properties.length) return `I found ${properties.length} portfolio ${properties.length === 1 ? 'home' : 'homes'} that may be relevant. Open a property card for its available details, or contact Gurmeet for tailored guidance.`;
   if (mode === 'assistant') {
-    if (/\b(financ|mortgage|loan|pre-approval|preapproval)\b/i.test(message)) return 'A typical purchase starts with clarifying your goals, speaking with a licensed lender about pre-approval, reviewing suitable homes, and then moving through offer, inspection, appraisal, and closing steps. Financing terms depend on your lender and situation, so Gurmeet can coordinate the home-search process while a lender answers loan-specific questions.';
+    if (/\b(finance|financing|mortgage|loan|pre-approval|preapproval)\b/i.test(message)) return 'A typical purchase starts with clarifying your goals, speaking with a licensed lender about pre-approval, reviewing suitable homes, and then moving through offer, inspection, appraisal, and closing steps. Financing terms depend on your lender and situation, so Gurmeet can coordinate the home-search process while a lender answers loan-specific questions.';
     if (/\b(buy|buying|purchase|purchasing)\b/i.test(message)) return 'Buying generally starts with your priorities and budget, followed by lender pre-approval, a focused home search, property review, offer strategy, inspections, and closing. Gurmeet can help you navigate the property and offer process; use Contact to begin a conversation.';
     if (/\b(sell|selling)\b/i.test(message)) return 'Selling generally starts with a property review and valuation, followed by preparation, pricing, marketing, showing management, negotiation, and closing coordination. Use Home Valuation to request a personalized starting point from Gurmeet.';
     return 'I can explain the buying, selling, and valuation process using Homes By Gurmeet’s services. Ask about a specific step, or use Contact to speak with Gurmeet directly.';

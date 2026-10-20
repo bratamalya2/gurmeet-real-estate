@@ -68,6 +68,7 @@ test('AI Assistant mode gives process guidance unless the visitor explicitly ask
   const reply = await createAssistantReply({ message: 'I want to buy a home. How can I finance it?', mode: 'assistant', apiKey: '' });
   assert.equal(reply.provider, 'local_fallback');
   assert.match(reply.reply, /pre-approval|lender/i);
+  assert.match(reply.reply, /financing terms/i);
 });
 
 test('builds grounded Chat Completions messages from sanitized context', () => {
