@@ -529,15 +529,6 @@ export default function Admin() {
                   </div>
                 </div>
               )}
-                <label>
-                  <input
-                    name="featured"
-                    type="checkbox"
-                    checked={property.featured}
-                    onChange={updateProperty}
-                  />{" "}
-                  Featured residence
-                </label>
                 <div style={{ display: "flex", gap: 12 }}>
                   <button className="btn">Save property</button>
                   {property.id && (
