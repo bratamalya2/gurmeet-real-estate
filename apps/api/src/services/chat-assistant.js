@@ -59,7 +59,7 @@ export function extractPropertyCriteria(message = '', cities = [], filters = {})
   }
 
   const address = value.match(/\b\d{1,6}\s+[\w\s.'#-]+(?:street|st|avenue|ave|road|rd|drive|dr|court|ct|lane|ln|way|place|pl|boulevard|blvd)\b/i)?.[0];
-  const stopWords = new Set(['a', 'an', 'and', 'are', 'bed', 'beds', 'bedroom', 'bedrooms', 'br', 'buy', 'buying', 'find', 'for', 'home', 'homes', 'house', 'houses', 'in', 'listing', 'listings', 'me', 'of', 'on', 'property', 'properties', 'search', 'show', 'the', 'under', 'with']);
+  const stopWords = new Set(['a', 'an', 'and', 'are', 'bed', 'beds', 'bedroom', 'bedrooms', 'br', 'bought', 'buy', 'buying', 'ca', 'california', 'completed', 'find', 'for', 'home', 'homes', 'house', 'houses', 'in', 'listing', 'listings', 'me', 'of', 'on', 'portfolio', 'property', 'properties', 'sale', 'sold', 'search', 'show', 'the', 'under', 'with']);
   const text = value
     .replace(/\$?[\d,.]+\s*(?:m|million|k|thousand)?/gi, ' ')
     .split(/[^a-zA-Z0-9]+/)

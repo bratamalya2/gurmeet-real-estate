@@ -28,6 +28,9 @@ test('extracts safe city, bedroom, price, and address property criteria', () => 
   assert.equal(buildPropertySearchFilter(extractPropertyCriteria('123 Main St', [])).$or[0].title.test('123 Main St'), true);
   const textFilter = buildPropertySearchFilter(extractPropertyCriteria('Show Eleanor homes', []));
   assert.equal(textFilter.$or[0].title.test('1995 Eleanor Loop'), true);
+  const portfolioFilter = buildPropertySearchFilter(extractPropertyCriteria('Homes bought in Fremont', ['Fremont']));
+  assert.equal(portfolioFilter['address.city'].test('Fremont'), true);
+  assert.equal(portfolioFilter.$or, undefined);
 });
 
 test('searches live property records using only safe public card fields', async () => {
