@@ -4,15 +4,15 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { FiArrowRight, FiCheck, FiChevronDown, FiCpu, FiDatabase, FiExternalLink, FiHome, FiMapPin, FiPhone, FiRefreshCw, FiSend, FiSliders, FiStar, FiTrendingUp, FiUser } from 'react-icons/fi';
 import { publicApiUrl, publicAssetUrl } from '../lib/api';
-import { AI_SEARCH_LABEL, buildAiSearchRequest, providerLabel } from '../lib/ai-search.mjs';
+import { buildAiSearchRequest, providerLabel } from '../lib/ai-search.mjs';
 import PropertyImage from './PropertyImage';
 
 const agentPhone = process.env.NEXT_PUBLIC_AGENT_PHONE || '';
 const agentEmail = process.env.NEXT_PUBLIC_AGENT_EMAIL || '';
 const phoneHref = agentPhone ? `tel:${agentPhone.replace(/\D/g, '')}` : '/contact';
 const modes = {
-  database: { label: 'Website Search', description: 'Search the live Homes By Gurmeet property portfolio.' },
-  assistant: { label: AI_SEARCH_LABEL, description: 'Ask for buying, selling, or valuation guidance.' },
+  database: { label: 'Website Search Mode', description: 'Search the live Homes By Gurmeet property portfolio.' },
+  assistant: { label: 'AI Search Mode', description: 'Ask for buying, selling, or valuation guidance.' },
 };
 const quickPrompts = {
   database: ['Homes in Fremont', 'What services do you offer?', 'How do I request a home valuation?', 'How can I contact Gurmeet?'],
@@ -140,7 +140,7 @@ export default function AiSearchClient() {
       <div className="container ai-search-hero-inner">
         <div className="ai-search-hero-badge"><FiStar aria-hidden="true" /> Gurmeet AI Mode Real Estate Suite</div>
         <p className="eyebrow">California portfolio search</p>
-        <h1>Gurmeet AI Mode Property Assistant</h1>
+        <h1>Gurmeet AI Mode</h1>
         <p>Explore verified Homes By Gurmeet properties or use Gurmeet AI Mode for clear guidance on buying, selling, and home valuation.</p>
         <div className="ai-search-contact-strip"><span><FiHome aria-hidden="true" /> Homes By Gurmeet</span>{agentPhone && <a href={phoneHref}><FiPhone aria-hidden="true" /> {agentPhone}</a>}{agentEmail && <a href={`mailto:${agentEmail}`}>{agentEmail}</a>}</div>
       </div>
@@ -149,7 +149,7 @@ export default function AiSearchClient() {
     <section className="ai-search-main">
       <div className="container ai-search-container">
         <div className="ai-search-console">
-          <div className="ai-search-console-heading"><div><p className="eyebrow">Search engine console</p><h2>Select your search mode</h2><p>Use structured website filters or ask Gurmeet AI Mode a natural-language question.</p></div>{history.length > 0 && <button className="ai-search-reset" type="button" onClick={resetSession}><FiRefreshCw aria-hidden="true" /> New search session</button>}</div>
+          <div className="ai-search-console-heading"><div><p className="eyebrow">Search engine console</p><h2>Select your Gurmeet AI mode</h2><p>Use structured website filters or ask Gurmeet AI Mode a natural-language question.</p></div>{history.length > 0 && <button className="ai-search-reset" type="button" onClick={resetSession}><FiRefreshCw aria-hidden="true" /> New search session</button>}</div>
           <div className="ai-search-mode-toggle" role="tablist" aria-label="Gurmeet AI Mode mode">
             {Object.entries(modes).map(([key, value]) => <button key={key} type="button" role="tab" aria-selected={mode === key} className={mode === key ? 'active' : ''} onClick={() => setMode(key)}><span className="ai-search-mode-icon">{key === 'database' ? <FiDatabase aria-hidden="true" /> : <FiCpu aria-hidden="true" />}</span><span><strong>{value.label}</strong><small>{value.description}</small></span>{mode === key && <FiCheck className="ai-search-mode-check" aria-hidden="true" />}</button>)}
           </div>
