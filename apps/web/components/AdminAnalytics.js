@@ -56,10 +56,16 @@ function StatCard({ label, value, detail }) {
   return <div className="analytics-stat"><span>{label}</span><strong>{value}</strong>{detail && <small>{detail}</small>}</div>;
 }
 
-function BarList({ items, labelKey = 'label', valueKey = 'count', empty = 'No data yet.', className = '' }) {
+function BarList({ items, labelKey = 'label', valueKey = 'count', empty = 'No data yet.', className = '', orientation = 'horizontal' }) {
   const max = Math.max(...items.map(item => Number(item[valueKey] || 0)), 1);
   if (!items.length) return <p className="muted analytics-empty">{empty}</p>;
-  return <div className={`analytics-bars ${className}`.trim()} role="list" aria-label="Horizontal bar chart">{items.map((item, index) => <div className="analytics-bar-row" key={`${item[labelKey]}-${index}`} role="listitem"><div className="analytics-bar-label"><span>{item[labelKey]}</span><b>{formatNumber(item[valueKey])}</b></div><div className="analytics-bar-track" aria-hidden="true"><i style={{ width: `${(Number(item[valueKey] || 0) / max) * 100}%` }} /></div></div>)}</div>;
+  const isVertical = orientation === 'vertical';
+  return <div className={`analytics-bars ${isVertical ? 'analytics-bars-vertical' : ''} ${className}`.trim()} role="list" aria-label={`${isVertical ? 'Vertical' : 'Horizontal'} bar chart`}>{items.map((item, index) => {
+    const value = Number(item[valueKey] || 0);
+    return <div className="analytics-bar-row" key={`${item[labelKey]}-${index}`} role="listitem">
+      {isVertical ? <><div className="analytics-bar-track" aria-hidden="true"><i style={{ height: `${(value / max) * 100}%` }} /></div><div className="analytics-bar-label"><span title={String(item[labelKey])}>{item[labelKey]}</span><b>{formatNumber(value)}</b></div></> : <><div className="analytics-bar-label"><span>{item[labelKey]}</span><b>{formatNumber(value)}</b></div><div className="analytics-bar-track" aria-hidden="true"><i style={{ width: `${(value / max) * 100}%` }} /></div></>}
+    </div>;
+  })}</div>;
 }
 
 function TrendChart({ data, firstKey, secondKey, firstLabel, secondLabel, empty = 'No activity in this range.' }) {
@@ -190,7 +196,7 @@ export default function AdminAnalytics() {
       </section>
       <div className="analytics-grid two"><Panel title="Traffic trend"><TrendChart data={data.traffic?.trend || []} firstKey="pageViews" secondKey="listingViews" firstLabel="Page views" secondLabel="Listing views" /></Panel><Panel title="Lead trend"><LeadTrend data={data.leads?.trend || []} /></Panel></div>
       <div className="analytics-grid three"><Panel title="Lead types"><BarList items={(data.leads?.byType || []).map(item => ({ label: item.type, count: item.count }))} /></Panel><Panel title="Listing status"><BarList items={(data.inventory?.byStatus || []).map(item => ({ label: item.status, count: item.count }))} /></Panel><Panel title="Price range"><div className="analytics-price-list"><span>Average active price <b>{formatCurrency(price.average)}</b></span><span>Lowest active price <b>{formatCurrency(price.minimum)}</b></span><span>Highest active price <b>{formatCurrency(price.maximum)}</b></span></div></Panel></div>
-      <div className="analytics-grid analytics-city-grid"><Panel title="Listings by city" className="analytics-city-panel"><BarList items={data.inventory?.byCity || []} className="analytics-horizontal-bars" /></Panel></div>
+      <div className="analytics-grid analytics-city-grid"><Panel title="Listings by city" className="analytics-city-panel"><BarList items={data.inventory?.byCity || []} orientation="vertical" className="analytics-vertical-city-bars" /></Panel></div>
       <div className="analytics-grid two"><Panel title="Source coverage"><BarList items={data.inventory?.sourceCoverage || []} /></Panel></div>
       <div className="analytics-grid two"><Panel title="Top public pages"><DataTable headers={["Page", "Views"]} rows={(data.traffic?.topPages || []).map(item => ({ key: item.path, cells: [item.path, formatNumber(item.views)] }))} /></Panel><Panel title="Top viewed listings"><DataTable headers={["Listing", "Views"]} rows={(data.traffic?.topListings || []).map(item => ({ key: item.propertyId, cells: [item.title, formatNumber(item.views)] }))} /></Panel></div>
       <div className="analytics-grid two"><Panel title="Listings generating leads"><DataTable headers={["Listing", "Leads"]} rows={(data.leads?.byListing || []).map(item => ({ key: item.propertyId, cells: [item.title, formatNumber(item.leads)] }))} /></Panel><Panel title="Image coverage"><BarList items={[{ label: 'With images', count: data.inventory?.imageCoverage?.withImages || 0 }, { label: 'Without images', count: data.inventory?.imageCoverage?.withoutImages || 0 }]} /></Panel></div>
