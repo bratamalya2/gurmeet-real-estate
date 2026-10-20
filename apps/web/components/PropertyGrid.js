@@ -12,7 +12,7 @@ const featuredAddressKey = property => {
   return fallback || property?._id;
 };
 
-export default function PropertyGrid({ status, side, featured = false, showFilters = false, showSourceFilters = false, showPriceSort = false }) {
+export default function PropertyGrid({ status, side, featured = false, featuredStatus, showFilters = false, showSourceFilters = false, showPriceSort = false }) {
   const [data, setData] = useState({ items: [], total: 0, page: 1, pages: 1 });
   const [page, setPage] = useState(1);
   const [source, setSource] = useState('all');
@@ -30,7 +30,8 @@ export default function PropertyGrid({ status, side, featured = false, showFilte
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    const endpoint = featured ? publicApiUrl('properties/featured') : publicApiUrl(`properties?${query.toString()}`);
+    const featuredQuery = featuredStatus ? `?status=${encodeURIComponent(featuredStatus)}` : '';
+    const endpoint = featured ? publicApiUrl(`properties/featured${featuredQuery}`) : publicApiUrl(`properties?${query.toString()}`);
     fetch(endpoint).then(response => response.ok ? response.json() : Promise.reject()).then(result => {
       if (!cancelled) {
         const items = featured ? result.filter((property, index, list) => list.findIndex(candidate => featuredAddressKey(candidate) === featuredAddressKey(property)) === index) : result.items;
@@ -38,7 +39,7 @@ export default function PropertyGrid({ status, side, featured = false, showFilte
       }
     }).catch(() => { if (!cancelled) setData({ items: [], total: 0, page: 1, pages: 1 }); }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [featured, page, status, side, source, sort, showSourceFilters, showPriceSort, JSON.stringify(filters)]);
+  }, [featured, featuredStatus, page, status, side, source, sort, showSourceFilters, showPriceSort, JSON.stringify(filters)]);
 
   function applyFilters(event) { event.preventDefault(); setPage(1); setFilters(draft); }
   function clearFilters() { setDraft(initialFilters); setFilters(initialFilters); setSource('all'); setPage(1); }

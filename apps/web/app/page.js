@@ -22,6 +22,9 @@ export default function Home() {
               <Link className="btn" href="/bought-with-gurmeet">
                 Bought with Gurmeet
               </Link>
+              <Link className="btn" href="/bought-with-gurmeet">
+                Featured Listings
+              </Link>
               <Link
                 className="btn alt"
                 style={{ color: "#fff", borderColor: "#fff" }}
@@ -38,16 +41,8 @@ export default function Home() {
               <p className="eyebrow">Curated collection</p>
               <h2 style={{ fontSize: 42 }}>Featured Residences</h2>
             </div>
-            <div className="feature-actions" aria-label="Browse portfolio homes">
-              <Link className="btn" href="/bought-with-gurmeet">
-                Bought with Gurmeet
-              </Link>
-              <Link className="btn alt" href="/sold-by-gurmeet">
-                Sold by Gurmeet
-              </Link>
-            </div>
           </div>
-          <PropertyGrid featured />
+          <PropertyGrid featured featuredStatus="Sold" />
         </section>
         <section className="dark-section section">
           <div className="container two">
