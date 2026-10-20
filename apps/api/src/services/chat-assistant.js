@@ -162,7 +162,7 @@ Use the Home Valuation page to begin a property-specific conversation. Estimates
 6. **Choose next steps.** If you decide to proceed, Gurmeet can help plan preparation, marketing, showings, offer review, and transaction coordination.
 
 Start with the Home Valuation form or use Contact to speak with Gurmeet. A valuation is an informed planning estimate and is not a guarantee of a sale price or lending value.`;
-    if (action === 'contact') return `## How Gurmeet AI can help
+    if (action === 'contact') return `## How AI Search can help
 
 1. **Buying:** organize your priorities, search the portfolio, and prepare questions for a property conversation.
 2. **Selling:** start with a valuation, discuss preparation, and plan a listing strategy around your timeline.
@@ -181,7 +181,7 @@ Gurmeet can provide real-estate process guidance, while licensed lenders, attorn
 7. **Prepare for closing.** Review final disclosures, confirm the walkthrough and closing timeline, and arrange funds and signing details.
 
 Financing terms and qualification depend on your lender, so a licensed lender should answer loan-specific questions. Use Contact when you are ready to discuss your search with Gurmeet.`;
-    return `## How Gurmeet AI can help
+    return `## How AI Search can help
 
 1. Ask about buying, selling, home valuation, or a specific property in the Homes By Gurmeet portfolio.
 2. For a property search, use an explicit request such as “show homes in Fremont” so matching cards can be returned.

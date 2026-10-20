@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildAiSearchRequest, GURMEET_AI_LABEL, providerLabel } from '../lib/ai-search.mjs';
+import { AI_SEARCH_LABEL, buildAiSearchRequest, providerLabel } from '../lib/ai-search.mjs';
 
-test('preserves conversation history while sending the selected Gurmeet AI mode', () => {
+test('preserves conversation history while sending the selected AI Search mode', () => {
   const request = buildAiSearchRequest({
     message: 'I want to buy a home in Fremont',
     mode: 'assistant',
@@ -21,12 +21,12 @@ test('preserves conversation history while sending the selected Gurmeet AI mode'
   assert.deepEqual(request.filters, {});
 });
 
-test('uses the Gurmeet AI public label', () => {
-  assert.equal(GURMEET_AI_LABEL, 'Gurmeet AI');
+test('uses the AI Search public label', () => {
+  assert.equal(AI_SEARCH_LABEL, 'AI Search');
 });
 
 test('labels the actual AI provider transparently', () => {
-  assert.equal(providerLabel('openai'), 'Gurmeet AI · OpenAI');
-  assert.equal(providerLabel('local_fallback'), 'Gurmeet AI · Local fallback');
-  assert.equal(providerLabel(undefined), GURMEET_AI_LABEL);
+  assert.equal(providerLabel('openai'), 'AI Search · OpenAI');
+  assert.equal(providerLabel('local_fallback'), 'AI Search · Local fallback');
+  assert.equal(providerLabel(undefined), AI_SEARCH_LABEL);
 });

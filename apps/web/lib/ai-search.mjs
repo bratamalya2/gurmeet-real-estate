@@ -1,9 +1,9 @@
-export const GURMEET_AI_LABEL = 'Gurmeet AI';
+export const AI_SEARCH_LABEL = 'AI Search';
 
 export function providerLabel(provider) {
-  if (provider === 'openai') return `${GURMEET_AI_LABEL} · OpenAI`;
-  if (provider === 'local_fallback') return `${GURMEET_AI_LABEL} · Local fallback`;
-  return GURMEET_AI_LABEL;
+  if (provider === 'openai') return `${AI_SEARCH_LABEL} · OpenAI`;
+  if (provider === 'local_fallback') return `${AI_SEARCH_LABEL} · Local fallback`;
+  return AI_SEARCH_LABEL;
 }
 
 export function buildAiSearchRequest({ message, mode = 'database', history = [], filters = {} } = {}) {

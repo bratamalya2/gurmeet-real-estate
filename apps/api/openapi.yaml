@@ -103,7 +103,7 @@ paths:
       tags: [Public]
       summary: Search the full-page AI property assistant
       description: |
-        Full-page equivalent of the public chat assistant. It accepts database-search
+        Full-page equivalent of the public AI Search assistant. It accepts website-search
         or conversational-assistant mode, uses live public property data, and never
         stores chat history or transcripts. The same IP rate limit applies as /chat.
       security: []

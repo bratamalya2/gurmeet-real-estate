@@ -72,7 +72,7 @@ test('AI Assistant mode gives process guidance unless the visitor explicitly ask
   assert.match(reply.reply, /loan-specific questions/i);
 });
 
-test('local Gurmeet AI fallback gives detailed buying, selling, and valuation guidance', () => {
+test('local AI Search fallback gives detailed buying, selling, and valuation guidance', () => {
   const buying = fallbackReply({ message: 'I want to buy a home', mode: 'assistant' });
   assert.match(buying, /## Buying a home with Gurmeet/);
   assert.match(buying, /Prepare for closing/);
@@ -86,7 +86,7 @@ test('local Gurmeet AI fallback gives detailed buying, selling, and valuation gu
   assert.match(valuation, /Submit the property address/);
 });
 
-test('Gurmeet AI mode searches when the visitor explicitly asks for homes', async () => {
+test('AI Search mode searches when the visitor explicitly asks for homes', async () => {
   const chain = {
     select() { return this; },
     sort() { return this; },

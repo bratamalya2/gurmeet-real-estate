@@ -2,7 +2,7 @@ import { Footer, Header } from '../../components/SiteChrome';
 import AiSearchClient from '../../components/AiSearchClient';
 
 export const metadata = {
-  title: 'Gurmeet AI Property Assistant',
+  title: 'AI Search Property Assistant',
   description: 'Explore the Homes By Gurmeet portfolio with an AI-assisted property search.',
 };
 
