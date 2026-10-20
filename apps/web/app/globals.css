@@ -4069,6 +4069,18 @@ a {
   overflow-wrap: anywhere;
 }
 
+/* The admin sidebar reduces the usable analytics width before the browser
+   viewport reaches the normal tablet breakpoint. */
+@media (max-width: 1280px) {
+  .analytics-donut-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .analytics-doughnut-visual {
+    grid-template-columns: minmax(112px, 130px) minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 900px) {
   .analytics-toolbar {
     align-items: stretch;
