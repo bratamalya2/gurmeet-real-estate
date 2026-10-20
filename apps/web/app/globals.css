@@ -1687,6 +1687,118 @@ footer {
   .ai-search-contact-strip { flex-direction: column; gap: 9px; }
 }
 
+/* Compact mode switch at the end of the dedicated AI Search experience. */
+.ai-search-bottom-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 13px 16px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.ai-search-bottom-switch > span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.ai-search-mode-switch {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid #dbe3ee;
+  border-radius: 999px;
+  background: #f8fafc;
+}
+.ai-search-mode-switch button {
+  min-width: 118px;
+  padding: 8px 13px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.ai-search-mode-switch button.active {
+  background: var(--navy);
+  color: #fff;
+}
+.ai-search-mode-switch button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Services page portfolio entry point. */
+.services-page {
+  display: grid;
+  gap: 28px;
+}
+.services-grid .card-body h2 {
+  margin: 10px 0;
+  font-size: 34px;
+}
+.services-active-listings {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 28px;
+  padding: 34px 38px;
+  background: var(--navy);
+  color: #fff;
+}
+.services-active-listings .eyebrow {
+  margin: 0 0 8px;
+  color: #e2bc7d;
+}
+.services-active-listings h2 {
+  font-size: 36px;
+}
+.services-active-listings p:last-child {
+  max-width: 650px;
+  margin: 12px 0 0;
+  color: #cbd5e1;
+  line-height: 1.55;
+}
+.services-active-listings .btn {
+  white-space: nowrap;
+  border-color: #e2bc7d;
+  background: #e2bc7d;
+  color: var(--navy);
+}
+.services-active-listings .btn:hover {
+  border-color: #fff;
+  background: #fff;
+}
+@media (max-width: 700px) {
+  .ai-search-bottom-switch {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .ai-search-mode-switch {
+    width: 100%;
+  }
+  .ai-search-mode-switch button {
+    flex: 1;
+    min-width: 0;
+  }
+  .services-active-listings {
+    grid-template-columns: 1fr;
+    padding: 28px 24px;
+  }
+  .services-active-listings h2 {
+    font-size: 30px;
+  }
+  .services-active-listings .btn {
+    width: fit-content;
+  }
+}
+
 /* About & Contact Page Enhancements */
 .about-hero-badge {
   display: inline-flex;

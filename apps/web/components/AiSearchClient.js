@@ -42,6 +42,12 @@ function ProviderBadge({ provider }) {
   return <span className="ai-search-provider"><FiCheck aria-hidden="true" /> {providerLabel(provider)}</span>;
 }
 
+function ModeSwitch({ mode, onChange, compact = false }) {
+  return <div className={`ai-search-mode-switch ${compact ? 'compact' : ''}`.trim()} role="group" aria-label="Choose AI Search mode">
+    {Object.entries(modes).map(([key, value]) => <button key={key} type="button" aria-pressed={mode === key} className={mode === key ? 'active' : ''} onClick={() => onChange(key)}>{value.label}</button>)}
+  </div>;
+}
+
 function PropertyResults({ properties = [] }) {
   if (!properties.length) return null;
   return <div className="ai-search-results">
@@ -150,6 +156,7 @@ export default function AiSearchClient() {
         </div>
 
         <div className="ai-search-composer"><div className="ai-search-suggestions"><span>Suggested questions</span>{quickPrompts[mode].map(prompt => <button type="button" key={prompt} onClick={() => submit(prompt)} disabled={loading}>{prompt}</button>)}</div><form onSubmit={event => { event.preventDefault(); submit(); }}><label className="sr-only" htmlFor="ai-search-input">Ask AI Search</label><input ref={inputRef} id="ai-search-input" value={message} onChange={event => setMessage(event.target.value)} maxLength={1200} placeholder={mode === 'database' ? 'Search by city, beds, price, or address…' : 'Ask AI Search about buying, selling, or home valuation…'} disabled={loading} /><button type="submit" disabled={!message.trim() || loading} aria-label="Submit AI Search question"><FiSend aria-hidden="true" /></button></form><p className="ai-search-disclosure">AI responses may be inaccurate. Property information is drawn from the current Homes By Gurmeet portfolio and should be verified.</p></div>
+        <div className="ai-search-bottom-switch"><span>Switch search mode</span><ModeSwitch mode={mode} onChange={setMode} compact /></div>
       </div>
     </section>
   </main>;
