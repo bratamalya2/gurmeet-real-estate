@@ -30,7 +30,16 @@ The Admin dashboard **Analytics** tab reports current inventory, pricing, lead a
 
 The public site includes a floating Gurmeet AI property assistant and a full-page assistant at `/ai-search`. The full-page experience has two modes: **Database Search** for structured portfolio filters and **Gurmeet AI** for conversational buying, selling, and valuation guidance. Both modes use the live portfolio when a property search is requested, return public property cards, and direct visitors to the existing Contact and Home Valuation forms. The assistant is hidden on admin and `/ai-search` routes, and chats stay in the visitor's browser; no transcript is stored in MongoDB.
 
-The public endpoints are `POST /api/chat` for the floating widget and `POST /api/ai-search` for the full-page client. Both validate a maximum 1,200-character message, six history turns, bounded city/bedroom/price filters, and share a public rate limit of 24 requests per IP per 15 minutes. The floating widget shows up to four matches; the full-page assistant returns the complete matching public portfolio and links to `/property-catalogue`, where visitors can browse and filter the catalogue. Set `OPENAI_API_KEY` only in `apps/api/.env`; never expose it in the web environment. `OPENAI_CHAT_MODEL` defaults to `gpt-5-mini` and can be overridden for the API container. The API sends grounded messages to OpenAI Chat Completions with `store: false`; without a configured key or when OpenAI is unavailable, it returns a useful `local_fallback` response with the same live property matches and CTAs.
+The public endpoints are `POST /api/chat` for the floating widget and `POST /api/ai-search` for the full-page client. Both validate a maximum 1,200-character message, six history turns, bounded city/bedroom/price filters, and share a public rate limit of 24 requests per IP per 15 minutes. The floating widget shows up to four matches; the full-page assistant returns the complete matching public portfolio and links to `/property-catalogue`, where visitors can browse and filter the catalogue. Set `OPENAI_API_KEY` only in `apps/api/.env`; never expose it in the web environment. `OPENAI_CHAT_MODEL` defaults to `gpt-5-mini` and can be overridden for the API container. The API sends grounded messages to OpenAI Chat Completions with `store: false`; `Gurmeet AI · OpenAI` indicates a successful model response, while `Gurmeet AI · Local fallback` indicates that the configured key is missing or the upstream request failed. In assistant mode, buying, selling, valuation, and financing questions receive structured multi-step guidance; explicit property searches still return live property cards, while conversational financing questions do not. If the key is missing or OpenAI is unavailable, the local fallback returns the same detailed guidance without writing transcripts to MongoDB.
+
+On EC2, add the server-only key to `apps/api/.env` and restart only the API after changing it:
+
+```bash
+cd ~/gurmeet-real-estate
+docker compose up -d --force-recreate --no-deps api
+```
+
+Never put `OPENAI_API_KEY` in the web app environment or a `NEXT_PUBLIC_*` variable. You can verify the provider without exposing secrets by posting to `/api/ai-search` and inspecting the response's `provider` field.
 
 ## Updating property images from Google Drive
 

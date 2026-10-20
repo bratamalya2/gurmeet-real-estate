@@ -10,6 +10,10 @@ const VALUATION_TERMS = /\b(worth|value|valuation|cma|appraisal|estimate|price m
 const CONTACT_TERMS = /\b(contact|call|phone|email|speak|talk|consultation|showing|tour|visit)\b/i;
 const BUYER_SIDE_TERMS = /\b(bought|purchased|buyer representation|buyer side)\b/i;
 const SELLER_SIDE_TERMS = /\b(sold by gurmeet|seller representation|seller side)\b/i;
+const FINANCING_TERMS = /\b(finance|financing|mortgage|loan|pre-approval|preapproval|lender|down payment|interest rate)\b/i;
+const BUYING_GUIDANCE_TERMS = /\b(buy|buying|purchase|purchasing|buyer)\b/i;
+const SELLING_GUIDANCE_TERMS = /\b(sell|selling|seller|list my home|list a home)\b/i;
+const VALUATION_GUIDANCE_TERMS = /\b(worth|value|valuation|cma|appraisal|estimate|price my home)\b/i;
 
 const filtersSchema = z.object({
   city: z.preprocess(value => String(value || '').trim() || undefined, z.string().max(80).optional()),
@@ -122,15 +126,73 @@ export async function searchChatProperties(PropertyModel, message, filters = {},
 }
 
 export function fallbackReply({ message, properties = [], action, mode = 'database' } = {}) {
-  if (action === 'valuation') return 'Gurmeet can prepare a complimentary home valuation based on your property and current local context. Use the Home Valuation form to get started, or contact Gurmeet directly for a conversation.';
-  if (action === 'contact') return 'Gurmeet would be glad to help with your question or arrange a conversation. Use the Contact page to share the best way to reach you.';
   if (properties.length) return `I found ${properties.length} portfolio ${properties.length === 1 ? 'home' : 'homes'} that may be relevant. Open a property card for its available details, or contact Gurmeet for tailored guidance.`;
   if (mode === 'assistant') {
-    if (/\b(finance|financing|mortgage|loan|pre-approval|preapproval)\b/i.test(message)) return 'A typical purchase starts with clarifying your goals, speaking with a licensed lender about pre-approval, reviewing suitable homes, and then moving through offer, inspection, appraisal, and closing steps. Financing terms depend on your lender and situation, so Gurmeet can coordinate the home-search process while a lender answers loan-specific questions.';
-    if (/\b(buy|buying|purchase|purchasing)\b/i.test(message)) return 'Buying generally starts with your priorities and budget, followed by lender pre-approval, a focused home search, property review, offer strategy, inspections, and closing. Gurmeet can help you navigate the property and offer process; use Contact to begin a conversation.';
-    if (/\b(sell|selling)\b/i.test(message)) return 'Selling generally starts with a property review and valuation, followed by preparation, pricing, marketing, showing management, negotiation, and closing coordination. Use Home Valuation to request a personalized starting point from Gurmeet.';
-    return 'I can explain the buying, selling, and valuation process using Homes By Gurmeet’s services. Ask about a specific step, or use Contact to speak with Gurmeet directly.';
+    if (FINANCING_TERMS.test(message)) return `## Financing a home purchase
+
+1. **Set a comfortable budget.** Consider the purchase price, down payment, closing costs, taxes, insurance, and a reserve for ongoing ownership costs.
+2. **Gather your financial documents.** A lender may ask for income, employment, asset, debt, and tax information so they can evaluate your application.
+3. **Compare licensed lenders.** Ask about loan programs, rates, fees, minimum down payment, estimated monthly payment, and prepayment terms.
+4. **Request pre-approval.** A pre-approval helps establish a working budget and shows sellers that a lender has reviewed your initial information.
+5. **Keep your finances stable.** Avoid major new credit, large unexplained transfers, or job changes while your loan is being reviewed unless you discuss them with your lender first.
+6. **Search within the approved range.** Gurmeet can help you compare portfolio homes and coordinate the property-search and offer process.
+7. **Review the full cost of an offer.** Before making a decision, discuss contingencies, inspections, appraisal requirements, and estimated cash to close with the appropriate professionals.
+8. **Complete underwriting and closing.** Your lender will verify the file and provide final loan disclosures; review those documents carefully before signing.
+
+Loan qualification, rates, and terms depend on your lender and personal circumstances. Gurmeet can help with the real-estate process, while a licensed lender should answer loan-specific questions.`;
+    if (SELLING_GUIDANCE_TERMS.test(message)) return `## Selling a home with Gurmeet
+
+1. **Clarify your goals and timeline.** Decide whether your priority is timing, convenience, pricing, a move, or another personal objective.
+2. **Request a home valuation.** Share the address, size, condition, improvements, and any relevant property details so Gurmeet can prepare a useful starting point.
+3. **Review preparation options.** Identify repairs, cleaning, staging, photography, and other presentation choices that fit your timeline and budget.
+4. **Set a pricing strategy.** Discuss available comparable information, property condition, competition, and the tradeoffs between price and timing.
+5. **Prepare the launch.** Organize disclosures and listing information, then coordinate photography, marketing, showing access, and communication preferences.
+6. **Evaluate offers carefully.** Compare price, financing, contingencies, timing, credits, and the overall strength of each offer.
+7. **Manage inspections and negotiations.** Work through requests and required disclosures with the relevant licensed professionals and keep the transaction on schedule.
+8. **Coordinate closing.** Confirm agreed repairs, dates, documents, possession details, and final walkthrough responsibilities before the transaction closes.
+
+Use the Home Valuation page to begin a property-specific conversation. Estimates are planning guidance, not a guarantee of a future sale price.`;
+    if (VALUATION_GUIDANCE_TERMS.test(message) || action === 'valuation') return `## Starting a home valuation
+
+1. **Submit the property address.** Include the complete address so Gurmeet can understand which home you would like to discuss.
+2. **Share useful context.** Note the bed and bath count, approximate size, condition, renovations, special features, and any timing considerations.
+3. **Discuss the property’s presentation.** A review can identify updates or preparation steps that may affect how buyers experience the home.
+4. **Review available comparable information.** Gurmeet can discuss relevant portfolio and local context where available, while being clear about which information is verified.
+5. **Align the strategy with your goals.** Timing, convenience, preparation budget, and pricing expectations should be considered together.
+6. **Choose next steps.** If you decide to proceed, Gurmeet can help plan preparation, marketing, showings, offer review, and transaction coordination.
+
+Start with the Home Valuation form or use Contact to speak with Gurmeet. A valuation is an informed planning estimate and is not a guarantee of a sale price or lending value.`;
+    if (action === 'contact') return `## How Gurmeet AI can help
+
+1. **Buying:** organize your priorities, search the portfolio, and prepare questions for a property conversation.
+2. **Selling:** start with a valuation, discuss preparation, and plan a listing strategy around your timeline.
+3. **Valuation:** provide property details so Gurmeet can begin a focused review.
+4. **Next step:** use the Contact page to share what you need and the best way to reach you.
+
+Gurmeet can provide real-estate process guidance, while licensed lenders, attorneys, tax professionals, and other specialists should answer questions in their areas of practice.`;
+    if (BUYING_GUIDANCE_TERMS.test(message)) return `## Buying a home with Gurmeet
+
+1. **Define your priorities.** Identify the areas, home type, size, timing, and features that matter most to you.
+2. **Set a realistic budget.** Review your cash reserves and expected ownership costs, then speak with a licensed lender about pre-approval.
+3. **Build a focused search.** Gurmeet can help you compare portfolio homes and organize questions about each property.
+4. **Review each home carefully.** Consider condition, disclosures, inspections, location information, and fit with your goals.
+5. **Plan the offer.** Discuss price, contingencies, financing, timing, and negotiation strategy before submitting an offer.
+6. **Complete due diligence.** Coordinate inspections, appraisal, lender underwriting, and required documents with the appropriate professionals.
+7. **Prepare for closing.** Review final disclosures, confirm the walkthrough and closing timeline, and arrange funds and signing details.
+
+Financing terms and qualification depend on your lender, so a licensed lender should answer loan-specific questions. Use Contact when you are ready to discuss your search with Gurmeet.`;
+    return `## How Gurmeet AI can help
+
+1. Ask about buying, selling, home valuation, or a specific property in the Homes By Gurmeet portfolio.
+2. For a property search, use an explicit request such as “show homes in Fremont” so matching cards can be returned.
+3. For a valuation, provide the property address and any known details about size, condition, and improvements.
+4. For financing, speak with a licensed lender about qualification, rates, loan programs, and terms.
+5. Use Contact when you want Gurmeet to understand your goals and coordinate a next conversation.
+
+Responses are general guidance and property information should be verified before you make a decision.`;
   }
+  if (action === 'valuation') return 'Gurmeet can prepare a complimentary home valuation based on your property and current local context. Use the Home Valuation form to get started, or contact Gurmeet directly for a conversation.';
+  if (action === 'contact') return 'Gurmeet would be glad to help with your question or arrange a conversation. Use the Contact page to share the best way to reach you.';
   if (detectChatIntent(message).propertySearch) return 'I could not find a direct portfolio match for that request. Gurmeet can help you explore comparable homes and off-market opportunities.';
   return 'I can help with Homes By Gurmeet portfolio homes, buying or selling guidance, and home valuation requests. What would you like to explore?';
 }
@@ -142,7 +204,10 @@ export function assistantInstructions(properties = [], mode = 'database') {
   const modeGuidance = mode === 'database'
     ? 'The visitor is using portfolio search. Describe only the matching records supplied below and encourage them to open a result card for details.'
     : 'The visitor is using the conversational assistant. Give general buying, selling, or valuation process guidance, but use the supplied records for any property-specific answer.';
-  return `You are Gurmeet Singh's assistant for Homes By Gurmeet, a California real estate website. Respond in 2-4 concise, warm sentences. ${modeGuidance} Never invent property details, MLS availability, real-time market data, demographics, schools, crime, or investment returns. Treat the portfolio context below as the only property data available. Do not give legal, tax, lending, or financial advice; suggest an appropriate professional where needed. Follow Fair Housing principles: do not make recommendations or claims based on protected characteristics. Encourage the visitor to use the Contact or Home Valuation page when appropriate.\n\nPortfolio context: ${propertyContext}`;
+  const responseGuidance = mode === 'assistant'
+    ? 'For buying, selling, valuation, and financing questions, provide structured guidance with a short markdown heading and approximately 6-10 concise numbered steps. Financing guidance must remain general and direct the visitor to a licensed lender for qualification, rates, and loan terms.'
+    : 'Respond in 2-4 concise, warm sentences focused on the matching portfolio records.';
+  return `You are Gurmeet Singh's assistant for Homes By Gurmeet, a California real estate website. ${responseGuidance} ${modeGuidance} Never invent property details, MLS availability, real-time market data, demographics, schools, crime, or investment returns. Treat the portfolio context below as the only property data available. Do not provide legal, tax, or personalized lending/financial advice; provide general educational guidance and suggest an appropriate licensed professional where needed. Follow Fair Housing principles: do not make recommendations or claims based on protected characteristics. Encourage the visitor to use the Contact or Home Valuation page when appropriate.\n\nPortfolio context: ${propertyContext}`;
 }
 
 export function chatCompletionMessages({ message, history = [], properties = [], mode = 'database' } = {}) {
@@ -164,7 +229,7 @@ export async function createAssistantReply({ message, history = [], properties =
         model,
         messages: chatCompletionMessages({ message, history, properties: contextProperties, mode }),
         store: false,
-        max_completion_tokens: 450,
+        max_completion_tokens: 900,
       }),
     });
     if (!response.ok) throw new Error(`OpenAI returned ${response.status}`);

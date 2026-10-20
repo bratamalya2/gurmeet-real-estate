@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildPropertySearchFilter, chatCompletionMessages, chatRequestSchema, createAssistantReply, detectChatIntent, extractPropertyCriteria, searchChatProperties } from '../src/services/chat-assistant.js';
+import { buildPropertySearchFilter, chatCompletionMessages, chatRequestSchema, createAssistantReply, detectChatIntent, extractPropertyCriteria, fallbackReply, searchChatProperties } from '../src/services/chat-assistant.js';
 
 test('validates bounded public chat requests', () => {
   assert.equal(chatRequestSchema.safeParse({ message: 'Homes in Fremont' }).success, true);
@@ -67,8 +67,23 @@ test('AI Assistant mode gives process guidance unless the visitor explicitly ask
   assert.equal(queried, false);
   const reply = await createAssistantReply({ message: 'I want to buy a home. How can I finance it?', mode: 'assistant', apiKey: '' });
   assert.equal(reply.provider, 'local_fallback');
+  assert.match(reply.reply, /## Financing a home purchase/);
   assert.match(reply.reply, /pre-approval|lender/i);
-  assert.match(reply.reply, /financing terms/i);
+  assert.match(reply.reply, /loan-specific questions/i);
+});
+
+test('local Gurmeet AI fallback gives detailed buying, selling, and valuation guidance', () => {
+  const buying = fallbackReply({ message: 'I want to buy a home', mode: 'assistant' });
+  assert.match(buying, /## Buying a home with Gurmeet/);
+  assert.match(buying, /Prepare for closing/);
+
+  const selling = fallbackReply({ message: 'How can I sell my home?', mode: 'assistant', action: 'valuation' });
+  assert.match(selling, /## Selling a home with Gurmeet/);
+  assert.match(selling, /Evaluate offers carefully/);
+
+  const valuation = fallbackReply({ message: 'What is my home worth?', mode: 'assistant', action: 'valuation' });
+  assert.match(valuation, /## Starting a home valuation/);
+  assert.match(valuation, /Submit the property address/);
 });
 
 test('Gurmeet AI mode searches when the visitor explicitly asks for homes', async () => {
@@ -120,7 +135,7 @@ test('uses the OpenAI Chat Completions API without storing responses', async () 
   assert.equal(body.store, false);
   assert.equal(body.messages.at(-1).content, 'Tell me about a Fremont home');
   assert.match(body.messages[0].content, /never invent property details/i);
-  assert.equal(body.max_completion_tokens, 450);
+  assert.equal(body.max_completion_tokens, 900);
 });
 
 test('falls back safely when an API key is unavailable or an upstream request fails', async () => {

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { FiArrowRight, FiCheck, FiChevronDown, FiCpu, FiDatabase, FiExternalLink, FiHome, FiMapPin, FiPhone, FiRefreshCw, FiSend, FiSliders, FiStar, FiTrendingUp, FiUser } from 'react-icons/fi';
 import { publicApiUrl, publicAssetUrl } from '../lib/api';
-import { buildAiSearchRequest, GURMEET_AI_LABEL } from '../lib/ai-search.mjs';
+import { buildAiSearchRequest, GURMEET_AI_LABEL, providerLabel } from '../lib/ai-search.mjs';
 import PropertyImage from './PropertyImage';
 
 const agentPhone = process.env.NEXT_PUBLIC_AGENT_PHONE || '';
@@ -39,7 +39,7 @@ function FormattedText({ text }) {
 }
 
 function ProviderBadge({ provider }) {
-  return <span className="ai-search-provider"><FiCheck aria-hidden="true" /> {GURMEET_AI_LABEL}</span>;
+  return <span className="ai-search-provider"><FiCheck aria-hidden="true" /> {providerLabel(provider)}</span>;
 }
 
 function PropertyResults({ properties = [] }) {
