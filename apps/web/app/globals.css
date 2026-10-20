@@ -4395,3 +4395,100 @@ a {
     font-size: 25px;
   }
 }
+
+/* Admin analytics table and city chart refinements. Keep the table header and
+   body on the same fixed column grid, including when the table scrolls. */
+.analytics-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  max-height: 210px;
+  margin-top: 18px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.analytics-table-scroll .analytics-table,
+.analytics-doughnut-data .analytics-table {
+  display: table;
+  width: 100%;
+  min-width: 560px;
+  max-height: none;
+  margin: 0;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.analytics-table thead,
+.analytics-table tbody,
+.analytics-table tr {
+  display: table-row-group;
+  width: auto;
+}
+
+.analytics-table thead {
+  display: table-header-group;
+}
+
+.analytics-table tr {
+  display: table-row;
+}
+
+.analytics-table th,
+.analytics-table td {
+  display: table-cell;
+  vertical-align: top;
+  text-align: left;
+  white-space: normal;
+}
+
+.analytics-table th:first-child,
+.analytics-table td:first-child {
+  width: 34%;
+}
+
+.analytics-table th:not(:first-child),
+.analytics-table td:not(:first-child) {
+  text-align: right;
+}
+
+.analytics-doughnut-data .analytics-table {
+  min-width: 100%;
+}
+
+.analytics-trend .analytics-table th:first-child,
+.analytics-trend .analytics-table td:first-child {
+  width: 42%;
+}
+
+.analytics-city-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.analytics-city-panel .analytics-bars {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.analytics-city-panel .analytics-bar-row {
+  min-width: 0;
+}
+
+.analytics-city-panel .analytics-bar-label {
+  font-size: 14px;
+}
+
+.analytics-city-panel .analytics-bar-track {
+  height: 10px;
+}
+
+@media (max-width: 760px) {
+  .analytics-city-panel .analytics-bar-label {
+    font-size: 13px;
+  }
+
+  .analytics-table-scroll {
+    margin-right: 0;
+    max-width: 100%;
+  }
+}

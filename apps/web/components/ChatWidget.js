@@ -78,7 +78,6 @@ export default function ChatWidget() {
     const content = String(explicitMessage || input).trim();
     if (!content || loading) return;
     const userMessage = { id: `user-${Date.now()}`, role: 'user', content, time: now() };
-    const history = messages.slice(-6).map(message => ({ role: message.role, content: message.content }));
     setMessages(current => [...current, userMessage]);
     setInput('');
     setLoading(true);
@@ -86,7 +85,7 @@ export default function ChatWidget() {
       const response = await fetch(publicApiUrl('chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: content, history, mode: 'database' }),
+        body: JSON.stringify({ message: content, mode: 'database' }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || 'The assistant is unavailable right now.');

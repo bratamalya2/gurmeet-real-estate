@@ -8,6 +8,9 @@ test('validates bounded public chat requests', () => {
   assert.equal(chatRequestSchema.safeParse({ message: 'Hello', mode: 'invalid' }).success, false);
   assert.equal(chatRequestSchema.safeParse({ message: '' }).success, false);
   assert.equal(chatRequestSchema.safeParse({ message: 'x'.repeat(1201) }).success, false);
+  assert.equal(chatRequestSchema.safeParse({ message: 'Hello', history: [{ role: 'user', content: 'x'.repeat(1201) }] }).success, false);
+  assert.equal(chatRequestSchema.safeParse({ message: 'Hello', history: [{ role: 'assistant', content: 'x'.repeat(1201) }] }).success, true);
+  assert.equal(chatRequestSchema.safeParse({ message: 'Hello', history: [{ role: 'assistant', content: 'x'.repeat(6001) }] }).success, false);
   assert.equal(chatRequestSchema.safeParse({ message: 'Hello', history: Array.from({ length: 7 }, () => ({ role: 'user', content: 'Too many' })) }).success, false);
   assert.equal(chatRequestSchema.safeParse({ message: 'Hello', history: [{ role: 'system', content: 'Invalid' }] }).success, false);
 });
@@ -111,6 +114,8 @@ test('builds grounded Chat Completions messages from sanitized context', () => {
   });
   assert.equal(messages[0].role, 'system');
   assert.match(messages[0].content, /never invent property details/i);
+  assert.equal(messages.length, 2);
+  assert.equal(messages.some(message => message.content === 'Hi'), false);
   assert.deepEqual(messages.at(-1), { role: 'user', content: 'Tell me about a Fremont home' });
 });
 

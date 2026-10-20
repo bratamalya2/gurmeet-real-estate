@@ -15,7 +15,7 @@ export function buildAiSearchRequest({ message, mode = 'database', history = [],
   return {
     message: String(message || '').trim(),
     mode,
-    history: history.slice(-6).map(turn => ({ role: turn.role, content: turn.content })),
+    history: [],
     filters: Object.fromEntries(Object.entries(normalizedFilters).filter(([, value]) => value !== undefined)),
   };
 }

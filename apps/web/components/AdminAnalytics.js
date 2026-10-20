@@ -56,28 +56,28 @@ function StatCard({ label, value, detail }) {
   return <div className="analytics-stat"><span>{label}</span><strong>{value}</strong>{detail && <small>{detail}</small>}</div>;
 }
 
-function BarList({ items, labelKey = 'label', valueKey = 'count', empty = 'No data yet.' }) {
+function BarList({ items, labelKey = 'label', valueKey = 'count', empty = 'No data yet.', className = '' }) {
   const max = Math.max(...items.map(item => Number(item[valueKey] || 0)), 1);
   if (!items.length) return <p className="muted analytics-empty">{empty}</p>;
-  return <div className="analytics-bars">{items.map((item, index) => <div className="analytics-bar-row" key={`${item[labelKey]}-${index}`}><div className="analytics-bar-label"><span>{item[labelKey]}</span><b>{formatNumber(item[valueKey])}</b></div><div className="analytics-bar-track"><i style={{ width: `${(Number(item[valueKey] || 0) / max) * 100}%` }} /></div></div>)}</div>;
+  return <div className={`analytics-bars ${className}`.trim()} role="list" aria-label="Horizontal bar chart">{items.map((item, index) => <div className="analytics-bar-row" key={`${item[labelKey]}-${index}`} role="listitem"><div className="analytics-bar-label"><span>{item[labelKey]}</span><b>{formatNumber(item[valueKey])}</b></div><div className="analytics-bar-track" aria-hidden="true"><i style={{ width: `${(Number(item[valueKey] || 0) / max) * 100}%` }} /></div></div>)}</div>;
 }
 
 function TrendChart({ data, firstKey, secondKey, firstLabel, secondLabel, empty = 'No activity in this range.' }) {
   const max = Math.max(...data.flatMap(item => [item[firstKey] || 0, item[secondKey] || 0]), 1);
   const points = key => data.map((item, index) => `${data.length === 1 ? 50 : (index / (data.length - 1)) * 100},${100 - ((item[key] || 0) / max) * 86 - 7}`).join(' ');
   if (!data.length) return <p className="muted analytics-empty">{empty}</p>;
-  return <div className="analytics-trend"><div className="analytics-legend"><span><i className="legend-dot first" />{firstLabel}</span><span><i className="legend-dot second" />{secondLabel}</span></div><svg viewBox="0 0 100 100" role="img" aria-label={`${firstLabel} and ${secondLabel} trend chart`} preserveAspectRatio="none"><line x1="0" y1="93" x2="100" y2="93" /><polyline className="trend-line first" points={points(firstKey)} /><polyline className="trend-line second" points={points(secondKey)} /></svg><table className="analytics-table"><caption className="sr-only">{firstLabel} and {secondLabel} by day</caption><thead><tr><th>Date</th><th>{firstLabel}</th><th>{secondLabel}</th></tr></thead><tbody>{data.map(item => <tr key={item.date}><td>{item.date}</td><td>{formatNumber(item[firstKey])}</td><td>{formatNumber(item[secondKey])}</td></tr>)}</tbody></table></div>;
+  return <div className="analytics-trend"><div className="analytics-legend"><span><i className="legend-dot first" />{firstLabel}</span><span><i className="legend-dot second" />{secondLabel}</span></div><svg viewBox="0 0 100 100" role="img" aria-label={`${firstLabel} and ${secondLabel} trend chart`} preserveAspectRatio="none"><line x1="0" y1="93" x2="100" y2="93" /><polyline className="trend-line first" points={points(firstKey)} /><polyline className="trend-line second" points={points(secondKey)} /></svg><div className="analytics-table-scroll"><table className="analytics-table"><caption className="sr-only">{firstLabel} and {secondLabel} by day</caption><thead><tr><th>Date</th><th>{firstLabel}</th><th>{secondLabel}</th></tr></thead><tbody>{data.map(item => <tr key={item.date}><td>{item.date}</td><td>{formatNumber(item[firstKey])}</td><td>{formatNumber(item[secondKey])}</td></tr>)}</tbody></table></div></div>;
 }
 
 function LeadTrend({ data }) {
   const max = Math.max(...data.map(item => item.count || 0), 1);
   if (!data.length) return <p className="muted analytics-empty">No leads in this range.</p>;
-  return <div className="analytics-trend"><svg viewBox="0 0 100 100" role="img" aria-label="Lead trend chart" preserveAspectRatio="none"><line x1="0" y1="93" x2="100" y2="93" /><polyline className="trend-line first" points={data.map((item, index) => `${data.length === 1 ? 50 : (index / (data.length - 1)) * 100},${100 - ((item.count || 0) / max) * 86 - 7}`).join(' ')} /></svg><table className="analytics-table"><caption className="sr-only">Leads by day</caption><thead><tr><th>Date</th><th>Leads</th></tr></thead><tbody>{data.map(item => <tr key={item.date}><td>{item.date}</td><td>{formatNumber(item.count)}</td></tr>)}</tbody></table></div>;
+  return <div className="analytics-trend"><svg viewBox="0 0 100 100" role="img" aria-label="Lead trend chart" preserveAspectRatio="none"><line x1="0" y1="93" x2="100" y2="93" /><polyline className="trend-line first" points={data.map((item, index) => `${data.length === 1 ? 50 : (index / (data.length - 1)) * 100},${100 - ((item.count || 0) / max) * 86 - 7}`).join(' ')} /></svg><div className="analytics-table-scroll"><table className="analytics-table"><caption className="sr-only">Leads by day</caption><thead><tr><th>Date</th><th>Leads</th></tr></thead><tbody>{data.map(item => <tr key={item.date}><td>{item.date}</td><td>{formatNumber(item.count)}</td></tr>)}</tbody></table></div></div>;
 }
 
 function DataTable({ headers, rows, empty = 'No data yet.' }) {
   if (!rows.length) return <p className="muted analytics-empty">{empty}</p>;
-  return <table className="admin-table analytics-table"><thead><tr>{headers.map(header => <th key={header}>{header}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={row.key || index}>{row.cells.map((cell, cellIndex) => <td key={cellIndex}>{cell}</td>)}</tr>)}</tbody></table>;
+  return <div className="analytics-table-scroll"><table className="admin-table analytics-table"><thead><tr>{headers.map(header => <th key={header}>{header}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={row.key || index}>{row.cells.map((cell, cellIndex) => <td key={cellIndex}>{cell}</td>)}</tr>)}</tbody></table></div>;
 }
 
 function DoughnutChart({ title, items }) {
@@ -190,7 +190,8 @@ export default function AdminAnalytics() {
       </section>
       <div className="analytics-grid two"><Panel title="Traffic trend"><TrendChart data={data.traffic?.trend || []} firstKey="pageViews" secondKey="listingViews" firstLabel="Page views" secondLabel="Listing views" /></Panel><Panel title="Lead trend"><LeadTrend data={data.leads?.trend || []} /></Panel></div>
       <div className="analytics-grid three"><Panel title="Lead types"><BarList items={(data.leads?.byType || []).map(item => ({ label: item.type, count: item.count }))} /></Panel><Panel title="Listing status"><BarList items={(data.inventory?.byStatus || []).map(item => ({ label: item.status, count: item.count }))} /></Panel><Panel title="Price range"><div className="analytics-price-list"><span>Average active price <b>{formatCurrency(price.average)}</b></span><span>Lowest active price <b>{formatCurrency(price.minimum)}</b></span><span>Highest active price <b>{formatCurrency(price.maximum)}</b></span></div></Panel></div>
-      <div className="analytics-grid two"><Panel title="Listings by city"><BarList items={data.inventory?.byCity || []} /></Panel><Panel title="Source coverage"><BarList items={data.inventory?.sourceCoverage || []} /></Panel></div>
+      <div className="analytics-grid analytics-city-grid"><Panel title="Listings by city" className="analytics-city-panel"><BarList items={data.inventory?.byCity || []} className="analytics-horizontal-bars" /></Panel></div>
+      <div className="analytics-grid two"><Panel title="Source coverage"><BarList items={data.inventory?.sourceCoverage || []} /></Panel></div>
       <div className="analytics-grid two"><Panel title="Top public pages"><DataTable headers={["Page", "Views"]} rows={(data.traffic?.topPages || []).map(item => ({ key: item.path, cells: [item.path, formatNumber(item.views)] }))} /></Panel><Panel title="Top viewed listings"><DataTable headers={["Listing", "Views"]} rows={(data.traffic?.topListings || []).map(item => ({ key: item.propertyId, cells: [item.title, formatNumber(item.views)] }))} /></Panel></div>
       <div className="analytics-grid two"><Panel title="Listings generating leads"><DataTable headers={["Listing", "Leads"]} rows={(data.leads?.byListing || []).map(item => ({ key: item.propertyId, cells: [item.title, formatNumber(item.leads)] }))} /></Panel><Panel title="Image coverage"><BarList items={[{ label: 'With images', count: data.inventory?.imageCoverage?.withImages || 0 }, { label: 'Without images', count: data.inventory?.imageCoverage?.withoutImages || 0 }]} /></Panel></div>
       <div className="analytics-grid two"><Panel title="Data freshness"><DataTable headers={["Source", "Rows", "Last upload", "Status"]} rows={(data.dataHealth?.latestImports || []).map(item => ({ key: item.source, cells: [item.source, formatNumber(item.rowCount), formatDate(item.uploadedAt), item.status] }))} empty="No workbook imports yet." /></Panel><Panel title="Recent system activity"><DataTable headers={["Source", "Status", "Created", "Updated", "When"]} rows={data.dataHealth?.lastActivity ? [{ key: data.dataHealth.lastActivity._id, cells: [data.dataHealth.lastActivity.source, data.dataHealth.lastActivity.status, formatNumber(data.dataHealth.lastActivity.created), formatNumber(data.dataHealth.lastActivity.updated), formatDate(data.dataHealth.lastActivity.completedAt || data.dataHealth.lastActivity.createdAt)] }] : []} empty="No system activity yet." /></Panel></div>
@@ -198,6 +199,6 @@ export default function AdminAnalytics() {
   </div>;
 }
 
-function Panel({ title, children }) {
-  return <section className="admin-panel analytics-panel"><h2>{title}</h2>{children}</section>;
+function Panel({ title, children, className = '' }) {
+  return <section className={`admin-panel analytics-panel ${className}`.trim()}><h2>{title}</h2>{children}</section>;
 }

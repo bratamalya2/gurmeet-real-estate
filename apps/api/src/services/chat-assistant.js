@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { PROPERTY_PLACEHOLDER_IMAGE } from '../constants/property-assets.js';
 
 const MAX_MESSAGE_LENGTH = 1200;
+const MAX_ASSISTANT_HISTORY_LENGTH = 6000;
 const MAX_HISTORY_MESSAGES = 6;
 const PROPERTY_TERMS = /\b(property|properties|home|homes|house|houses|listing|listings|buy|buying|search|showing|tour|bed|bedroom|br)\b/i;
 const EXPLICIT_SEARCH_TERMS = /\b(show|find|search|browse|available|matching|listings?|properties)\b|\bhomes?\s+(?:in|under|below)\b/i;
@@ -23,10 +24,16 @@ const filtersSchema = z.object({
 
 export const chatRequestSchema = z.object({
   message: z.string().trim().min(1, 'Enter a message.').max(MAX_MESSAGE_LENGTH, `Messages must be ${MAX_MESSAGE_LENGTH} characters or fewer.`),
-  history: z.array(z.object({
-    role: z.enum(['user', 'assistant']),
-    content: z.string().trim().min(1).max(MAX_MESSAGE_LENGTH),
-  })).max(MAX_HISTORY_MESSAGES, `Send no more than ${MAX_HISTORY_MESSAGES} recent messages.`).default([]),
+  history: z.array(z.discriminatedUnion('role', [
+    z.object({
+      role: z.literal('user'),
+      content: z.string().trim().min(1).max(MAX_MESSAGE_LENGTH),
+    }),
+    z.object({
+      role: z.literal('assistant'),
+      content: z.string().trim().min(1).max(MAX_ASSISTANT_HISTORY_LENGTH),
+    }),
+  ])).max(MAX_HISTORY_MESSAGES, `Send no more than ${MAX_HISTORY_MESSAGES} recent messages.`).default([]),
   mode: z.enum(['database', 'assistant']).default('database'),
   filters: filtersSchema,
 });
@@ -213,7 +220,6 @@ export function assistantInstructions(properties = [], mode = 'database') {
 export function chatCompletionMessages({ message, history = [], properties = [], mode = 'database' } = {}) {
   return [
     { role: 'system', content: assistantInstructions(properties, mode) },
-    ...history.map(turn => ({ role: turn.role, content: turn.content })),
     { role: 'user', content: message },
   ];
 }
