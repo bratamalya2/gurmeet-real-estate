@@ -28,9 +28,9 @@ The Admin dashboard **Analytics** tab reports current inventory, pricing, lead a
 
 ## AI property assistant
 
-The public site includes a floating AI property assistant. It can search the live portfolio, provide concise general buying or selling guidance, and direct visitors to the existing Contact and Home Valuation forms. Chats stay in the visitor's browser and are not stored in MongoDB.
+The public site includes a floating AI property assistant and a full-page assistant at `/ai-search`. The full-page experience has two modes: **Database Search** for structured portfolio filters and **AI Assistant** for conversational buying, selling, and valuation guidance. Both modes search the live portfolio, return at most four public property cards, and direct visitors to the existing Contact and Home Valuation forms. The assistant is hidden on admin and `/ai-search` routes, and chats stay in the visitor's browser; no transcript is stored in MongoDB.
 
-Set `OPENAI_API_KEY` only in `apps/api/.env`; never expose it in the web environment. `OPENAI_CHAT_MODEL` defaults to `gpt-5-mini` and can be overridden for the API container. Without a configured key, the widget still provides local portfolio matches and contact/valuation guidance without an AI model response.
+The public endpoints are `POST /api/chat` for the floating widget and `POST /api/ai-search` for the full-page client. Both validate a maximum 1,200-character message, six history turns, bounded city/bedroom/price filters, and share a public rate limit of 24 requests per IP per 15 minutes. Set `OPENAI_API_KEY` only in `apps/api/.env`; never expose it in the web environment. `OPENAI_CHAT_MODEL` defaults to `gpt-5-mini` and can be overridden for the API container. The API sends grounded messages to OpenAI Chat Completions with `store: false`; without a configured key or when OpenAI is unavailable, it returns a useful `local_fallback` response with the same live property matches and CTAs.
 
 ## Updating property images from Google Drive
 

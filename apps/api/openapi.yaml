@@ -36,7 +36,7 @@ paths:
       tags: [Public]
       summary: Ask the public AI property assistant
       description: |
-        Searches the public property portfolio and returns a concise assistant reply.
+        Searches the live public property portfolio and returns a concise assistant reply.
         Conversation history is used only for this request and is not stored by this API.
         The endpoint permits 24 requests per IP address per 15 minutes.
       security: []
@@ -58,6 +58,14 @@ paths:
                     properties:
                       role: { type: string, enum: [user, assistant] }
                       content: { type: string, maxLength: 1200 }
+                mode: { type: string, enum: [database, assistant], default: database }
+                filters:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    city: { type: string, maxLength: 80 }
+                    beds: { type: integer, minimum: 1, maximum: 20 }
+                    maxPrice: { type: number, minimum: 1, maximum: 100000000 }
       responses:
         '200':
           description: Assistant reply with optional portfolio matches and navigation action
@@ -67,8 +75,10 @@ paths:
                 type: object
                 properties:
                   reply: { type: string }
-                  provider: { type: string, enum: [openai, fallback] }
+                  provider: { type: string, enum: [openai, local_fallback] }
                   action: { type: string, enum: [valuation, contact], nullable: true }
+                  actionType: { type: string, enum: [valuation, contact, home_valuation], nullable: true }
+                  mode: { type: string, enum: [database, assistant] }
                   properties:
                     type: array
                     maxItems: 4
@@ -87,6 +97,30 @@ paths:
         '422': { $ref: '#/components/responses/ValidationError' }
         '429':
           description: Too many chat requests
+  /ai-search:
+    post:
+      tags: [Public]
+      summary: Search the full-page AI property assistant
+      description: |
+        Full-page equivalent of the public chat assistant. It accepts database-search
+        or conversational-assistant mode, uses live public property data, and never
+        stores chat history or transcripts. The same IP rate limit applies as /chat.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Assistant reply with optional portfolio matches and navigation action
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { description: Too many chat requests }
   /properties:
     get:
       tags: [Properties]
@@ -975,3 +1009,50 @@ components:
         totalListings: { type: integer }
         filename: { type: string }
         error: { type: string }
+    ChatRequest:
+      type: object
+      required: [message]
+      additionalProperties: false
+      properties:
+        message: { type: string, minLength: 1, maxLength: 1200, example: Show homes in Fremont with 3 bedrooms }
+        history:
+          type: array
+          maxItems: 6
+          items:
+            type: object
+            required: [role, content]
+            properties:
+              role: { type: string, enum: [user, assistant] }
+              content: { type: string, maxLength: 1200 }
+        mode: { type: string, enum: [database, assistant], default: database }
+        filters:
+          type: object
+          additionalProperties: false
+          properties:
+            city: { type: string, maxLength: 80 }
+            beds: { type: integer, minimum: 1, maximum: 20 }
+            maxPrice: { type: number, minimum: 1, maximum: 100000000 }
+    ChatResponse:
+      type: object
+      properties:
+        reply: { type: string }
+        provider: { type: string, enum: [openai, local_fallback] }
+        action: { type: string, enum: [valuation, contact], nullable: true }
+        actionType: { type: string, enum: [valuation, contact, home_valuation], nullable: true }
+        mode: { type: string, enum: [database, assistant] }
+        properties:
+          type: array
+          maxItems: 4
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              title: { type: string }
+              slug: { type: string }
+              price: { type: number, nullable: true }
+              city: { type: string, nullable: true }
+              beds: { type: number, nullable: true }
+              baths: { type: number, nullable: true }
+              sqft: { type: number, nullable: true }
+              status: { type: string }
+              image: { type: string }

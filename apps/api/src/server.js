@@ -99,17 +99,21 @@ const analyticsEventSchema = z.object({
 });
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
-app.post('/api/chat', rateLimit({ windowMs: 15 * 60 * 1000, max: 24, standardHeaders: true, legacyHeaders: false }), async (req, res, next) => {
+const publicChatLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 24, standardHeaders: true, legacyHeaders: false });
+async function handlePublicChat(req, res, next) {
   try {
     const parsed = chatRequestSchema.safeParse(req.body);
     if (!parsed.success) return res.status(422).json({ error: parsed.error.issues[0]?.message || 'Provide a valid chat message.' });
-    const { message, history } = parsed.data;
+    const { message, history, mode, filters } = parsed.data;
     const intent = detectChatIntent(message);
-    const properties = await searchChatProperties(Property, message);
-    const response = await createAssistantReply({ message, history, properties, action: intent.action });
-    return res.json({ ...response, properties, action: intent.action });
+    const properties = await searchChatProperties(Property, message, filters);
+    const response = await createAssistantReply({ message, history, properties, action: intent.action, mode });
+    const actionType = intent.action === 'valuation' ? 'home_valuation' : intent.action;
+    return res.json({ ...response, properties, action: intent.action, actionType, mode });
   } catch (error) { return next(error); }
-});
+}
+app.post('/api/chat', publicChatLimiter, handlePublicChat);
+app.post('/api/ai-search', publicChatLimiter, handlePublicChat);
 app.post('/api/analytics/events', rateLimit({ windowMs: 15 * 60 * 1000, max: 120, standardHeaders: true, legacyHeaders: false }), async (req, res, next) => {
   try {
     const parsed = analyticsEventSchema.safeParse(req.body);

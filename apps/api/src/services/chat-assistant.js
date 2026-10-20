@@ -7,12 +7,20 @@ const PROPERTY_TERMS = /\b(property|properties|home|homes|house|houses|listing|l
 const VALUATION_TERMS = /\b(worth|value|valuation|cma|appraisal|estimate|price my home|sell my home|selling)\b/i;
 const CONTACT_TERMS = /\b(contact|call|phone|email|speak|talk|consultation|showing|tour|visit)\b/i;
 
+const filtersSchema = z.object({
+  city: z.preprocess(value => String(value || '').trim() || undefined, z.string().max(80).optional()),
+  beds: z.preprocess(value => value === '' || value == null ? undefined : Number(value), z.number().int().min(1).max(20).optional()),
+  maxPrice: z.preprocess(value => value === '' || value == null ? undefined : Number(value), z.number().positive().max(100000000).optional()),
+}).strict().default({});
+
 export const chatRequestSchema = z.object({
   message: z.string().trim().min(1, 'Enter a message.').max(MAX_MESSAGE_LENGTH, `Messages must be ${MAX_MESSAGE_LENGTH} characters or fewer.`),
   history: z.array(z.object({
     role: z.enum(['user', 'assistant']),
     content: z.string().trim().min(1).max(MAX_MESSAGE_LENGTH),
   })).max(MAX_HISTORY_MESSAGES, `Send no more than ${MAX_HISTORY_MESSAGES} recent messages.`).default([]),
+  mode: z.enum(['database', 'assistant']).default('database'),
+  filters: filtersSchema,
 });
 
 const cleanText = value => String(value || '').trim();
@@ -28,19 +36,19 @@ export function detectChatIntent(message = '') {
   };
 }
 
-export function extractPropertyCriteria(message = '', cities = []) {
+export function extractPropertyCriteria(message = '', cities = [], filters = {}) {
   const value = cleanText(message);
   const lower = value.toLowerCase();
-  const city = [...cities]
+  const city = cleanText(filters.city) || [...cities]
     .map(candidate => cleanText(candidate))
     .filter(Boolean)
     .sort((left, right) => right.length - left.length)
     .find(candidate => lower.includes(candidate.toLowerCase()));
 
-  const bedrooms = Number(lower.match(/\b(\d+(?:\.5)?)\s*(?:bed|bedroom|br)\b/)?.[1]) || undefined;
+  const bedrooms = filters.beds || Number(lower.match(/\b(\d+(?:\.5)?)\s*(?:bed|bedroom|br)\b/)?.[1]) || undefined;
   const priceMatch = lower.match(/\b(?:under|below|less than|budget(?:\s+of)?|up to|max(?:imum)?)\s*\$?([\d,.]+)\s*(m|million|k|thousand)?\b/i);
-  let maxPrice;
-  if (priceMatch) {
+  let maxPrice = filters.maxPrice;
+  if (!maxPrice && priceMatch) {
     const parsed = Number(priceMatch[1].replace(/,/g, ''));
     const unit = priceMatch[2]?.toLowerCase();
     if (Number.isFinite(parsed) && parsed > 0) {
@@ -51,7 +59,15 @@ export function extractPropertyCriteria(message = '', cities = []) {
   }
 
   const address = value.match(/\b\d{1,6}\s+[\w\s.'#-]+(?:street|st|avenue|ave|road|rd|drive|dr|court|ct|lane|ln|way|place|pl|boulevard|blvd)\b/i)?.[0];
-  return { city, bedrooms, maxPrice, address: address || undefined };
+  const stopWords = new Set(['a', 'an', 'and', 'are', 'bed', 'beds', 'bedroom', 'bedrooms', 'br', 'buy', 'buying', 'find', 'for', 'home', 'homes', 'house', 'houses', 'in', 'listing', 'listings', 'me', 'of', 'on', 'property', 'properties', 'search', 'show', 'the', 'under', 'with']);
+  const text = value
+    .replace(/\$?[\d,.]+\s*(?:m|million|k|thousand)?/gi, ' ')
+    .split(/[^a-zA-Z0-9]+/)
+    .map(token => token.toLowerCase())
+    .filter(token => token.length > 2 && !stopWords.has(token) && !/^\d+$/.test(token) && token !== city?.toLowerCase())
+    .slice(0, 4)
+    .join(' ');
+  return { city, bedrooms, maxPrice, address: address || undefined, ...(address || !text ? {} : { text }) };
 }
 
 export function buildPropertySearchFilter(criteria = {}) {
@@ -59,9 +75,10 @@ export function buildPropertySearchFilter(criteria = {}) {
   if (criteria.city) filter['address.city'] = new RegExp(`^${escapeRegex(criteria.city)}$`, 'i');
   if (criteria.bedrooms) filter.beds = { $gte: criteria.bedrooms };
   if (criteria.maxPrice) filter.price = { $lte: criteria.maxPrice };
-  if (criteria.address) {
-    const addressExpression = new RegExp(escapeRegex(criteria.address), 'i');
+  if (criteria.address || criteria.text) {
+    const addressExpression = new RegExp(escapeRegex(criteria.address || criteria.text), 'i');
     filter.$or = [{ title: addressExpression }, { 'address.street': addressExpression }];
+    if (!criteria.address) filter.$or.push({ 'address.city': addressExpression });
   }
   return filter;
 }
@@ -76,18 +93,19 @@ export function chatPropertyDocument(property = {}) {
     city: property.address?.city || null,
     beds: Number.isFinite(Number(property.beds)) ? Number(property.beds) : null,
     baths: Number.isFinite(Number(property.baths)) ? Number(property.baths) : null,
+    sqft: Number.isFinite(Number(property.sqft)) ? Number(property.sqft) : null,
     status: property.status || 'Sold',
     image: images.find(path => typeof path === 'string' && path.trim()) || PROPERTY_PLACEHOLDER_IMAGE,
   };
 }
 
-export async function searchChatProperties(PropertyModel, message) {
+export async function searchChatProperties(PropertyModel, message, filters = {}) {
   const intent = detectChatIntent(message);
-  if (!intent.propertySearch) return [];
+  if (!intent.propertySearch && !filters.city && !filters.beds && !filters.maxPrice) return [];
   const cities = await PropertyModel.distinct('address.city', { 'address.city': { $exists: true, $ne: '' } });
-  const criteria = extractPropertyCriteria(message, cities);
+  const criteria = extractPropertyCriteria(message, cities, filters);
   const properties = await PropertyModel.find(buildPropertySearchFilter(criteria))
-    .select('title slug address price beds baths status images transaction.soldDate updatedAt')
+    .select('title slug address price beds baths sqft status images transaction.soldDate updatedAt')
     .sort({ 'transaction.soldDate': -1, updatedAt: -1, _id: 1 })
     .limit(4)
     .lean();
@@ -102,44 +120,44 @@ export function fallbackReply({ message, properties = [], action } = {}) {
   return 'I can help with Homes By Gurmeet portfolio homes, buying or selling guidance, and home valuation requests. What would you like to explore?';
 }
 
-export function assistantInstructions(properties = []) {
+export function assistantInstructions(properties = [], mode = 'database') {
   const propertyContext = properties.length
-    ? JSON.stringify(properties.map(({ title, slug, price, city, beds, baths, status }) => ({ title, slug, price, city, beds, baths, status })))
+    ? JSON.stringify(properties.map(({ title, slug, price, city, beds, baths, sqft, status }) => ({ title, slug, price, city, beds, baths, sqft, status })))
     : 'No matching portfolio properties were found.';
-  return `You are Gurmeet Singh's assistant for Homes By Gurmeet, a California real estate website. Respond in 2-4 concise, warm sentences. You may discuss general buying, selling, and home-valuation process guidance, but never invent property details, MLS availability, real-time market data, demographics, schools, crime, or investment returns. Treat the portfolio context below as the only property data available. Do not give legal, tax, lending, or financial advice; suggest an appropriate professional where needed. Follow Fair Housing principles: do not make recommendations or claims based on protected characteristics. Encourage the visitor to use the Contact or Home Valuation page when appropriate.\n\nPortfolio context: ${propertyContext}`;
+  const modeGuidance = mode === 'database'
+    ? 'The visitor is using portfolio search. Describe only the matching records supplied below and encourage them to open a result card for details.'
+    : 'The visitor is using the conversational assistant. Give general buying, selling, or valuation process guidance, but use the supplied records for any property-specific answer.';
+  return `You are Gurmeet Singh's assistant for Homes By Gurmeet, a California real estate website. Respond in 2-4 concise, warm sentences. ${modeGuidance} Never invent property details, MLS availability, real-time market data, demographics, schools, crime, or investment returns. Treat the portfolio context below as the only property data available. Do not give legal, tax, lending, or financial advice; suggest an appropriate professional where needed. Follow Fair Housing principles: do not make recommendations or claims based on protected characteristics. Encourage the visitor to use the Contact or Home Valuation page when appropriate.\n\nPortfolio context: ${propertyContext}`;
 }
 
-function outputText(payload = {}) {
-  if (cleanText(payload.output_text)) return cleanText(payload.output_text);
-  return (payload.output || [])
-    .flatMap(item => item.content || [])
-    .filter(content => content.type === 'output_text')
-    .map(content => cleanText(content.text))
-    .filter(Boolean)
-    .join('\n');
+export function chatCompletionMessages({ message, history = [], properties = [], mode = 'database' } = {}) {
+  return [
+    { role: 'system', content: assistantInstructions(properties, mode) },
+    ...history.map(turn => ({ role: turn.role, content: turn.content })),
+    { role: 'user', content: message },
+  ];
 }
 
-export async function createAssistantReply({ message, history = [], properties = [], action = null, apiKey = process.env.OPENAI_API_KEY, model = process.env.OPENAI_CHAT_MODEL || 'gpt-5-mini', fetchImpl = fetch } = {}) {
+export async function createAssistantReply({ message, history = [], properties = [], action = null, mode = 'database', apiKey = process.env.OPENAI_API_KEY, model = process.env.OPENAI_CHAT_MODEL || 'gpt-5-mini', fetchImpl = fetch } = {}) {
   const fallback = fallbackReply({ message, properties, action });
-  if (!apiKey) return { reply: fallback, provider: 'fallback' };
-  const transcript = history.map(turn => `${turn.role === 'assistant' ? 'Assistant' : 'Visitor'}: ${turn.content}`).join('\n');
+  if (!apiKey) return { reply: fallback, provider: 'local_fallback' };
   try {
-    const response = await fetchImpl('https://api.openai.com/v1/responses', {
+    const response = await fetchImpl('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model,
+        messages: chatCompletionMessages({ message, history, properties, mode }),
         store: false,
-        instructions: assistantInstructions(properties),
-        input: `${transcript ? `${transcript}\n` : ''}Visitor: ${message}`,
-        max_output_tokens: 350,
+        max_completion_tokens: 450,
       }),
     });
     if (!response.ok) throw new Error(`OpenAI returned ${response.status}`);
-    const reply = outputText(await response.json());
-    return reply ? { reply, provider: 'openai' } : { reply: fallback, provider: 'fallback' };
+    const data = await response.json();
+    const reply = cleanText(data.choices?.[0]?.message?.content);
+    return reply ? { reply, provider: 'openai' } : { reply: fallback, provider: 'local_fallback' };
   } catch (error) {
     console.warn(`AI chat fallback: ${error.message}`);
-    return { reply: fallback, provider: 'fallback' };
+    return { reply: fallback, provider: 'local_fallback' };
   }
 }
