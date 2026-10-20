@@ -1625,6 +1625,14 @@ footer {
 .ai-search-results { margin-top: 16px; }
 .ai-search-results-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 9px; }
 .ai-search-results-label { margin: 0; color: #76531a; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.ai-search-website-results { margin-top: 16px; }
+.ai-search-website-list { display: grid; gap: 8px; margin-top: 9px; }
+.ai-search-website-result { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 12px; border: 1px solid #dbe3ee; background: #fff; color: var(--navy); text-decoration: none; }
+.ai-search-website-result:hover { border-color: var(--gold); background: #fffaf0; }
+.ai-search-website-result > span { display: grid; gap: 3px; min-width: 0; }
+.ai-search-website-result strong { font-size: 12px; }
+.ai-search-website-result small { color: #64748b; font-size: 11px; line-height: 1.45; }
+.ai-search-website-result > svg { flex: 0 0 auto; color: #76531a; }
 .ai-search-browse-link, .ai-search-catalogue-link { display: inline-flex; align-items: center; gap: 5px; color: #76531a; font-size: 11px; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
 .ai-search-catalogue-link { margin-left: auto; }
 .ai-search-property-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }

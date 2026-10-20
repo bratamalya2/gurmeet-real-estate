@@ -119,7 +119,7 @@ export function chatPropertyDocument(property = {}) {
 export async function searchChatProperties(PropertyModel, message, filters = {}, maxResults = 4, mode = 'database') {
   const intent = detectChatIntent(message);
   const shouldSearch = mode === 'database'
-    ? intent.propertySearch || filters.city || filters.beds || filters.maxPrice
+    ? EXPLICIT_SEARCH_TERMS.test(message) || filters.city || filters.beds || filters.maxPrice
     : (!ASSISTANT_GUIDANCE_TERMS.test(message) && EXPLICIT_SEARCH_TERMS.test(message)) || filters.city || filters.beds || filters.maxPrice;
   if (!shouldSearch) return [];
   const cities = await PropertyModel.distinct('address.city', { 'address.city': { $exists: true, $ne: '' } });
@@ -132,8 +132,12 @@ export async function searchChatProperties(PropertyModel, message, filters = {},
   return properties.map(chatPropertyDocument).filter(property => property.slug);
 }
 
-export function fallbackReply({ message, properties = [], action, mode = 'database' } = {}) {
+export function fallbackReply({ message, properties = [], websiteResults = [], action, mode = 'database' } = {}) {
   if (properties.length) return `I found ${properties.length} portfolio ${properties.length === 1 ? 'home' : 'homes'} that may be relevant. Open a property card for its available details, or contact Gurmeet for tailored guidance.`;
+  if (mode === 'database' && websiteResults.length) {
+    const pages = websiteResults.slice(0, 4).map(result => `- **${result.title}** — ${result.excerpt}`).join('\n');
+    return `## Website Search results\n\nI found these relevant pages on the Homes By Gurmeet website:\n\n${pages}\n\nOpen a page below for the complete information.`;
+  }
   if (mode === 'assistant') {
     if (FINANCING_TERMS.test(message)) return `## Financing a home purchase
 
@@ -204,28 +208,31 @@ Responses are general guidance and property information should be verified befor
   return 'I can help with Homes By Gurmeet portfolio homes, buying or selling guidance, and home valuation requests. What would you like to explore?';
 }
 
-export function assistantInstructions(properties = [], mode = 'database') {
+export function assistantInstructions(properties = [], mode = 'database', websiteResults = []) {
   const propertyContext = properties.length
     ? JSON.stringify(properties.map(({ title, slug, price, city, beds, baths, sqft, status }) => ({ title, slug, price, city, beds, baths, sqft, status })))
     : 'No matching portfolio properties were found.';
+  const websiteContext = websiteResults.length
+    ? JSON.stringify(websiteResults.map(({ title, path, excerpt }) => ({ title, path, excerpt })))
+    : 'No matching website pages were found.';
   const modeGuidance = mode === 'database'
-    ? 'The visitor is using portfolio search. Describe only the matching records supplied below and encourage them to open a result card for details.'
+    ? 'The visitor is using Website Search. Answer from the matching website pages and supplied property records. Website Search may answer questions about any public site page, services, credentials, contact details, valuations, listings, catalogue, or market insights. Do not claim site content that is not present in the supplied context.'
     : 'The visitor is using the conversational assistant. Give general buying, selling, or valuation process guidance, but use the supplied records for any property-specific answer.';
   const responseGuidance = mode === 'assistant'
     ? 'For buying, selling, valuation, and financing questions, provide structured guidance with a short markdown heading and approximately 6-10 concise numbered steps. Financing guidance must remain general and direct the visitor to a licensed lender for qualification, rates, and loan terms.'
     : 'Respond in 2-4 concise, warm sentences focused on the matching portfolio records.';
-  return `You are Gurmeet Singh's assistant for Homes By Gurmeet, a California real estate website. ${responseGuidance} ${modeGuidance} Never invent property details, MLS availability, real-time market data, demographics, schools, crime, or investment returns. Treat the portfolio context below as the only property data available. Do not provide legal, tax, or personalized lending/financial advice; provide general educational guidance and suggest an appropriate licensed professional where needed. Follow Fair Housing principles: do not make recommendations or claims based on protected characteristics. Encourage the visitor to use the Contact or Home Valuation page when appropriate.\n\nPortfolio context: ${propertyContext}`;
+  return `You are Gurmeet Singh's assistant for Homes By Gurmeet, a California real estate website. ${responseGuidance} ${modeGuidance} Never invent property details, MLS availability, real-time market data, demographics, schools, crime, or investment returns. Treat the website context and portfolio context below as the only factual sources available. Do not provide legal, tax, or personalized lending/financial advice; provide general educational guidance and suggest an appropriate licensed professional where needed. Follow Fair Housing principles: do not make recommendations or claims based on protected characteristics. Encourage the visitor to use the Contact or Home Valuation page when appropriate.\n\nWebsite context: ${websiteContext}\n\nPortfolio context: ${propertyContext}`;
 }
 
-export function chatCompletionMessages({ message, history = [], properties = [], mode = 'database' } = {}) {
+export function chatCompletionMessages({ message, history = [], properties = [], websiteResults = [], mode = 'database' } = {}) {
   return [
-    { role: 'system', content: assistantInstructions(properties, mode) },
+    { role: 'system', content: assistantInstructions(properties, mode, websiteResults) },
     { role: 'user', content: message },
   ];
 }
 
-export async function createAssistantReply({ message, history = [], properties = [], contextProperties = properties.slice(0, 4), action = null, mode = 'database', apiKey = process.env.OPENAI_API_KEY, model = process.env.OPENAI_CHAT_MODEL || 'gpt-5-mini', fetchImpl = fetch } = {}) {
-  const fallback = fallbackReply({ message, properties, action, mode });
+export async function createAssistantReply({ message, history = [], properties = [], contextProperties = properties.slice(0, 4), websiteResults = [], action = null, mode = 'database', apiKey = process.env.OPENAI_API_KEY, model = process.env.OPENAI_CHAT_MODEL || 'gpt-5-mini', fetchImpl = fetch } = {}) {
+  const fallback = fallbackReply({ message, properties, websiteResults, action, mode });
   if (!apiKey) return { reply: fallback, provider: 'local_fallback' };
   try {
     const response = await fetchImpl('https://api.openai.com/v1/chat/completions', {
@@ -233,7 +240,7 @@ export async function createAssistantReply({ message, history = [], properties =
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model,
-        messages: chatCompletionMessages({ message, history, properties: contextProperties, mode }),
+        messages: chatCompletionMessages({ message, history, properties: contextProperties, websiteResults, mode }),
         store: false,
         max_completion_tokens: 2400,
       }),

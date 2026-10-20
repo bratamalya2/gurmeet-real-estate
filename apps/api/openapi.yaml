@@ -36,7 +36,8 @@ paths:
       tags: [Public]
       summary: Ask the public AI property assistant
       description: |
-        Searches the live public property portfolio and returns a concise assistant reply.
+        Searches public Homes By Gurmeet website content and the live public property portfolio,
+        then returns a grounded assistant reply.
         Conversation history is used only for this request and is not stored by this API.
         The endpoint permits 24 requests per IP address per 15 minutes.
       security: []
@@ -57,7 +58,7 @@ paths:
                     required: [role, content]
                     properties:
                       role: { type: string, enum: [user, assistant] }
-                      content: { type: string, maxLength: 1200 }
+                      content: { type: string, maxLength: 6000 }
                 mode: { type: string, enum: [database, assistant], default: database }
                 filters:
                   type: object
@@ -95,6 +96,16 @@ paths:
                         sqft: { type: number, nullable: true }
                         status: { type: string }
                         image: { type: string }
+                  websiteResults:
+                    type: array
+                    maxItems: 8
+                    description: Matching public website pages for Website Search requests.
+                    items:
+                      type: object
+                      properties:
+                        title: { type: string }
+                        path: { type: string }
+                        excerpt: { type: string }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429':
           description: Too many chat requests
@@ -103,8 +114,9 @@ paths:
       tags: [Public]
       summary: Search the full-page AI property assistant
       description: |
-        Full-page equivalent of the public AI Search assistant. It accepts website-search
-        or conversational-assistant mode, uses live public property data, and never
+        Full-page equivalent of the public AI Search assistant. Website Search can answer
+        from public site content as well as live property data; conversational-assistant mode
+        provides buying and selling guidance. It never
         stores chat history or transcripts. The same IP rate limit applies as /chat.
       security: []
       requestBody:
@@ -1024,7 +1036,7 @@ components:
             required: [role, content]
             properties:
               role: { type: string, enum: [user, assistant] }
-              content: { type: string, maxLength: 1200 }
+              content: { type: string, maxLength: 6000 }
         mode: { type: string, enum: [database, assistant], default: database }
         filters:
           type: object
@@ -1057,3 +1069,13 @@ components:
               sqft: { type: number, nullable: true }
               status: { type: string }
               image: { type: string }
+        websiteResults:
+          type: array
+          maxItems: 8
+          description: Matching public website pages for Website Search requests.
+          items:
+            type: object
+            properties:
+              title: { type: string }
+              path: { type: string }
+              excerpt: { type: string }

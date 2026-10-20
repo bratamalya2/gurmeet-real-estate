@@ -15,7 +15,7 @@ const modes = {
   assistant: { label: AI_SEARCH_LABEL, description: 'Ask for concise buying, selling, or valuation guidance.' },
 };
 const quickPrompts = {
-  database: ['Homes in Fremont', '3 bedroom homes under $1.2M', 'Show sold homes in San Jose', 'Homes with images'],
+  database: ['Homes in Fremont', 'What services do you offer?', 'How do I request a home valuation?', 'How can I contact Gurmeet?'],
   assistant: ['How does a home valuation work?', 'What should I prepare before buying?', 'How can Gurmeet help me sell?', 'Contact Gurmeet'],
 };
 
@@ -62,6 +62,16 @@ function PropertyResults({ properties = [] }) {
       </div>
     </article>)}</div>
   </div>;
+}
+
+function WebsiteResults({ results = [] }) {
+  if (!results.length) return null;
+  return <section className="ai-search-website-results" aria-label="Matching website pages">
+    <p className="ai-search-results-label">Matching website pages ({results.length})</p>
+    <div className="ai-search-website-list">{results.map(result => <Link href={result.path} className="ai-search-website-result" key={result.path}>
+      <span><strong>{result.title}</strong><small>{result.excerpt}</small></span><FiArrowRight aria-hidden="true" />
+    </Link>)}</div>
+  </section>;
 }
 
 function ActionCard({ action }) {
@@ -116,7 +126,7 @@ export default function AiSearchClient() {
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || 'The assistant could not process that request.');
-      setHistory(current => [...current, { id: `assistant-${Date.now()}`, role: 'assistant', content: result.reply || 'I can help you explore the portfolio or connect with Gurmeet.', time: timeLabel(), properties: result.properties || [], provider: result.provider, action: actionName(result.action || result.actionType) }]);
+      setHistory(current => [...current, { id: `assistant-${Date.now()}`, role: 'assistant', content: result.reply || 'I can help you explore the website, portfolio, or connect with Gurmeet.', time: timeLabel(), properties: result.properties || [], websiteResults: result.websiteResults || [], provider: result.provider, action: actionName(result.action || result.actionType) }]);
     } catch (requestError) {
       setError(requestError.message || 'The assistant is temporarily unavailable.');
       setHistory(current => [...current, { id: `assistant-${Date.now()}`, role: 'assistant', content: 'I’m unable to complete that search right now. Please contact Gurmeet directly for help.', time: timeLabel(), action: 'contact', provider: 'local_fallback' }]);
@@ -148,9 +158,9 @@ export default function AiSearchClient() {
         </div>
 
         <div className="ai-search-conversation" aria-live="polite">
-          {!history.length && <div className="ai-search-empty"><span className="ai-search-empty-icon"><FiCpu aria-hidden="true" /></span><h2>What would you like to explore?</h2><p>Ask about portfolio homes, use the filters above, or get connected with Gurmeet.</p></div>}
-          {history.map(turn => <article className={`ai-search-turn ${turn.role}`} key={turn.id}><div className="ai-search-turn-header">{turn.role === 'assistant' ? <><span className="ai-search-turn-avatar"><FiCpu aria-hidden="true" /></span><ProviderBadge provider={turn.provider} /></> : <><span className="ai-search-turn-avatar user"><FiUser aria-hidden="true" /></span><strong>You</strong></>}<time>{turn.time}</time></div><div className="ai-search-turn-body"><FormattedText text={turn.content} /><PropertyResults properties={turn.properties} /><ActionCard action={turn.action} /></div></article>)}
-          {loading && <div className="ai-search-loading"><span className="ai-search-turn-avatar"><FiRefreshCw aria-hidden="true" /></span><span>AI Search is searching the portfolio…</span></div>}
+          {!history.length && <div className="ai-search-empty"><span className="ai-search-empty-icon"><FiCpu aria-hidden="true" /></span><h2>What would you like to explore?</h2><p>Search any public Homes By Gurmeet page, explore portfolio homes, use the filters above, or get connected with Gurmeet.</p></div>}
+          {history.map(turn => <article className={`ai-search-turn ${turn.role}`} key={turn.id}><div className="ai-search-turn-header">{turn.role === 'assistant' ? <><span className="ai-search-turn-avatar"><FiCpu aria-hidden="true" /></span><ProviderBadge provider={turn.provider} /></> : <><span className="ai-search-turn-avatar user"><FiUser aria-hidden="true" /></span><strong>You</strong></>}<time>{turn.time}</time></div><div className="ai-search-turn-body"><FormattedText text={turn.content} /><WebsiteResults results={turn.websiteResults} /><PropertyResults properties={turn.properties} /><ActionCard action={turn.action} /></div></article>)}
+          {loading && <div className="ai-search-loading"><span className="ai-search-turn-avatar"><FiRefreshCw aria-hidden="true" /></span><span>{mode === 'database' ? 'Website Search is searching the site…' : 'AI Search is preparing guidance…'}</span></div>}
           {error && <p className="error ai-search-error">{error}</p>}
           <div ref={resultsEndRef} />
         </div>

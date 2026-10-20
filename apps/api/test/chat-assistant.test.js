@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildPropertySearchFilter, chatCompletionMessages, chatRequestSchema, createAssistantReply, detectChatIntent, extractPropertyCriteria, fallbackReply, searchChatProperties } from '../src/services/chat-assistant.js';
+import { searchWebsiteContent } from '../src/services/website-search.js';
 
 test('validates bounded public chat requests', () => {
   assert.equal(chatRequestSchema.safeParse({ message: 'Homes in Fremont' }).success, true);
@@ -105,15 +106,37 @@ test('AI Search mode searches when the visitor explicitly asks for homes', async
   assert.equal(result[0].slug, '1-main-st-fremont');
 });
 
+test('Website Search finds public site content as well as property records', () => {
+  const services = searchWebsiteContent('What services do you offer?');
+  assert.equal(services.some(result => result.path === '/services'), true);
+  assert.equal(services[0].excerpt.length > 0, true);
+
+  const contact = searchWebsiteContent('What is Gurmeet phone number?');
+  assert.equal(contact.some(result => result.path === '/contact'), true);
+
+  const valuation = searchWebsiteContent('How do I request a home valuation?');
+  assert.equal(valuation.some(result => result.path === '/home-valuation'), true);
+});
+
+test('Website Search fallback is grounded in matching page content', () => {
+  const results = searchWebsiteContent('How do I contact Gurmeet?');
+  const reply = fallbackReply({ message: 'How do I contact Gurmeet?', mode: 'database', websiteResults: results });
+  assert.match(reply, /Website Search results/);
+  assert.match(reply, /Contact Gurmeet/);
+});
+
 test('builds grounded Chat Completions messages from sanitized context', () => {
+  const websiteResults = searchWebsiteContent('What services do you offer?');
   const messages = chatCompletionMessages({
     message: 'Tell me about a Fremont home',
     history: [{ role: 'user', content: 'Hi' }],
     properties: [{ title: '1 Main St', slug: '1-main', city: 'Fremont', price: 900000 }],
+    websiteResults,
     mode: 'assistant',
   });
   assert.equal(messages[0].role, 'system');
   assert.match(messages[0].content, /never invent property details/i);
+  assert.match(messages[0].content, /Website context:/);
   assert.equal(messages.length, 2);
   assert.equal(messages.some(message => message.content === 'Hi'), false);
   assert.deepEqual(messages.at(-1), { role: 'user', content: 'Tell me about a Fremont home' });

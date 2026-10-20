@@ -27,6 +27,7 @@ import { DriveImageImportError, stageDriveFolderImages, commitStagedDriveImages,
 import { applyPropertyDeduplication } from './services/property-deduplication.js';
 import { buildApproximateCoordinateUpdates } from './services/approximate-coordinates.js';
 import { chatRequestSchema, createAssistantReply, detectChatIntent, searchChatProperties } from './services/chat-assistant.js';
+import { searchWebsiteContent } from './services/website-search.js';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -108,9 +109,10 @@ async function handlePublicChat(req, res, next) {
     const intent = detectChatIntent(message);
     const fullPageSearch = req.path === '/api/ai-search';
     const properties = await searchChatProperties(Property, message, filters, fullPageSearch ? 250 : 4, mode);
-    const response = await createAssistantReply({ message, history, properties, contextProperties: properties.slice(0, 4), action: intent.action, mode });
+    const websiteResults = mode === 'database' ? searchWebsiteContent(message) : [];
+    const response = await createAssistantReply({ message, history, properties, contextProperties: properties.slice(0, 4), websiteResults, action: intent.action, mode });
     const actionType = intent.action === 'valuation' ? 'home_valuation' : intent.action;
-    return res.json({ ...response, properties, action: intent.action, actionType, mode });
+    return res.json({ ...response, properties, websiteResults, action: intent.action, actionType, mode });
   } catch (error) { return next(error); }
 }
 app.post('/api/chat', publicChatLimiter, handlePublicChat);

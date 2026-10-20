@@ -22,8 +22,8 @@ export default function Home() {
               <Link className="btn" href="/bought-with-gurmeet">
                 Bought with Gurmeet
               </Link>
-              <Link className="btn" href="/bought-with-gurmeet">
-                Featured Listings
+              <Link className="btn" href="/homes-for-sale">
+                Active Listings
               </Link>
               <Link
                 className="btn alt"
