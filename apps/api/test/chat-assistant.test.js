@@ -118,6 +118,27 @@ test('Website Search finds public site content as well as property records', () 
   assert.equal(valuation.some(result => result.path === '/home-valuation'), true);
 });
 
+test('Website Search can use live Market Insights data', () => {
+  const results = searchWebsiteContent('What is the median sale price and total sales volume?');
+  assert.equal(results.some(result => result.path === '/market-insights'), true);
+  const marketInsights = {
+    soldCount: 203,
+    medianSalePrice: 579500,
+    averageSalePrice: 650000,
+    averagePricePerSqft: 444,
+    totalSalesVolume: 132841408,
+    averageSqft: 1657.19,
+    byCity: [{ city: 'Union City', count: 43 }],
+    priceBands: [{ label: 'Under $500K', count: 76 }],
+  };
+  const reply = fallbackReply({ message: 'What is the median sale price?', mode: 'database', websiteResults: results, marketInsights });
+  assert.match(reply, /\$579,500/);
+  assert.match(reply, /\$132,841,408/);
+  const messages = chatCompletionMessages({ message: 'What is the median sale price?', mode: 'database', websiteResults: results, marketInsights });
+  assert.match(messages[0].content, /Live market-insights context:/);
+  assert.match(messages[0].content, /579500/);
+});
+
 test('Website Search fallback is grounded in matching page content', () => {
   const results = searchWebsiteContent('How do I contact Gurmeet?');
   const reply = fallbackReply({ message: 'How do I contact Gurmeet?', mode: 'database', websiteResults: results });

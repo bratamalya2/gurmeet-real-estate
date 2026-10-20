@@ -15,12 +15,12 @@ test('keeps browser history visible without sending previous context to the API'
   assert.deepEqual(request.filters, {});
 });
 
-test('uses the AI Search public label', () => {
-  assert.equal(AI_SEARCH_LABEL, 'AI Search');
+test('uses the Gurmeet AI Mode public label', () => {
+  assert.equal(AI_SEARCH_LABEL, 'Gurmeet AI Mode');
 });
 
 test('labels the actual AI provider transparently', () => {
-  assert.equal(providerLabel('openai'), 'AI Search · OpenAI');
-  assert.equal(providerLabel('local_fallback'), 'AI Search · Local fallback');
+  assert.equal(providerLabel('openai'), 'Gurmeet AI Mode · OpenAI');
+  assert.equal(providerLabel('local_fallback'), 'Gurmeet AI Mode · Local fallback');
   assert.equal(providerLabel(undefined), AI_SEARCH_LABEL);
 });

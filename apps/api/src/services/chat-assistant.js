@@ -16,6 +16,8 @@ const BUYING_GUIDANCE_TERMS = /\b(buy|buying|purchase|purchasing|buyer)\b/i;
 const SELLING_GUIDANCE_TERMS = /\b(sell|selling|seller|list my home|list a home)\b/i;
 const VALUATION_GUIDANCE_TERMS = /\b(worth|value|valuation|cma|appraisal|estimate|price my home)\b/i;
 
+const formatMoney = value => Number.isFinite(Number(value)) && Number(value) > 0 ? `$${Math.round(Number(value)).toLocaleString()}` : 'Not available';
+
 const filtersSchema = z.object({
   city: z.preprocess(value => String(value || '').trim() || undefined, z.string().max(80).optional()),
   beds: z.preprocess(value => value === '' || value == null ? undefined : Number(value), z.number().int().min(1).max(20).optional()),
@@ -132,8 +134,13 @@ export async function searchChatProperties(PropertyModel, message, filters = {},
   return properties.map(chatPropertyDocument).filter(property => property.slug);
 }
 
-export function fallbackReply({ message, properties = [], websiteResults = [], action, mode = 'database' } = {}) {
+export function fallbackReply({ message, properties = [], websiteResults = [], marketInsights, action, mode = 'database' } = {}) {
   if (properties.length) return `I found ${properties.length} portfolio ${properties.length === 1 ? 'home' : 'homes'} that may be relevant. Open a property card for its available details, or contact Gurmeet for tailored guidance.`;
+  if (mode === 'database' && marketInsights) {
+    const cities = Array.isArray(marketInsights.byCity) ? marketInsights.byCity.slice(0, 5).map(item => `${item.city} (${item.count})`).join(', ') : 'Not available';
+    const bands = Array.isArray(marketInsights.priceBands) ? marketInsights.priceBands.filter(item => item.count > 0).map(item => `${item.label}: ${item.count}`).join(', ') : 'Not available';
+    return `## Market & Portfolio Insights\n\nThese figures come from the completed Homes By Gurmeet portfolio records currently available on the Market Insights page:\n\n- **Homes sold:** ${marketInsights.soldCount || 0}\n- **Median sale price:** ${formatMoney(marketInsights.medianSalePrice)}\n- **Average sale price:** ${formatMoney(marketInsights.averageSalePrice)}\n- **Average price per square foot:** ${formatMoney(marketInsights.averagePricePerSqft)}\n- **Total sales volume:** ${formatMoney(marketInsights.totalSalesVolume)}\n- **Average home size:** ${marketInsights.averageSqft > 0 ? `${Number(marketInsights.averageSqft).toLocaleString()} sq ft` : 'Not available'}\n- **Cities represented:** ${Array.isArray(marketInsights.byCity) ? marketInsights.byCity.length : 'Not available'}\n- **Top city volumes:** ${cities || 'Not available'}\n- **Price bands:** ${bands || 'Not available'}\n\nThis is Gurmeet’s completed portfolio data, not a general regional market report. Open the Market Insights page for the full annual, city, price-band, profile, and recent-sales detail.`;
+  }
   if (mode === 'database' && websiteResults.length) {
     const pages = websiteResults.slice(0, 4).map(result => `- **${result.title}** — ${result.excerpt}`).join('\n');
     return `## Website Search results\n\nI found these relevant pages on the Homes By Gurmeet website:\n\n${pages}\n\nOpen a page below for the complete information.`;
@@ -173,7 +180,7 @@ Use the Home Valuation page to begin a property-specific conversation. Estimates
 6. **Choose next steps.** If you decide to proceed, Gurmeet can help plan preparation, marketing, showings, offer review, and transaction coordination.
 
 Start with the Home Valuation form or use Contact to speak with Gurmeet. A valuation is an informed planning estimate and is not a guarantee of a sale price or lending value.`;
-    if (action === 'contact') return `## How AI Search can help
+    if (action === 'contact') return `## How Gurmeet AI Mode can help
 
 1. **Buying:** organize your priorities, search the portfolio, and prepare questions for a property conversation.
 2. **Selling:** start with a valuation, discuss preparation, and plan a listing strategy around your timeline.
@@ -192,7 +199,7 @@ Gurmeet can provide real-estate process guidance, while licensed lenders, attorn
 7. **Prepare for closing.** Review final disclosures, confirm the walkthrough and closing timeline, and arrange funds and signing details.
 
 Financing terms and qualification depend on your lender, so a licensed lender should answer loan-specific questions. Use Contact when you are ready to discuss your search with Gurmeet.`;
-    return `## How AI Search can help
+    return `## How Gurmeet AI Mode can help
 
 1. Ask about buying, selling, home valuation, or a specific property in the Homes By Gurmeet portfolio.
 2. For a property search, use an explicit request such as “show homes in Fremont” so matching cards can be returned.
@@ -208,31 +215,50 @@ Responses are general guidance and property information should be verified befor
   return 'I can help with Homes By Gurmeet portfolio homes, buying or selling guidance, and home valuation requests. What would you like to explore?';
 }
 
-export function assistantInstructions(properties = [], mode = 'database', websiteResults = []) {
+export function assistantInstructions(properties = [], mode = 'database', websiteResults = [], marketInsights) {
   const propertyContext = properties.length
     ? JSON.stringify(properties.map(({ title, slug, price, city, beds, baths, sqft, status }) => ({ title, slug, price, city, beds, baths, sqft, status })))
     : 'No matching portfolio properties were found.';
   const websiteContext = websiteResults.length
     ? JSON.stringify(websiteResults.map(({ title, path, excerpt }) => ({ title, path, excerpt })))
     : 'No matching website pages were found.';
+  const marketInsightsContext = marketInsights
+    ? JSON.stringify({
+      soldCount: marketInsights.soldCount,
+      totalSalesVolume: marketInsights.totalSalesVolume,
+      averageSalePrice: marketInsights.averageSalePrice,
+      medianSalePrice: marketInsights.medianSalePrice,
+      averagePricePerSqft: marketInsights.averagePricePerSqft,
+      averageSqft: marketInsights.averageSqft,
+      averageBeds: marketInsights.averageBeds,
+      averageBaths: marketInsights.averageBaths,
+      coverage: marketInsights.coverage,
+      byYear: marketInsights.byYear,
+      byCity: marketInsights.byCity,
+      byBuyerCity: marketInsights.byBuyerCity,
+      priceBands: marketInsights.priceBands,
+      recentSales: marketInsights.recentSales,
+      mapLocations: Array.isArray(marketInsights.mapPoints) ? marketInsights.mapPoints.length : 0,
+    })
+    : 'No live market-insights data was requested.';
   const modeGuidance = mode === 'database'
     ? 'The visitor is using Website Search. Answer from the matching website pages and supplied property records. Website Search may answer questions about any public site page, services, credentials, contact details, valuations, listings, catalogue, or market insights. Do not claim site content that is not present in the supplied context.'
     : 'The visitor is using the conversational assistant. Give general buying, selling, or valuation process guidance, but use the supplied records for any property-specific answer.';
   const responseGuidance = mode === 'assistant'
     ? 'For buying, selling, valuation, and financing questions, provide structured guidance with a short markdown heading and approximately 6-10 concise numbered steps. Financing guidance must remain general and direct the visitor to a licensed lender for qualification, rates, and loan terms.'
     : 'Respond in 2-4 concise, warm sentences focused on the matching portfolio records.';
-  return `You are Gurmeet Singh's assistant for Homes By Gurmeet, a California real estate website. ${responseGuidance} ${modeGuidance} Never invent property details, MLS availability, real-time market data, demographics, schools, crime, or investment returns. Treat the website context and portfolio context below as the only factual sources available. Do not provide legal, tax, or personalized lending/financial advice; provide general educational guidance and suggest an appropriate licensed professional where needed. Follow Fair Housing principles: do not make recommendations or claims based on protected characteristics. Encourage the visitor to use the Contact or Home Valuation page when appropriate.\n\nWebsite context: ${websiteContext}\n\nPortfolio context: ${propertyContext}`;
+  return `You are Gurmeet Singh's assistant for Homes By Gurmeet, a California real estate website. ${responseGuidance} ${modeGuidance} Never invent property details, MLS availability, real-time market data, demographics, schools, crime, or investment returns. Treat the website context, live market-insights context, and portfolio context below as the only factual sources available. When live market-insights data is supplied, answer numerical questions using those values and clearly describe them as completed Gurmeet portfolio data. Do not provide legal, tax, or personalized lending/financial advice; provide general educational guidance and suggest an appropriate licensed professional where needed. Follow Fair Housing principles: do not make recommendations or claims based on protected characteristics. Encourage the visitor to use the Contact or Home Valuation page when appropriate.\n\nWebsite context: ${websiteContext}\n\nLive market-insights context: ${marketInsightsContext}\n\nPortfolio context: ${propertyContext}`;
 }
 
-export function chatCompletionMessages({ message, history = [], properties = [], websiteResults = [], mode = 'database' } = {}) {
+export function chatCompletionMessages({ message, history = [], properties = [], websiteResults = [], marketInsights, mode = 'database' } = {}) {
   return [
-    { role: 'system', content: assistantInstructions(properties, mode, websiteResults) },
+    { role: 'system', content: assistantInstructions(properties, mode, websiteResults, marketInsights) },
     { role: 'user', content: message },
   ];
 }
 
-export async function createAssistantReply({ message, history = [], properties = [], contextProperties = properties.slice(0, 4), websiteResults = [], action = null, mode = 'database', apiKey = process.env.OPENAI_API_KEY, model = process.env.OPENAI_CHAT_MODEL || 'gpt-5-mini', fetchImpl = fetch } = {}) {
-  const fallback = fallbackReply({ message, properties, websiteResults, action, mode });
+export async function createAssistantReply({ message, history = [], properties = [], contextProperties = properties.slice(0, 4), websiteResults = [], marketInsights, action = null, mode = 'database', apiKey = process.env.OPENAI_API_KEY, model = process.env.OPENAI_CHAT_MODEL || 'gpt-5-mini', fetchImpl = fetch } = {}) {
+  const fallback = fallbackReply({ message, properties, websiteResults, marketInsights, action, mode });
   if (!apiKey) return { reply: fallback, provider: 'local_fallback' };
   try {
     const response = await fetchImpl('https://api.openai.com/v1/chat/completions', {
@@ -240,7 +266,7 @@ export async function createAssistantReply({ message, history = [], properties =
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model,
-        messages: chatCompletionMessages({ message, history, properties: contextProperties, websiteResults, mode }),
+        messages: chatCompletionMessages({ message, history, properties: contextProperties, websiteResults, marketInsights, mode }),
         store: false,
         max_completion_tokens: 2400,
       }),

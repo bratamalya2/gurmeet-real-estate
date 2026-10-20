@@ -12,7 +12,7 @@ const agentEmail = process.env.NEXT_PUBLIC_AGENT_EMAIL || '';
 const phoneHref = agentPhone ? `tel:${agentPhone.replace(/\D/g, '')}` : '/contact';
 const modes = {
   database: { label: 'Website Search', description: 'Search the live Homes By Gurmeet property portfolio.' },
-  assistant: { label: AI_SEARCH_LABEL, description: 'Ask for concise buying, selling, or valuation guidance.' },
+  assistant: { label: AI_SEARCH_LABEL, description: 'Ask for buying, selling, or valuation guidance.' },
 };
 const quickPrompts = {
   database: ['Homes in Fremont', 'What services do you offer?', 'How do I request a home valuation?', 'How can I contact Gurmeet?'],
@@ -43,7 +43,7 @@ function ProviderBadge({ provider }) {
 }
 
 function ModeSwitch({ mode, onChange, compact = false }) {
-  return <div className={`ai-search-mode-switch ${compact ? 'compact' : ''}`.trim()} role="group" aria-label="Choose AI Search mode">
+  return <div className={`ai-search-mode-switch ${compact ? 'compact' : ''}`.trim()} role="group" aria-label="Choose Gurmeet AI Mode mode">
     {Object.entries(modes).map(([key, value]) => <button key={key} type="button" aria-pressed={mode === key} className={mode === key ? 'active' : ''} onClick={() => onChange(key)}>{value.label}</button>)}
   </div>;
 }
@@ -138,10 +138,10 @@ export default function AiSearchClient() {
   return <main className="ai-search-page">
     <section className="ai-search-hero">
       <div className="container ai-search-hero-inner">
-        <div className="ai-search-hero-badge"><FiStar aria-hidden="true" /> AI Search Real Estate Suite</div>
+        <div className="ai-search-hero-badge"><FiStar aria-hidden="true" /> Gurmeet AI Mode Real Estate Suite</div>
         <p className="eyebrow">California portfolio search</p>
-        <h1>AI Search Property Assistant</h1>
-        <p>Explore verified Homes By Gurmeet properties or use AI Search for clear guidance on buying, selling, and home valuation.</p>
+        <h1>Gurmeet AI Mode Property Assistant</h1>
+        <p>Explore verified Homes By Gurmeet properties or use Gurmeet AI Mode for clear guidance on buying, selling, and home valuation.</p>
         <div className="ai-search-contact-strip"><span><FiHome aria-hidden="true" /> Homes By Gurmeet</span>{agentPhone && <a href={phoneHref}><FiPhone aria-hidden="true" /> {agentPhone}</a>}{agentEmail && <a href={`mailto:${agentEmail}`}>{agentEmail}</a>}</div>
       </div>
     </section>
@@ -149,8 +149,8 @@ export default function AiSearchClient() {
     <section className="ai-search-main">
       <div className="container ai-search-container">
         <div className="ai-search-console">
-          <div className="ai-search-console-heading"><div><p className="eyebrow">Search engine console</p><h2>Select your search mode</h2><p>Use structured website filters or ask AI Search a natural-language question.</p></div>{history.length > 0 && <button className="ai-search-reset" type="button" onClick={resetSession}><FiRefreshCw aria-hidden="true" /> New search session</button>}</div>
-          <div className="ai-search-mode-toggle" role="tablist" aria-label="AI Search mode">
+          <div className="ai-search-console-heading"><div><p className="eyebrow">Search engine console</p><h2>Select your search mode</h2><p>Use structured website filters or ask Gurmeet AI Mode a natural-language question.</p></div>{history.length > 0 && <button className="ai-search-reset" type="button" onClick={resetSession}><FiRefreshCw aria-hidden="true" /> New search session</button>}</div>
+          <div className="ai-search-mode-toggle" role="tablist" aria-label="Gurmeet AI Mode mode">
             {Object.entries(modes).map(([key, value]) => <button key={key} type="button" role="tab" aria-selected={mode === key} className={mode === key ? 'active' : ''} onClick={() => setMode(key)}><span className="ai-search-mode-icon">{key === 'database' ? <FiDatabase aria-hidden="true" /> : <FiCpu aria-hidden="true" />}</span><span><strong>{value.label}</strong><small>{value.description}</small></span>{mode === key && <FiCheck className="ai-search-mode-check" aria-hidden="true" />}</button>)}
           </div>
           <div className="ai-search-filter-bar"><button type="button" onClick={() => setShowFilters(value => !value)} aria-expanded={showFilters}><FiSliders aria-hidden="true" /> {showFilters ? 'Hide property filters' : 'Show property filters'} <FiChevronDown className={showFilters ? 'rotated' : ''} aria-hidden="true" /></button>{Object.values(filters).some(Boolean) && <button type="button" className="ai-search-clear" onClick={() => setFilters({ city: '', beds: '', maxPrice: '' })}>Clear filters</button>}<Link href="/property-catalogue" className="ai-search-catalogue-link">Browse full catalogue <FiArrowRight aria-hidden="true" /></Link></div>
@@ -160,12 +160,12 @@ export default function AiSearchClient() {
         <div className="ai-search-conversation" aria-live="polite">
           {!history.length && <div className="ai-search-empty"><span className="ai-search-empty-icon"><FiCpu aria-hidden="true" /></span><h2>What would you like to explore?</h2><p>Search any public Homes By Gurmeet page, explore portfolio homes, use the filters above, or get connected with Gurmeet.</p></div>}
           {history.map(turn => <article className={`ai-search-turn ${turn.role}`} key={turn.id}><div className="ai-search-turn-header">{turn.role === 'assistant' ? <><span className="ai-search-turn-avatar"><FiCpu aria-hidden="true" /></span><ProviderBadge provider={turn.provider} /></> : <><span className="ai-search-turn-avatar user"><FiUser aria-hidden="true" /></span><strong>You</strong></>}<time>{turn.time}</time></div><div className="ai-search-turn-body"><FormattedText text={turn.content} /><WebsiteResults results={turn.websiteResults} /><PropertyResults properties={turn.properties} /><ActionCard action={turn.action} /></div></article>)}
-          {loading && <div className="ai-search-loading"><span className="ai-search-turn-avatar"><FiRefreshCw aria-hidden="true" /></span><span>{mode === 'database' ? 'Website Search is searching the site…' : 'AI Search is preparing guidance…'}</span></div>}
+          {loading && <div className="ai-search-loading"><span className="ai-search-turn-avatar"><FiRefreshCw aria-hidden="true" /></span><span>{mode === 'database' ? 'Website Search is searching the site…' : 'Gurmeet AI Mode is preparing guidance…'}</span></div>}
           {error && <p className="error ai-search-error">{error}</p>}
           <div ref={resultsEndRef} />
         </div>
 
-        <div className="ai-search-composer"><div className="ai-search-suggestions"><span>Suggested questions</span>{quickPrompts[mode].map(prompt => <button type="button" key={prompt} onClick={() => submit(prompt)} disabled={loading}>{prompt}</button>)}</div><form onSubmit={event => { event.preventDefault(); submit(); }}><label className="sr-only" htmlFor="ai-search-input">Ask AI Search</label><input ref={inputRef} id="ai-search-input" value={message} onChange={event => setMessage(event.target.value)} maxLength={1200} placeholder={mode === 'database' ? 'Search by city, beds, price, or address…' : 'Ask AI Search about buying, selling, or home valuation…'} disabled={loading} /><button type="submit" disabled={!message.trim() || loading} aria-label="Submit AI Search question"><FiSend aria-hidden="true" /></button></form><p className="ai-search-disclosure">AI responses may be inaccurate. Property information is drawn from the current Homes By Gurmeet portfolio and should be verified.</p></div>
+        <div className="ai-search-composer"><div className="ai-search-suggestions"><span>Suggested questions</span>{quickPrompts[mode].map(prompt => <button type="button" key={prompt} onClick={() => submit(prompt)} disabled={loading}>{prompt}</button>)}</div><form onSubmit={event => { event.preventDefault(); submit(); }}><label className="sr-only" htmlFor="ai-search-input">Ask Gurmeet AI Mode</label><input ref={inputRef} id="ai-search-input" value={message} onChange={event => setMessage(event.target.value)} maxLength={1200} placeholder={mode === 'database' ? 'Search by city, beds, price, address, or website topic…' : 'Ask Gurmeet AI Mode about buying, selling, or home valuation…'} disabled={loading} /><button type="submit" disabled={!message.trim() || loading} aria-label="Submit Gurmeet AI Mode question"><FiSend aria-hidden="true" /></button></form><p className="ai-search-disclosure">AI responses may be inaccurate. Property information is drawn from the current Homes By Gurmeet portfolio and should be verified.</p></div>
         <div className="ai-search-bottom-switch"><span>Switch search mode</span><ModeSwitch mode={mode} onChange={setMode} compact /></div>
       </div>
     </section>

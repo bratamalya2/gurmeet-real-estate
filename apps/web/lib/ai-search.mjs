@@ -1,4 +1,4 @@
-export const AI_SEARCH_LABEL = 'AI Search';
+export const AI_SEARCH_LABEL = 'Gurmeet AI Mode';
 
 export function providerLabel(provider) {
   if (provider === 'openai') return `${AI_SEARCH_LABEL} · OpenAI`;

@@ -114,7 +114,7 @@ paths:
       tags: [Public]
       summary: Search the full-page AI property assistant
       description: |
-        Full-page equivalent of the public AI Search assistant. Website Search can answer
+        Full-page equivalent of the public Gurmeet AI Mode assistant. Website Search can answer
         from public site content as well as live property data; conversational-assistant mode
         provides buying and selling guidance. It never
         stores chat history or transcripts. The same IP rate limit applies as /chat.

@@ -47,7 +47,7 @@ const WEBSITE_PAGES = [
   {
     title: 'Market and Portfolio Insights',
     path: '/market-insights',
-    keywords: ['market', 'insights', 'portfolio', 'analysis', 'sold homes by city', 'bought homes by city', 'sales', 'price', 'square foot'],
+    keywords: ['market', 'insights', 'portfolio', 'analysis', 'sold', 'homes sold', 'sold homes by city', 'bought homes by city', 'sales', 'sale price', 'median sale price', 'average sale price', 'total sales volume', 'price per square foot', 'square foot', 'city performance', 'price bands', 'beds', 'baths', 'home size', 'map'],
     content: 'Market and Portfolio Insights summarizes verified completed portfolio transactions, including sale prices, price per square foot, annual sales performance, city representation, price bands, home characteristics, and recent sold homes. It represents Gurmeet’s portfolio rather than a general regional market report.',
   },
   {
@@ -63,10 +63,10 @@ const WEBSITE_PAGES = [
     content: 'The Home Valuation page lets homeowners share property details so Gurmeet can prepare a personalized perspective on the home’s current market position. The form asks for property information and sends the request for follow-up.',
   },
   {
-    title: 'AI Search',
+    title: 'Gurmeet AI Mode',
     path: '/ai-search',
     keywords: ['ai', 'assistant', 'website search', 'search', 'natural language', 'property search', 'guidance'],
-    content: 'AI Search lets visitors search the public Homes By Gurmeet website and property portfolio, or ask for general buying, selling, financing, and home valuation guidance. Property information should be verified and financing-specific questions should be directed to a licensed lender.',
+    content: 'Gurmeet AI Mode lets visitors search the public Homes By Gurmeet website and property portfolio, or ask for general buying, selling, financing, and home valuation guidance. Property information should be verified and financing-specific questions should be directed to a licensed lender.',
   },
 ];
 
@@ -117,6 +117,10 @@ export function searchWebsiteContent(query = '', maxResults = 5) {
     path: page.path,
     excerpt: excerpt(page.content, queryTokens),
   }));
+}
+
+export function includesWebsitePage(results = [], path = '') {
+  return results.some(result => result.path === path);
 }
 
 export function websiteSearchContext(results = []) {
