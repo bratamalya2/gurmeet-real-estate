@@ -135,7 +135,7 @@ test('uses the OpenAI Chat Completions API without storing responses', async () 
   assert.equal(body.store, false);
   assert.equal(body.messages.at(-1).content, 'Tell me about a Fremont home');
   assert.match(body.messages[0].content, /never invent property details/i);
-  assert.equal(body.max_completion_tokens, 900);
+  assert.equal(body.max_completion_tokens, 2400);
 });
 
 test('falls back safely when an API key is unavailable or an upstream request fails', async () => {

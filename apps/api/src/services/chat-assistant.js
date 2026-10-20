@@ -229,7 +229,7 @@ export async function createAssistantReply({ message, history = [], properties =
         model,
         messages: chatCompletionMessages({ message, history, properties: contextProperties, mode }),
         store: false,
-        max_completion_tokens: 900,
+        max_completion_tokens: 2400,
       }),
     });
     if (!response.ok) throw new Error(`OpenAI returned ${response.status}`);
