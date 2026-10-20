@@ -4,6 +4,8 @@ import { PROPERTY_PLACEHOLDER_IMAGE } from '../constants/property-assets.js';
 const MAX_MESSAGE_LENGTH = 1200;
 const MAX_HISTORY_MESSAGES = 6;
 const PROPERTY_TERMS = /\b(property|properties|home|homes|house|houses|listing|listings|buy|buying|search|showing|tour|bed|bedroom|br)\b/i;
+const EXPLICIT_SEARCH_TERMS = /\b(show|find|search|browse|available|matching|listings?|properties)\b|\bhomes?\s+(?:in|under|below)\b/i;
+const ASSISTANT_GUIDANCE_TERMS = /\b(i\s+(?:want|would like)|how can i|what are the steps|tell me how|help me|financ|mortgage|loan|pre-approval|preapproval)\b/i;
 const VALUATION_TERMS = /\b(worth|value|valuation|cma|appraisal|estimate|price my home|sell my home|selling)\b/i;
 const CONTACT_TERMS = /\b(contact|call|phone|email|speak|talk|consultation|showing|tour|visit)\b/i;
 const BUYER_SIDE_TERMS = /\b(bought|purchased|buyer representation|buyer side)\b/i;
@@ -103,9 +105,12 @@ export function chatPropertyDocument(property = {}) {
   };
 }
 
-export async function searchChatProperties(PropertyModel, message, filters = {}, maxResults = 4) {
+export async function searchChatProperties(PropertyModel, message, filters = {}, maxResults = 4, mode = 'database') {
   const intent = detectChatIntent(message);
-  if (!intent.propertySearch && !filters.city && !filters.beds && !filters.maxPrice) return [];
+  const shouldSearch = mode === 'database'
+    ? intent.propertySearch || filters.city || filters.beds || filters.maxPrice
+    : (!ASSISTANT_GUIDANCE_TERMS.test(message) && EXPLICIT_SEARCH_TERMS.test(message)) || filters.city || filters.beds || filters.maxPrice;
+  if (!shouldSearch) return [];
   const cities = await PropertyModel.distinct('address.city', { 'address.city': { $exists: true, $ne: '' } });
   const criteria = extractPropertyCriteria(message, cities, filters);
   const properties = await PropertyModel.find(buildPropertySearchFilter(criteria))
@@ -116,10 +121,16 @@ export async function searchChatProperties(PropertyModel, message, filters = {},
   return properties.map(chatPropertyDocument).filter(property => property.slug);
 }
 
-export function fallbackReply({ message, properties = [], action } = {}) {
+export function fallbackReply({ message, properties = [], action, mode = 'database' } = {}) {
   if (action === 'valuation') return 'Gurmeet can prepare a complimentary home valuation based on your property and current local context. Use the Home Valuation form to get started, or contact Gurmeet directly for a conversation.';
   if (action === 'contact') return 'Gurmeet would be glad to help with your question or arrange a conversation. Use the Contact page to share the best way to reach you.';
   if (properties.length) return `I found ${properties.length} portfolio ${properties.length === 1 ? 'home' : 'homes'} that may be relevant. Open a property card for its available details, or contact Gurmeet for tailored guidance.`;
+  if (mode === 'assistant') {
+    if (/\b(financ|mortgage|loan|pre-approval|preapproval)\b/i.test(message)) return 'A typical purchase starts with clarifying your goals, speaking with a licensed lender about pre-approval, reviewing suitable homes, and then moving through offer, inspection, appraisal, and closing steps. Financing terms depend on your lender and situation, so Gurmeet can coordinate the home-search process while a lender answers loan-specific questions.';
+    if (/\b(buy|buying|purchase|purchasing)\b/i.test(message)) return 'Buying generally starts with your priorities and budget, followed by lender pre-approval, a focused home search, property review, offer strategy, inspections, and closing. Gurmeet can help you navigate the property and offer process; use Contact to begin a conversation.';
+    if (/\b(sell|selling)\b/i.test(message)) return 'Selling generally starts with a property review and valuation, followed by preparation, pricing, marketing, showing management, negotiation, and closing coordination. Use Home Valuation to request a personalized starting point from Gurmeet.';
+    return 'I can explain the buying, selling, and valuation process using Homes By Gurmeet’s services. Ask about a specific step, or use Contact to speak with Gurmeet directly.';
+  }
   if (detectChatIntent(message).propertySearch) return 'I could not find a direct portfolio match for that request. Gurmeet can help you explore comparable homes and off-market opportunities.';
   return 'I can help with Homes By Gurmeet portfolio homes, buying or selling guidance, and home valuation requests. What would you like to explore?';
 }
@@ -143,7 +154,7 @@ export function chatCompletionMessages({ message, history = [], properties = [],
 }
 
 export async function createAssistantReply({ message, history = [], properties = [], contextProperties = properties.slice(0, 4), action = null, mode = 'database', apiKey = process.env.OPENAI_API_KEY, model = process.env.OPENAI_CHAT_MODEL || 'gpt-5-mini', fetchImpl = fetch } = {}) {
-  const fallback = fallbackReply({ message, properties, action });
+  const fallback = fallbackReply({ message, properties, action, mode });
   if (!apiKey) return { reply: fallback, provider: 'local_fallback' };
   try {
     const response = await fetchImpl('https://api.openai.com/v1/chat/completions', {

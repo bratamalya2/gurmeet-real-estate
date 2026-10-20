@@ -57,6 +57,19 @@ test('searches live property records using only safe public card fields', async 
   assert.deepEqual(result, [{ id: 'property-id', title: '1 Main St, Fremont', slug: '1-main-st-fremont', price: 950000, city: 'Fremont', beds: 3, baths: 2, sqft: 1800, status: 'Sold', image: '/uploads/main.jpg' }]);
 });
 
+test('AI Assistant mode gives process guidance unless the visitor explicitly asks to search', async () => {
+  let queried = false;
+  const PropertyModel = {
+    distinct: async () => [],
+    find() { queried = true; throw new Error('should not search'); },
+  };
+  assert.deepEqual(await searchChatProperties(PropertyModel, 'I want to buy a home in Fremont. What are the steps?', {}, 250, 'assistant'), []);
+  assert.equal(queried, false);
+  const reply = await createAssistantReply({ message: 'I want to buy a home. How can I finance it?', mode: 'assistant', apiKey: '' });
+  assert.equal(reply.provider, 'local_fallback');
+  assert.match(reply.reply, /pre-approval|lender/i);
+});
+
 test('builds grounded Chat Completions messages from sanitized context', () => {
   const messages = chatCompletionMessages({
     message: 'Tell me about a Fremont home',

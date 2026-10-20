@@ -107,7 +107,7 @@ async function handlePublicChat(req, res, next) {
     const { message, history, mode, filters } = parsed.data;
     const intent = detectChatIntent(message);
     const fullPageSearch = req.path === '/api/ai-search';
-    const properties = await searchChatProperties(Property, message, filters, fullPageSearch ? 250 : 4);
+    const properties = await searchChatProperties(Property, message, filters, fullPageSearch ? 250 : 4, mode);
     const response = await createAssistantReply({ message, history, properties, contextProperties: properties.slice(0, 4), action: intent.action, mode });
     const actionType = intent.action === 'valuation' ? 'home_valuation' : intent.action;
     return res.json({ ...response, properties, action: intent.action, actionType, mode });
