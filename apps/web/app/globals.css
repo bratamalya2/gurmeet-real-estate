@@ -4658,3 +4658,229 @@ a {
     max-width: 100%;
   }
 }
+
+/* Footer developer credit */
+.copyright {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.footer-credit {
+  font-size: 11px;
+  color: #9ca3af;
+  letter-spacing: 0.02em;
+}
+
+/* About page review platforms */
+.review-platforms {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+.review-platform-card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 26px 24px;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.03);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.review-platform-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
+}
+.review-platform-icon {
+  display: inline-flex;
+  font-size: 30px;
+}
+.review-platform-icon svg {
+  width: 30px;
+  height: 30px;
+}
+.review-platform-name {
+  font-family: "Libre Caslon Text", serif;
+  font-size: 21px;
+  color: var(--navy);
+}
+.review-platform-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #f59e0b;
+  font-size: 14px;
+}
+.review-platform-rating b {
+  margin-left: 6px;
+  color: var(--navy);
+  font-size: 13px;
+}
+.review-platform-summary {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.review-platform-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 700;
+}
+.review-platforms-label {
+  margin: 40px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+@media (max-width: 900px) {
+  .review-platforms { grid-template-columns: 1fr; gap: 16px; }
+}
+
+/* Admin rich-text description editor */
+.rich-text-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.rich-text-field > span {
+  font-size: 13px;
+  font-weight: 700;
+}
+.rich-text-editor {
+  border: 1px solid #cbd5e1;
+  border-radius: 2px;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.rich-text-editor:focus-within {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(180, 140, 79, 0.16);
+}
+.rich-text-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 7px;
+  border-bottom: 1px solid var(--line);
+  background: #f8fafc;
+}
+.rich-text-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: #475569;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.rich-text-toolbar button:hover {
+  border-color: #dbe3ee;
+  background: #fff;
+  color: var(--navy);
+}
+.rich-text-toolbar button[aria-pressed="true"] {
+  border-color: var(--gold);
+  background: #fffaf0;
+  color: var(--navy);
+}
+.rich-text-toolbar button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+.rich-text-glyph {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.rich-text-divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: #dbe3ee;
+}
+.rich-text-surface {
+  min-height: 200px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding: 14px 16px;
+  outline: none;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.rich-text-surface[data-empty="true"]::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  pointer-events: none;
+}
+.rich-text-hint {
+  margin: 0;
+  padding: 7px 16px;
+  border-top: 1px solid var(--line);
+  color: #64748b;
+  font-size: 12px;
+}
+.rich-text-hint.is-over { color: #b91c1c; }
+
+/* Formatted content, shared by the editor surface and the public property page */
+.rich-text-surface > :first-child,
+.property-description > :first-child { margin-top: 0; }
+.rich-text-surface > :last-child,
+.property-description > :last-child { margin-bottom: 0; }
+.property-description { margin: 16px 0; }
+.rich-text-surface p,
+.property-description p { margin: 0 0 12px; }
+.rich-text-surface h2,
+.rich-text-surface h3,
+.property-description h2,
+.property-description h3 {
+  margin: 20px 0 8px;
+  color: var(--navy);
+  line-height: 1.3;
+}
+.rich-text-surface h2,
+.property-description h2 { font-size: 22px; }
+.rich-text-surface h3,
+.property-description h3 { font-size: 18px; }
+.rich-text-surface ul,
+.rich-text-surface ol,
+.property-description ul,
+.property-description ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+.rich-text-surface li,
+.property-description li { margin-bottom: 4px; }
+.rich-text-surface strong,
+.property-description strong { color: var(--navy); font-weight: 700; }
+.rich-text-surface a,
+.property-description a {
+  color: var(--navy);
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-underline-offset: 3px;
+}
+@media (max-width: 700px) {
+  .rich-text-toolbar button { min-width: 40px; height: 40px; }
+  .rich-text-surface { min-height: 160px; }
+}

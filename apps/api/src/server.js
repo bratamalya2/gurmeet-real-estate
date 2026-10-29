@@ -28,12 +28,14 @@ import { applyPropertyDeduplication } from './services/property-deduplication.js
 import { buildApproximateCoordinateUpdates } from './services/approximate-coordinates.js';
 import { chatRequestSchema, createAssistantReply, detectChatIntent, searchChatProperties } from './services/chat-assistant.js';
 import { includesWebsitePage, searchWebsiteContent } from './services/website-search.js';
+import { MAX_DESCRIPTION_LENGTH, sanitizeDescription, validateDescriptionLength } from './services/description-html.js';
 
 const app = express();
 app.set('trust proxy', 1);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDirectory = path.resolve(__dirname, '../uploads');
-const publicFields = 'title slug address price beds baths sqft description status featured images photoManifest.managedImagePaths photoManifest.localUploadPaths coordinates coordinatesSource source createdAt updatedAt transaction.soldDate transaction.side transaction.verification';
+const descriptionTooLong = `Descriptions must be ${MAX_DESCRIPTION_LENGTH.toLocaleString('en-US')} characters or fewer.`;
+const publicFields ='title slug address price beds baths sqft description status featured images photoManifest.managedImagePaths photoManifest.localUploadPaths coordinates coordinatesSource source createdAt updatedAt transaction.soldDate transaction.side transaction.verification';
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: process.env.WEB_ORIGIN || 'http://localhost:3000', credentials: true }));
@@ -193,7 +195,7 @@ app.get('/api/properties/featured', async (req, res, next) => {
   } catch (error) { return next(error); }
 });
 app.get('/api/properties/map', async (req, res, next) => { try { res.json(await Property.find({ status: { $in: ['Active', 'Pending'] }, 'coordinates.lat': { $ne: null }, 'coordinates.lng': { $ne: null } }).select('title slug address price status coordinates').limit(250)); } catch (error) { next(error); } });
-app.get('/api/properties/:slug', async (req, res, next) => { try { const property = await Property.findOne({ slug: req.params.slug }).select(publicFields); return property ? res.json(property) : res.sendStatus(404); } catch (error) { return next(error); } });
+app.get('/api/properties/:slug', async (req, res, next) => { try { const property = await Property.findOne({ slug: req.params.slug }).select(publicFields).lean(); if (!property) return res.sendStatus(404); return res.json({ ...property, description: sanitizeDescription(property.description) }); } catch (error) { return next(error); } });
 
 app.post('/api/leads', rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false }), async (req, res, next) => {
   try {
@@ -222,8 +224,8 @@ app.post('/api/auth/logout', (req, res) => res.clearCookie('hbg_session').json({
 app.get('/api/auth/me', auth(), async (req, res, next) => { try { res.json(await User.findById(req.user.id).select('email role active')); } catch (error) { next(error); } });
 
 app.get('/api/admin/properties', auth(), async (req, res, next) => { try { res.json(await Property.find().sort({ createdAt: -1 })); } catch (error) { next(error); } });
-app.post('/api/admin/properties', auth(), async (req, res, next) => { try { const property = { ...req.body }; property.slug = property.slug || slugify(property.title || property.address?.street, { lower: true, strict: true }); property.address = { ...property.address, normalized: `${property.address?.street || ''}${property.address?.city || ''}${property.address?.state || ''}${property.address?.zip || ''}`.toLowerCase().replace(/\W/g, '') }; property.createdBy = req.user.id; res.status(201).json(await Property.create(property)); } catch (error) { next(error); } });
-app.patch('/api/admin/properties/:id', auth(), async (req, res, next) => { try { const property = await Property.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true }); return property ? res.json(property) : res.sendStatus(404); } catch (error) { return next(error); } });
+app.post('/api/admin/properties', auth(), async (req, res, next) => { try { const property = { ...req.body }; if (!validateDescriptionLength(property.description)) return res.status(422).json({ error: descriptionTooLong }); if ('description' in property) property.description = sanitizeDescription(property.description); property.slug = property.slug || slugify(property.title || property.address?.street, { lower: true, strict: true }); property.address = { ...property.address, normalized: `${property.address?.street || ''}${property.address?.city || ''}${property.address?.state || ''}${property.address?.zip || ''}`.toLowerCase().replace(/\W/g, '') }; property.createdBy = req.user.id; res.status(201).json(await Property.create(property)); } catch (error) { next(error); } });
+app.patch('/api/admin/properties/:id', auth(), async (req, res, next) => { try { const update = { ...req.body }; if (!validateDescriptionLength(update.description)) return res.status(422).json({ error: descriptionTooLong }); if ('description' in update) update.description = sanitizeDescription(update.description); const property = await Property.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true }); return property ? res.json(property) : res.sendStatus(404); } catch (error) { return next(error); } });
 app.delete('/api/admin/properties/:id', auth(), async (req, res, next) => { try { const property = await Property.findByIdAndDelete(req.params.id); return property ? res.sendStatus(204) : res.sendStatus(404); } catch (error) { return next(error); } });
 app.post('/api/admin/properties/deduplicate', auth(['admin']), async (req, res, next) => {
   const log = await SystemLog.create({ source: 'properties:deduplicate', status: 'running', startedAt: new Date() });

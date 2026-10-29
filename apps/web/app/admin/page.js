@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { publicApiUrl, publicAssetUrl } from "../../lib/api";
 import AdminAnalytics from "../../components/AdminAnalytics";
+import RichTextEditor from "../../components/RichTextEditor";
+import { descriptionToEditorHtml } from "../../lib/property-description.mjs";
 
 const emptyProperty = {
   title: "",
@@ -107,7 +109,7 @@ export default function Admin() {
       baths: record.baths || "",
       sqft: record.sqft || "",
       status: record.status || "Active",
-      description: record.description || "",
+      description: descriptionToEditorHtml(record.description),
       featured: Boolean(record.featured),
       images: record.images || [],
     });
@@ -158,7 +160,10 @@ export default function Admin() {
           body: JSON.stringify(body),
         },
       );
-      if (!response.ok) throw new Error("Property could not be saved.");
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.error || "Property could not be saved.");
+      }
       setProperty(emptyProperty);
       if (uploadRef.current) uploadRef.current.value = "";
       setNotice("Property saved.");
@@ -487,12 +492,17 @@ export default function Admin() {
                   <option>Pending</option>
                   <option>Sold</option>
                 </select>
-                <textarea
-                  name="description"
-                  placeholder="Description"
-                  value={property.description}
-                  onChange={updateProperty}
-                />
+                <div className="rich-text-field">
+                  <span>Description</span>
+                  <RichTextEditor
+                    label="Property description"
+                    placeholder="Describe the home: highlights, upgrades, neighborhood, and schools…"
+                    value={property.description}
+                    onChange={(html) =>
+                      setProperty((value) => ({ ...value, description: html }))
+                    }
+                  />
+                </div>
                 <label>
                   Listing images
                   <input

@@ -361,6 +361,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Property' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /admin/properties/{id}:
     patch:
       tags: [Staff administration]
@@ -380,6 +381,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Property' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
     delete:
       tags: [Staff administration]
       summary: Delete a property
@@ -896,7 +898,7 @@ components:
         beds: { type: number, example: 4 }
         baths: { type: number, example: 3.5 }
         sqft: { type: number, example: 2800 }
-        description: { type: string }
+        description: { type: string, description: 'Sanitized HTML using only p, br, strong, em, u, h2, h3, ul, ol, li, and a (href only). Legacy plain-text descriptions are returned as escaped paragraphs.' }
         status: { type: string, enum: [Active, Pending, Sold] }
         featured: { type: boolean }
         images:
@@ -945,7 +947,7 @@ components:
         beds: { type: number, minimum: 0 }
         baths: { type: number, minimum: 0 }
         sqft: { type: number, minimum: 0 }
-        description: { type: string }
+        description: { type: string, maxLength: 20000, description: 'Plain text or HTML. The server keeps only p, br, strong, em, u, h2, h3, ul, ol, li, and a with an http, https, mailto, or tel href; all other markup and attributes are removed.' }
         status: { type: string, enum: [Active, Pending, Sold], default: Active }
         featured: { type: boolean, default: false }
         images: { type: array, items: { type: string } }
@@ -967,7 +969,7 @@ components:
         beds: { type: number, minimum: 0 }
         baths: { type: number, minimum: 0 }
         sqft: { type: number, minimum: 0 }
-        description: { type: string }
+        description: { type: string, maxLength: 20000, description: 'Plain text or HTML. The server keeps only p, br, strong, em, u, h2, h3, ul, ol, li, and a with an http, https, mailto, or tel href; all other markup and attributes are removed.' }
         status: { type: string, enum: [Active, Pending, Sold] }
         featured: { type: boolean }
         images: { type: array, items: { type: string } }

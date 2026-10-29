@@ -15,7 +15,7 @@ const modes = {
   assistant: { label: 'AI Search Mode', description: 'Ask for buying, selling, or valuation guidance.' },
 };
 const quickPrompts = {
-  database: ['Homes in Fremont', 'What services do you offer?', 'How do I request a home valuation?', 'How can I contact Gurmeet?'],
+  database: ['Homes Bought in Fremont','What services do you offer?', 'How do I request a home valuation?', 'How can I contact Gurmeet?'],
   assistant: ['How does a home valuation work?', 'What should I prepare before buying?', 'How can Gurmeet help me sell?', 'Contact Gurmeet'],
 };
 

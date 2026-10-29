@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Header, Footer } from "../../components/SiteChrome";
+import { Header, Footer, RedfinIcon } from "../../components/SiteChrome";
+import { SiGoogle, SiZillow } from "react-icons/si";
 import {
   FiStar,
   FiAward,
@@ -66,6 +67,31 @@ const specialties = [
     title: "Investment & Relocation Guidance",
     description:
       "In-depth analysis of rental yields, neighborhood trajectory, and school districts across Alameda, Contra Costa, San Joaquin, and surrounding counties.",
+  },
+];
+
+const reviewPlatforms = [
+  {
+    name: "Zillow",
+    href: "https://www.zillow.com/profile/Gurmeet%20Singh#reviews",
+    Icon: SiZillow,
+    color: "#006aff",
+    rating: "5.0 · 80+ reviews",
+    summary: "Verified reviews from buyers and sellers Gurmeet has represented.",
+  },
+  {
+    name: "Google",
+    href: "https://share.google/lt9TUeOb2TNgi9p9z",
+    Icon: SiGoogle,
+    color: "#4285f4",
+    summary: "See what local clients say about working with Gurmeet on Google.",
+  },
+  {
+    name: "Redfin",
+    href: "https://www.redfin.com/real-estate-agents/gurmeet-singh",
+    Icon: RedfinIcon,
+    color: "#c82021",
+    summary: "Read client feedback on Gurmeet's Redfin agent profile.",
   },
 ];
 
@@ -280,7 +306,7 @@ export default function About() {
                 <p className="eyebrow">Client Feedback</p>
                 <h2 style={{ fontSize: 38, marginTop: 8 }}>Verified 5-Star Reviews</h2>
                 <p style={{ color: "#64748b", marginTop: 6, fontSize: 15 }}>
-                  Real testimonials published by clients on Zillow.
+                  Real feedback published by clients on Zillow, Google, and Redfin.
                 </p>
               </div>
               <a
@@ -294,7 +320,31 @@ export default function About() {
               </a>
             </div>
 
-            <div className="testimonials-grid">
+            <div className="review-platforms">
+              {reviewPlatforms.map(({ name, href, Icon, color, rating, summary }) => (
+                <a key={name} className="review-platform-card" href={href} target="_blank" rel="noreferrer">
+                  <span className="review-platform-icon" style={{ color }}>
+                    <Icon />
+                  </span>
+                  <span className="review-platform-name">{name} Reviews</span>
+                  {rating && (
+                    <span className="review-platform-rating">
+                      {[...Array(5)].map((_, i) => (
+                        <FiStar key={i} style={{ fill: "#f59e0b" }} />
+                      ))}
+                      <b>{rating}</b>
+                    </span>
+                  )}
+                  <span className="review-platform-summary">{summary}</span>
+                  <span className="review-platform-link">
+                    Read reviews on {name} <FiExternalLink />
+                  </span>
+                </a>
+              ))}
+            </div>
+
+            <p className="review-platforms-label">Featured Zillow testimonials</p>
+            <div className="testimonials-grid" style={{ marginTop: 16 }}>
               {testimonials.map((review, idx) => (
                 <div key={idx} className="testimonial-box">
                   <div>

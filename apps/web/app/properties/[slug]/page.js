@@ -6,6 +6,7 @@ import AnalyticsTracker from "../../../components/AnalyticsTracker";
 import { publicAssetUrl, serverApiUrl } from "../../../lib/api";
 import { propertyPrimaryImagePath } from "../../../lib/property-images.mjs";
 import PropertyImage from "../../../components/PropertyImage";
+import { describeDescription, descriptionMetaText, descriptionPlainText } from "../../../lib/property-description.mjs";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,7 @@ export async function generateMetadata({ params }) {
   return {
     title: property.title || address,
     description:
-      property.description || `${address} represented by HomesByGurmeet.`,
+      descriptionMetaText(property.description) || `${address} represented by HomesByGurmeet.`,
   };
 }
 
@@ -61,6 +62,7 @@ export default async function Detail({ params }) {
     .filter(Boolean)
     .join(", ");
   const photo = publicAssetUrl(propertyPrimaryImagePath(property));
+  const description = describeDescription(property.description);
   const mapQuery = encodeURIComponent(
     property.coordinates?.lat
       ? `${property.coordinates.lat},${property.coordinates.lng}`
@@ -71,7 +73,7 @@ export default async function Detail({ params }) {
     "@type": "RealEstateListing",
     name: property.title || address,
     url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/properties/${property.slug}`,
-    description: property.description,
+    description: descriptionPlainText(property.description) || undefined,
     datePosted: property.createdAt,
     offers: property.price
       ? {
@@ -145,10 +147,27 @@ export default async function Detail({ params }) {
                 .join(" · ")}
             </p>
             <div className="gold-line" />
-            <p className="muted property-description">
-              {property.description ||
-                "Contact Gurmeet for complete property details and a private showing."}
-            </p>
+            {description?.kind === "html" ? (
+              <div
+                className="muted property-description rich-description"
+                dangerouslySetInnerHTML={{ __html: description.html }}
+              />
+            ) : (
+              <div className="muted property-description">
+                {(description?.paragraphs || [["Contact Gurmeet for complete property details and a private showing."]]).map(
+                  (lines, index) => (
+                    <p key={index}>
+                      {lines.map((line, lineIndex) => (
+                        <span key={lineIndex}>
+                          {lineIndex > 0 && <br />}
+                          {line}
+                        </span>
+                      ))}
+                    </p>
+                  ),
+                )}
+              </div>
+            )}
             {property.transaction?.soldDate && (
               <p className="transaction-note">
                 Closed{" "}
