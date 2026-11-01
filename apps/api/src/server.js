@@ -45,6 +45,7 @@ app.use('/uploads', express.static(uploadsDirectory));
 app.get('/api/openapi.yaml', (req, res) => res.sendFile(path.resolve(__dirname, '../openapi.yaml')));
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(null, { swaggerOptions: { url: '/api/openapi.yaml' }, customSiteTitle: 'HomesByGurmeet API Docs' }));
 
+const sessionCookie = { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' };
 const sign = user => jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'development-only-secret', { expiresIn: '8h' });
 const auth = (roles = []) => (req, res, next) => {
   try {
@@ -219,8 +220,8 @@ app.post('/api/leads', rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHe
   } catch (error) { return next(error); }
 });
 
-app.post('/api/auth/login', async (req, res, next) => { try { const user = await User.findOne({ email: req.body.email?.toLowerCase(), active: true }); if (!user || !await bcrypt.compare(req.body.password || '', user.passwordHash)) return res.status(401).json({ error: 'Invalid credentials' }); return res.cookie('hbg_session', sign(user), { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 28_800_000 }).json({ user: { email: user.email, role: user.role } }); } catch (error) { return next(error); } });
-app.post('/api/auth/logout', (req, res) => res.clearCookie('hbg_session').json({ ok: true }));
+app.post('/api/auth/login', async (req, res, next) => { try { const user = await User.findOne({ email: req.body.email?.toLowerCase(), active: true }); if (!user || !await bcrypt.compare(req.body.password || '', user.passwordHash)) return res.status(401).json({ error: 'Invalid credentials' }); return res.cookie('hbg_session', sign(user), { ...sessionCookie, maxAge: 28_800_000 }).json({ user: { email: user.email, role: user.role } }); } catch (error) { return next(error); } });
+app.post('/api/auth/logout', (req, res) => res.clearCookie('hbg_session', sessionCookie).json({ ok: true }));
 app.get('/api/auth/me', auth(), async (req, res, next) => { try { res.json(await User.findById(req.user.id).select('email role active')); } catch (error) { next(error); } });
 
 app.get('/api/admin/properties', auth(), async (req, res, next) => { try { res.json(await Property.find().sort({ createdAt: -1 })); } catch (error) { next(error); } });

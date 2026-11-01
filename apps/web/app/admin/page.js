@@ -88,6 +88,16 @@ export default function Admin() {
     load();
   }, []);
 
+  async function logout() {
+    try {
+      const response = await request("auth/logout", { method: "POST" });
+      if (!response.ok) throw new Error();
+      router.replace("/admin/login");
+    } catch {
+      setNotice("Could not log out. Please try again.");
+    }
+  }
+
   const updateProperty = (event) =>
     setProperty((value) => ({
       ...value,
@@ -387,6 +397,9 @@ export default function Admin() {
           </a>
         ))}
         <a href="/">View site</a>
+        <button type="button" className="sidebar-logout" onClick={logout}>
+          Log out
+        </button>
       </aside>
       <main className="admin-main">
         <p className="eyebrow">{data.user.role} account</p>

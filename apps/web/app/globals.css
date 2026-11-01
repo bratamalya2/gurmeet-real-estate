@@ -4884,3 +4884,21 @@ a {
   .rich-text-toolbar button { min-width: 40px; height: 40px; }
   .rich-text-surface { min-height: 160px; }
 }
+
+/* Admin sidebar logout */
+.sidebar-logout {
+  display: block;
+  width: 100%;
+  padding: 12px 0;
+  border: 0;
+  background: transparent;
+  color: #cbd5e1;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sidebar-logout:hover { color: #fff; }
+.sidebar-logout:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+@media (max-width: 900px) {
+  .sidebar-logout { display: inline-block; width: auto; padding: 8px 0; }
+}
