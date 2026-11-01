@@ -28,7 +28,11 @@ const stats = [
   { value: "19+", label: "Years Experience", sub: "Licensed since 2007" },
   { value: "28+", label: "Years in Bay Area", sub: "Resident since 1998" },
   { value: "207+", label: "Homes Sold", sub: "Buyer & Seller transactions" },
-  { value: "5.0 ★", label: "Zillow Client Rating", sub: "Based on 80+ reviews" },
+  {
+    value: "5.0 ★",
+    label: "Zillow Client Rating",
+    sub: "Based on 80+ reviews",
+  },
 ];
 
 const specialties = [
@@ -77,7 +81,8 @@ const reviewPlatforms = [
     Icon: SiZillow,
     color: "#006aff",
     rating: "5.0 · 80+ reviews",
-    summary: "Verified reviews from buyers and sellers Gurmeet has represented.",
+    summary:
+      "Verified reviews from buyers and sellers Gurmeet has represented.",
   },
   {
     name: "Google",
@@ -147,7 +152,17 @@ const serviceAreas = [
 
 function FiHome() {
   return (
-    <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      stroke="currentColor"
+      fill="none"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      height="1em"
+      width="1em"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
       <polyline points="9 22 9 12 15 12 15 22"></polyline>
     </svg>
@@ -166,8 +181,17 @@ export default function About() {
               <FiAward /> Licensed California Realtor® • CA DRE #01479256
             </span>
             <h1>Dedicated Real Estate Leadership in the Bay Area</h1>
-            <p style={{ maxWidth: 740, margin: "16px auto 0", fontSize: 18, color: "#94a3b8", lineHeight: 1.6 }}>
-              Deep roots since 1998, over 19 years of licensed market expertise, and more than 200 successful residential transactions.
+            <p
+              style={{
+                maxWidth: 740,
+                margin: "16px auto 0",
+                fontSize: 18,
+                color: "#94a3b8",
+                lineHeight: 1.6,
+              }}
+            >
+              Deep roots since 1998, over 19 years of licensed market expertise,
+              and more than 200 successful residential transactions.
             </p>
           </div>
         </section>
@@ -181,9 +205,27 @@ export default function About() {
                 alt="Gurmeet Singh - Bay Area Realtor"
               />
               <div className="agent-floating-badge">
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontWeight: 700, fontSize: 16 }}>Gurmeet Singh</span>
-                  <span style={{ color: "#f59e0b", display: "flex", alignItems: "center", gap: 3, fontWeight: 700, fontSize: 14 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 6,
+                  }}
+                >
+                  <span style={{ fontWeight: 700, fontSize: 16 }}>
+                    Gurmeet Singh
+                  </span>
+                  <span
+                    style={{
+                      color: "#f59e0b",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 3,
+                      fontWeight: 700,
+                      fontSize: 14,
+                    }}
+                  >
                     <FiStar style={{ fill: "#f59e0b" }} /> 5.0 / 5.0
                   </span>
                 </div>
@@ -216,19 +258,41 @@ export default function About() {
 
               <div style={{ fontSize: 16, lineHeight: 1.8, color: "#334155" }}>
                 <p>
-                  <strong>Gurmeet Singh</strong> has been a proud resident of the San Francisco Bay Area since 1998, giving him deep personal roots, detailed neighborhood familiarity, and firsthand insight into the region’s evolving real estate landscape.
+                  <strong>Gurmeet Singh</strong> has been a proud resident of
+                  the Bay Area since 1998, giving him deep personal roots,
+                  detailed neighborhood familiarity, and firsthand insight into
+                  the region’s evolving real estate landscape.
                 </p>
                 <p style={{ marginTop: 14 }}>
-                  He began his real estate career in 2007 and has since established himself as a respected, client-first professional assisting families and investors with residential purchases, high-yield investments, and luxury home sales across Alameda County, Contra Costa County, the Tri-Valley, and Central Valley corridors.
+                  He began his real estate career in 2007 and has since
+                  established himself as a respected, client-first professional
+                  assisting families and investors with residential purchases,
+                  high-yield investments, and luxury home sales across Alameda
+                  County, Contra Costa County, the Tri-Valley, and Central
+                  Valley corridors.
                 </p>
                 <p style={{ marginTop: 14 }}>
-                  With extensive listing experience across multiple market cycles, Gurmeet has also successfully assisted homeowners navigating financial hardship — negotiating directly with lenders and banks on complex short sales to secure positive, confident outcomes.
+                  With extensive listing experience across multiple market
+                  cycles, Gurmeet has also successfully assisted homeowners
+                  navigating financial hardship — negotiating directly with
+                  lenders and banks on complex short sales to secure positive,
+                  confident outcomes.
                 </p>
               </div>
 
               {/* Quick Contact Bar */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginTop: 32 }}>
-                <a className="btn" href={`tel:${agentPhone.replace(/\D/g, "")}`}>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 14,
+                  marginTop: 32,
+                }}
+              >
+                <a
+                  className="btn"
+                  href={`tel:${agentPhone.replace(/\D/g, "")}`}
+                >
                   <FiPhoneCall style={{ marginRight: 8 }} /> Call {agentPhone}
                 </a>
                 <Link className="btn alt" href="/contact">
@@ -239,7 +303,11 @@ export default function About() {
                   href="https://www.zillow.com/profile/Gurmeet%20Singh"
                   target="_blank"
                   rel="noreferrer"
-                  style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
                 >
                   View Zillow Profile <FiExternalLink />
                 </a>
@@ -251,8 +319,16 @@ export default function About() {
         {/* Stats Matrix Banner */}
         <section className="dark-section section">
           <div className="container">
-            <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 40px" }}>
-              <p className="eyebrow" style={{ color: "var(--gold)" }}>By The Numbers</p>
+            <div
+              style={{
+                textAlign: "center",
+                maxWidth: 700,
+                margin: "0 auto 40px",
+              }}
+            >
+              <p className="eyebrow" style={{ color: "var(--gold)" }}>
+                By The Numbers
+              </p>
               <h2 style={{ fontSize: 36, color: "#fff", marginTop: 8 }}>
                 A Track Record of Continuous Results
               </h2>
@@ -262,7 +338,15 @@ export default function About() {
                 <div key={idx} className="stat-card-dark">
                   <b>{stat.value}</b>
                   <span>{stat.label}</span>
-                  <p style={{ margin: "8px 0 0", fontSize: 12, color: "#94a3b8" }}>{stat.sub}</p>
+                  <p
+                    style={{
+                      margin: "8px 0 0",
+                      fontSize: 12,
+                      color: "#94a3b8",
+                    }}
+                  >
+                    {stat.sub}
+                  </p>
                 </div>
               ))}
             </div>
@@ -271,13 +355,20 @@ export default function About() {
 
         {/* Core Specialties */}
         <section className="section container">
-          <div style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 48px" }}>
+          <div
+            style={{
+              textAlign: "center",
+              maxWidth: 720,
+              margin: "0 auto 48px",
+            }}
+          >
             <p className="eyebrow">Comprehensive Real Estate Services</p>
             <h2 style={{ fontSize: 38, marginTop: 10 }}>
               Specialized Expertise for Every Step
             </h2>
             <p style={{ fontSize: 16, color: "#64748b", marginTop: 12 }}>
-              From initial market research and mortgage pre-approval navigation to closing negotiations and post-sale support.
+              From initial market research and mortgage pre-approval navigation
+              to closing negotiations and post-sale support.
             </p>
           </div>
 
@@ -286,10 +377,25 @@ export default function About() {
               <div key={idx} className="specialty-card">
                 <div>
                   <div className="specialty-icon">{item.icon}</div>
-                  <h3 style={{ fontSize: 20, fontFamily: "Hanken Grotesk", fontWeight: 700, marginBottom: 12, color: "var(--navy)" }}>
+                  <h3
+                    style={{
+                      fontSize: 20,
+                      fontFamily: "Hanken Grotesk",
+                      fontWeight: 700,
+                      marginBottom: 12,
+                      color: "var(--navy)",
+                    }}
+                  >
                     {item.title}
                   </h3>
-                  <p style={{ fontSize: 14, lineHeight: 1.7, color: "#64748b", margin: 0 }}>
+                  <p
+                    style={{
+                      fontSize: 14,
+                      lineHeight: 1.7,
+                      color: "#64748b",
+                      margin: 0,
+                    }}
+                  >
                     {item.description}
                   </p>
                 </div>
@@ -299,51 +405,62 @@ export default function About() {
         </section>
 
         {/* Verified Zillow Client Reviews */}
-        <section className="section" style={{ background: "#f8fafc", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+        <section
+          className="section"
+          style={{
+            background: "#f8fafc",
+            borderTop: "1px solid var(--line)",
+            borderBottom: "1px solid var(--line)",
+          }}
+        >
           <div className="container">
             <div className="feature-head">
               <div>
                 <p className="eyebrow">Client Feedback</p>
-                <h2 style={{ fontSize: 38, marginTop: 8 }}>Verified 5-Star Reviews</h2>
+                <h2 style={{ fontSize: 38, marginTop: 8 }}>
+                  Verified 5-Star Reviews
+                </h2>
                 <p style={{ color: "#64748b", marginTop: 6, fontSize: 15 }}>
-                  Real feedback published by clients on Zillow, Google, and Redfin.
+                  Real feedback published by clients on Zillow, Google, and
+                  Redfin.
                 </p>
               </div>
-              <a
-                className="btn alt"
-                href="https://www.zillow.com/profile/Gurmeet%20Singh#reviews"
-                target="_blank"
-                rel="noreferrer"
-                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-              >
-                Read All 80+ Reviews <FiExternalLink />
-              </a>
             </div>
 
             <div className="review-platforms">
-              {reviewPlatforms.map(({ name, href, Icon, color, rating, summary }) => (
-                <a key={name} className="review-platform-card" href={href} target="_blank" rel="noreferrer">
-                  <span className="review-platform-icon" style={{ color }}>
-                    <Icon />
-                  </span>
-                  <span className="review-platform-name">{name} Reviews</span>
-                  {rating && (
-                    <span className="review-platform-rating">
-                      {[...Array(5)].map((_, i) => (
-                        <FiStar key={i} style={{ fill: "#f59e0b" }} />
-                      ))}
-                      <b>{rating}</b>
+              {reviewPlatforms.map(
+                ({ name, href, Icon, color, rating, summary }) => (
+                  <a
+                    key={name}
+                    className="review-platform-card"
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <span className="review-platform-icon" style={{ color }}>
+                      <Icon />
                     </span>
-                  )}
-                  <span className="review-platform-summary">{summary}</span>
-                  <span className="review-platform-link">
-                    Read reviews on {name} <FiExternalLink />
-                  </span>
-                </a>
-              ))}
+                    <span className="review-platform-name">{name} Reviews</span>
+                    {rating && (
+                      <span className="review-platform-rating">
+                        {[...Array(5)].map((_, i) => (
+                          <FiStar key={i} style={{ fill: "#f59e0b" }} />
+                        ))}
+                        <b>{rating}</b>
+                      </span>
+                    )}
+                    <span className="review-platform-summary">{summary}</span>
+                    <span className="review-platform-link">
+                      Read reviews on {name} <FiExternalLink />
+                    </span>
+                  </a>
+                ),
+              )}
             </div>
 
-            <p className="review-platforms-label">Featured Zillow testimonials</p>
+            <p className="review-platforms-label">
+              Featured Zillow testimonials
+            </p>
             <div className="testimonials-grid" style={{ marginTop: 16 }}>
               {testimonials.map((review, idx) => (
                 <div key={idx} className="testimonial-box">
@@ -360,7 +477,15 @@ export default function About() {
                       <div className="testimonial-author">{review.author}</div>
                       <div className="testimonial-tag">{review.location}</div>
                     </div>
-                    <span className="pill-badge" style={{ background: "#ecfdf5", color: "#065f46", borderColor: "#a7f3d0", fontSize: 11 }}>
+                    <span
+                      className="pill-badge"
+                      style={{
+                        background: "#ecfdf5",
+                        color: "#065f46",
+                        borderColor: "#a7f3d0",
+                        fontSize: 11,
+                      }}
+                    >
                       <FiCheckCircle /> Verified
                     </span>
                   </div>
@@ -372,15 +497,27 @@ export default function About() {
 
         {/* Service Areas */}
         <section className="section container">
-          <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 30px" }}>
+          <div
+            style={{
+              textAlign: "center",
+              maxWidth: 700,
+              margin: "0 auto 30px",
+            }}
+          >
             <p className="eyebrow">Geographic Coverage</p>
-            <h2 style={{ fontSize: 36, marginTop: 8 }}>Bay Area & Regional Service Markets</h2>
+            <h2 style={{ fontSize: 36, marginTop: 8 }}>
+              Bay Area & Regional Service Markets
+            </h2>
             <p style={{ color: "#64748b", marginTop: 10 }}>
-              Specialized local market advisory across premier Alameda, Contra Costa, and Central Valley communities.
+              Specialized local market advisory across premier Alameda, Contra
+              Costa, and Central Valley communities.
             </p>
           </div>
 
-          <div className="service-areas-wrap" style={{ justifyContent: "center" }}>
+          <div
+            className="service-areas-wrap"
+            style={{ justifyContent: "center" }}
+          >
             {serviceAreas.map((area, idx) => (
               <span key={idx} className="service-area-pill">
                 <FiMapPin style={{ color: "var(--gold)" }} /> {area}
@@ -390,20 +527,53 @@ export default function About() {
         </section>
 
         {/* Bottom CTA */}
-        <section className="dark-section section" style={{ textAlign: "center" }}>
+        <section
+          className="dark-section section"
+          style={{ textAlign: "center" }}
+        >
           <div className="container" style={{ maxWidth: 760 }}>
-            <p className="eyebrow" style={{ color: "var(--gold)" }}>Begin Your Real Estate Journey</p>
+            <p className="eyebrow" style={{ color: "var(--gold)" }}>
+              Begin Your Real Estate Journey
+            </p>
             <h2 style={{ fontSize: 40, color: "#fff", marginTop: 12 }}>
               Ready to Discuss Your Next Move?
             </h2>
-            <p style={{ fontSize: 17, color: "#cbd5e1", lineHeight: 1.7, margin: "16px auto 32px" }}>
-              Whether you are buying your first residence, selling for top value, or seeking an expert market opinion, Gurmeet Singh is ready to provide dedicated, professional representation.
+            <p
+              style={{
+                fontSize: 17,
+                color: "#cbd5e1",
+                lineHeight: 1.7,
+                margin: "16px auto 32px",
+              }}
+            >
+              Whether you are buying your first residence, selling for top
+              value, or seeking an expert market opinion, Gurmeet Singh is ready
+              to provide dedicated, professional representation.
             </p>
-            <div style={{ display: "flex", justifyContent: "center", gap: 14, flexWrap: "wrap" }}>
-              <Link className="btn" style={{ background: "var(--gold)", borderColor: "var(--gold)", color: "#fff" }} href="/contact">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: 14,
+                flexWrap: "wrap",
+              }}
+            >
+              <Link
+                className="btn"
+                style={{
+                  background: "var(--gold)",
+                  borderColor: "var(--gold)",
+                  color: "#fff",
+                }}
+                href="/contact"
+              >
                 Contact Gurmeet Directly
               </Link>
-              <Link className="btn alt" style={{ color: "#fff", borderColor: "#fff" }} href="/home-valuation">
+              <Link
+                className="btn alt"
+                style={{ color: "#fff", borderColor: "#fff" }}
+                href="/home-valuation"
+              >
                 Request Free Home Valuation
               </Link>
             </div>
